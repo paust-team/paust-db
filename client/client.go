@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"github.com/paust-team/paust-db/types"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/rpc/client"
@@ -22,7 +23,7 @@ func NewClient(remote string) *Client {
 }
 
 func (client *Client) WriteData(time time.Time, data []byte) {
-	jsonString, _ := json.Marshal(types.Data{Timestamp: time.Unix(), Data: data})
+	jsonString, _ := json.Marshal(types.Data{Timestamp: time.UnixNano(), Data: data})
 
 	client.client.BroadcastTxSync(jsonString)
 }
@@ -39,8 +40,18 @@ var Cmd = &cobra.Command{
 }
 
 var writeCmd = &cobra.Command{
-	Use: "write",
+	Use: "write [data to write]",
+	Args: cobra.MinimumNArgs(1),
 	Short: "Run DB Write",
+	Run: func(cmd *cobra.Command, args []string) {
+		client := NewClient("http://localhost:26657")
+		client.WriteData(time.Now(), []byte(strings.Join(args, " ")))
+	},
+}
+
+var writeTestCmd = &cobra.Command{
+	Use: "writeTest",
+	Short: "Run DB Write Test",
 	Run: func(cmd *cobra.Command, args []string) {
 		client := NewClient("http://localhost:26657")
 
@@ -52,4 +63,5 @@ var writeCmd = &cobra.Command{
 
 func init() {
 	Cmd.AddCommand(writeCmd)
+	Cmd.AddCommand(writeTestCmd)
 }
