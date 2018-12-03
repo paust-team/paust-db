@@ -23,7 +23,7 @@ type MasterApplication struct {
 
 func NewMasterApplication(serial bool) *MasterApplication {
 	hash := make([]byte, 8)
-	database, err := db.NewGoLevelDB("paustdb", "/Users/dennis/tmp")
+	database, err := db.NewGoLevelDB("paustdb", "/Users/kevin/tmp")
 	if err != nil {
 		println(err)
 	}
@@ -48,6 +48,7 @@ func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
 }
 
 func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciTypes.ResponseInitChain {
+	app.caches = make(map[int64]types.Data)
 	return abciTypes.ResponseInitChain{}
 }
 
@@ -75,6 +76,15 @@ func (app *MasterApplication) EndBlock(req abciTypes.RequestEndBlock) abciTypes.
 
 func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	resp.Data = app.hash
+
+	for timestamp, data := range app.caches {
+		key := make([]byte, 8)
+
+		binary.BigEndian.PutUint64(key, uint64(timestamp))
+		app.db.Set(key, data.Data)
+	}
+
+	app.caches = make(map[int64]types.Data)
 
 	return
 }
