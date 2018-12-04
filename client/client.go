@@ -64,4 +64,8 @@ var writeTestCmd = &cobra.Command{
 func init() {
 	Cmd.AddCommand(writeCmd)
 	Cmd.AddCommand(writeTestCmd)
+
 }
+
+
+
