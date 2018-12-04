@@ -7,7 +7,7 @@ import (
 	"github.com/paust-team/paust-db/types"
 	"github.com/tendermint/tendermint/abci/example/code"
 	abciTypes "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/db"
+	"github.com/paust-team/paust-db/libs/db"
 	"math/rand"
 )
 
@@ -16,14 +16,14 @@ type MasterApplication struct {
 
 	hash []byte
 	serial bool
-	db *db.GoLevelDB
+	db *db.CRocksDB
 
 	caches map[int64]types.Data
 }
 
 func NewMasterApplication(serial bool) *MasterApplication {
 	hash := make([]byte, 8)
-	database, err := db.NewGoLevelDB("paustdb", "/Users/kevin/tmp")
+	database, err := db.NewCRocksDB("paustdb", "/Users/kevin/tmp")
 	if err != nil {
 		println(err)
 	}
