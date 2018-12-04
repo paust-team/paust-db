@@ -17,13 +17,15 @@ type MasterApplication struct {
 	hash []byte
 	serial bool
 	db *db.CRocksDB
+	wb db.Batch
 
-	caches map[int64]types.Data
+	//caches map[int64]types.Data
 }
 
 func NewMasterApplication(serial bool) *MasterApplication {
 	hash := make([]byte, 8)
-	database, err := db.NewCRocksDB("paustdb", "/Users/kevin/tmp")
+	database, err := db.NewCRocksDB("paustdb", "/Users/andrew/tmp")
+
 	if err != nil {
 		println(err)
 	}
@@ -48,11 +50,16 @@ func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
 }
 
 func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciTypes.ResponseInitChain {
-	app.caches = make(map[int64]types.Data)
+
+	app.wb = app.db.NewBatch()
+	//app.caches = make(map[int64]types.Data)
+
 	return abciTypes.ResponseInitChain{}
 }
 
 func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTypes.ResponseBeginBlock {
+	//Commit이 일어나지 않았을 경우에 batch를 flush 한다.
+	app.wb = app.db.NewBatch()
 	return abciTypes.ResponseBeginBlock{}
 }
 
@@ -65,7 +72,8 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 
 	fmt.Printf("--------- DeliverTx - tx: %v, time: %d, data: %s\n", tx, data.Timestamp, string(data.Data))
 
-	app.caches[data.Timestamp] = *data
+	rowKey := types.DataKeyToByteArr(*data)
+	app.wb.Set(rowKey, data.Data)
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
 }
@@ -76,15 +84,7 @@ func (app *MasterApplication) EndBlock(req abciTypes.RequestEndBlock) abciTypes.
 
 func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	resp.Data = app.hash
-
-	for timestamp, data := range app.caches {
-		key := make([]byte, 8)
-
-		binary.BigEndian.PutUint64(key, uint64(timestamp))
-		app.db.Set(key, data.Data)
-	}
-
-	app.caches = make(map[int64]types.Data)
+	app.wb.Write()
 
 	return
 }
