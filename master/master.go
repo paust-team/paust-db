@@ -9,8 +9,10 @@ import (
 	"os"
 )
 
+var dir string
+
 func Serve() error {
-	app := NewMasterApplication(true)
+	app := NewMasterApplication(true, dir)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 
 	srv, err := server.NewServer("0.0.0.0:26658", "socket", app)
@@ -41,4 +43,8 @@ var Cmd = &cobra.Command{
 			os.Exit(1)
 		}
 	},
+}
+
+func init() {
+	Cmd.Flags().StringVarP(&dir, "dir","d", "/tmp", "directory for rocksdb")
 }
