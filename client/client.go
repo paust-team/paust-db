@@ -1,12 +1,14 @@
 package client
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"github.com/paust-team/paust-db/types"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/rpc/client"
+	"golang.org/x/crypto/ed25519"
+	"strings"
 	"time"
 )
 
@@ -22,8 +24,13 @@ func NewClient(remote string) *Client {
 	}
 }
 
-func (client *Client) WriteData(time time.Time, data []byte) {
-	jsonString, _ := json.Marshal(types.Data{Timestamp: time.UnixNano(), Data: data})
+func (client *Client) WriteData(time time.Time, pubKey string, data []byte) {
+	pubKeyBytes, err := base64.StdEncoding.DecodeString(pubKey)
+	if err != nil {
+		panic(err)
+	}
+	//TODO: length 체크
+	jsonString, _ := json.Marshal(types.Data{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Data: data})
 
 	client.client.BroadcastTxSync(jsonString)
 }
@@ -33,6 +40,8 @@ func (client *Client) ReadData(start time.Time, stop time.Time) {
 
 	client.client.ABCIQuery("/between", jsonString)
 }
+
+var pubKey string
 
 var Cmd = &cobra.Command{
 	Use: "client",
@@ -45,7 +54,7 @@ var writeCmd = &cobra.Command{
 	Short: "Run DB Write",
 	Run: func(cmd *cobra.Command, args []string) {
 		client := NewClient("http://localhost:26657")
-		client.WriteData(time.Now(), []byte(strings.Join(args, " ")))
+		client.WriteData(time.Now(), pubKey, []byte(strings.Join(args, " ")))
 	},
 }
 
@@ -56,15 +65,30 @@ var writeTestCmd = &cobra.Command{
 		client := NewClient("http://localhost:26657")
 
 		for i := 0; i < 3; i++ {
-			client.WriteData(time.Now(), []byte(fmt.Sprintf("test-%d", i)))
+			client.WriteData(time.Now(), "Krc92XkJ+LhkDMO+Qe1utVg1KNGbXdhri3Ol9u5dIAY97w88jgyruQkiMMmN9+hOXqzkR7MZBLIhy7ljYpgNoQ==", []byte(fmt.Sprintf("test-%d", i)))
 		}
 	},
 }
 
+var generateCmd = &cobra.Command{
+	Use: "generate",
+	Short: "Generate ED25519 Key Pair",
+	Run: func(cmd *cobra.Command, args []string) {
+		priKey, pubKey, err := ed25519.GenerateKey(nil)
+		if err != nil {
+			panic(err)
+		}
+
+		fmt.Printf("Private Key(base64 encoding): %v\n", base64.StdEncoding.EncodeToString(priKey))
+		fmt.Printf("Public Key(base64 encoding): %v\n", base64.StdEncoding.EncodeToString(pubKey))
+	},
+}
+
 func init() {
+	writeCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "Krc92XkJ+LhkDMO+Qe1utVg1KNGbXdhri3Ol9u5dIAY97w88jgyruQkiMMmN9+hOXqzkR7MZBLIhy7ljYpgNoQ==", "Base64 encoded ED25519 public key")
 	Cmd.AddCommand(writeCmd)
 	Cmd.AddCommand(writeTestCmd)
-
+	Cmd.AddCommand(generateCmd)
 }
 
 
