@@ -203,7 +203,7 @@ func newCRocksDBIterator(source *gorocksdb.Iterator, start, end []byte, isRevers
 		} else {
 			source.Seek(start)
 			if source.Valid() {
-				soakey := source.KeyBytes() // start or after key
+				soakey := source.Key().Data() // start or after key
 				if bytes.Compare(start, soakey) < 0 {
 					source.Prev()
 				}
@@ -249,7 +249,7 @@ func (itr cRocksDBIterator) Valid() bool {
 
 	// If key is end or past it, invalid.
 	var end = itr.end
-	var key = itr.source.KeyBytes()
+	var key = itr.source.Key().Data()
 	if itr.isReverse {
 		if end != nil && bytes.Compare(key, end) <= 0 {
 			itr.isInvalid = true
