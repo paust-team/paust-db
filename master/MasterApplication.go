@@ -22,9 +22,9 @@ type MasterApplication struct {
 	//caches map[int64]types.Data
 }
 
-func NewMasterApplication(serial bool) *MasterApplication {
+func NewMasterApplication(serial bool, dir string) *MasterApplication {
 	hash := make([]byte, 8)
-	database, err := db.NewCRocksDB("paustdb", "/Users/andrew/tmp")
+	database, err := db.NewCRocksDB("paustdb", dir)
 
 	if err != nil {
 		println(err)
