@@ -1,5 +1,3 @@
-// +build gcc
-
 package db
 
 import (
