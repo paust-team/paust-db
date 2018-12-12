@@ -8,6 +8,7 @@ type Data struct {
 	//Timestamp는 client에서 nano단위로 들어옴.
 	Timestamp int64 `json:"timestamp"`
 	UserKey []byte `json:"userKey"`
+	Type string `json:"type"`
 	Data []byte `json:"data"`
 }
 
