@@ -4,20 +4,20 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/paust-team/paust-db/libs/db"
 	"github.com/paust-team/paust-db/types"
 	"github.com/tendermint/tendermint/abci/example/code"
 	abciTypes "github.com/tendermint/tendermint/abci/types"
-	"github.com/paust-team/paust-db/libs/db"
 	"math/rand"
 )
 
 type MasterApplication struct {
 	abciTypes.BaseApplication
 
-	hash []byte
+	hash   []byte
 	serial bool
-	db *db.CRocksDB
-	wb db.Batch
+	db     *db.CRocksDB
+	wb     db.Batch
 
 	//caches map[int64]types.Data
 }
@@ -33,8 +33,8 @@ func NewMasterApplication(serial bool, dir string) *MasterApplication {
 	binary.BigEndian.PutUint64(hash, rand.Uint64())
 	return &MasterApplication{
 		serial: serial,
-		hash: hash,
-		db: database,
+		hash:   hash,
+		db:     database,
 	}
 }
 

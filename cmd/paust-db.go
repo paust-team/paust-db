@@ -9,7 +9,7 @@ import (
 )
 
 var PaustDBCmd = &cobra.Command{
-	Use: "paust-db",
+	Use:   "paust-db",
 	Short: "Paust DB",
 }
 
