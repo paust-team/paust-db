@@ -34,7 +34,7 @@ func Serve() error {
 }
 
 var Cmd = &cobra.Command{
-	Use: "master",
+	Use:   "master",
 	Short: "Paust DB Master Application",
 	Run: func(cmd *cobra.Command, args []string) {
 		err := Serve()
@@ -46,5 +46,5 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.Flags().StringVarP(&dir, "dir","d", "/tmp", "directory for rocksdb")
+	Cmd.Flags().StringVarP(&dir, "dir", "d", "/tmp", "directory for rocksdb")
 }
