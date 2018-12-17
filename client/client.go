@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -73,6 +74,33 @@ func (client *Client) WriteStdin() {
 	}
 
 	client.client.BroadcastTxSync(bytes)
+}
+
+func (client *Client) ReadMetaData(start int64, end int64, pubKey string, dataType string) {
+	var pubKeyBytes []byte
+	if pubKey != "" {
+		var err error
+		pubKeyBytes, err = base64.StdEncoding.DecodeString(pubKey)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if len(pubKeyBytes) != 32 {
+			fmt.Println("public key: ed25519 public key must be 32bytes")
+			os.Exit(1)
+		}
+	}
+	if len(dataType) > 20 {
+		fmt.Printf("type: \"%v\" is bigger than 20 bytes", dataType)
+		os.Exit(1)
+	}
+
+	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Type: dataType})
+
+	response, _ := client.client.ABCIQuery("/metadata", jsonString)
+	responseJson, _ := json.MarshalIndent(response, "", "\t")
+	fmt.Println(string(responseJson))
 }
 
 var pubKey, dataType, filePath string
@@ -141,6 +169,41 @@ var queryCmd = &cobra.Command{
 	Short: "Query something to DB",
 }
 
+var metadataCmd = &cobra.Command{
+	Use:   "metadata start end [public key(base64)] [type(max 20 bytes)]",
+	Args:  cobra.RangeArgs(2, 4),
+	Short: "Query DB for metadata",
+	Long: `Query DB for metadata.
+'start' and 'end' is essential. 'public key' and 'type' is optional.
+If you want to query for specific type for all users, pass public key
+argument as 'none'.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		start, err := strconv.ParseInt(args[0], 0, 64)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		end, err := strconv.ParseInt(args[1], 0, 64)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		client := NewClient("http://localhost:26657")
+		if len(args) == 2 {
+			client.ReadMetaData(start, end, "", "")
+		} else if len(args) == 3 {
+			client.ReadMetaData(start, end, args[2], "")
+		} else if args[2] == "none" {
+			client.ReadMetaData(start, end, "", args[3])
+		} else {
+			client.ReadMetaData(start, end, args[2], args[3])
+		}
+
+	},
+}
+
 func init() {
 	writeCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
 	writeCmd.Flags().StringVarP(&dataType, "type", "t", "test", "Data type (max 20 bytes)")
@@ -150,4 +213,5 @@ func init() {
 	Cmd.AddCommand(writeTestCmd)
 	Cmd.AddCommand(generateCmd)
 	Cmd.AddCommand(queryCmd)
+	queryCmd.AddCommand(metadataCmd)
 }
