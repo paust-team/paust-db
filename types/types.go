@@ -12,6 +12,8 @@ type Data struct {
 	Data      []byte `json:"data"`
 }
 
+type DataSlice []Data
+
 type BetweenQuery struct {
 	Start int64 `json:"start"`
 	Stop  int64 `json:"stop"`
