@@ -136,6 +136,11 @@ var generateCmd = &cobra.Command{
 	},
 }
 
+var queryCmd = &cobra.Command{
+	Use:   "query",
+	Short: "Query something to DB",
+}
+
 func init() {
 	writeCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
 	writeCmd.Flags().StringVarP(&dataType, "type", "t", "test", "Data type (max 20 bytes)")
@@ -144,4 +149,5 @@ func init() {
 	Cmd.AddCommand(writeCmd)
 	Cmd.AddCommand(writeTestCmd)
 	Cmd.AddCommand(generateCmd)
+	Cmd.AddCommand(queryCmd)
 }
