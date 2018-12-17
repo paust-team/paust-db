@@ -24,7 +24,13 @@ type BetweenQuery struct {
 	Stop  int64 `json:"stop"`
 }
 
-//rowkey = timestamp + userkey + datatype + offset
+type DataQuery struct {
+	Start   int64  `json:"start"`
+	End     int64  `json:"end"`
+	UserKey []byte `json:"userKey"`
+	Type    string `json:"type"`
+}
+
 func DataKeyToByteArr(data Data) []byte {
 
 	timestamp := make([]byte, 8)
