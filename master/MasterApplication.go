@@ -63,35 +63,36 @@ func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciType
 	return abciTypes.ResponseInitChain{}
 }
 
-//TODO commit이 안되었을 떄의 처리
 func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTypes.ResponseBeginBlock {
 	//Commit이 일어나지 않았을 경우에 batch를 flush 한다.
-	app.wb = app.db.NewBatch()
-	app.mwb = app.db.NewBatch()
 
 	return abciTypes.ResponseBeginBlock{}
 }
 
-//TODO json object array 처리. 지금은 단일 object
 func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 
-	var data = &types.Data{}
-	err := json.Unmarshal(tx, data)
+	var dataSlice = types.DataSlice{}
+	err := json.Unmarshal(tx, &dataSlice)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("dataSlice Unmarshal error",err)
 	}
 
-	var metaData = &types.MetaData{}
-	metaData.UserKey = data.UserKey
-	metaData.Type = data.Type
-	metaByte, err := json.Marshal(metaData)
-	if err != nil {
-		fmt.Println("meta 변환 error : ", err)
+	for i := 0; i < len(dataSlice); i++ {
+		var metaData = &types.MetaData{}
+		metaData.UserKey = dataSlice[i].UserKey
+		metaData.Type = dataSlice[i].Type
+		metaByte, err := json.Marshal(metaData)
+		if err != nil {
+			fmt.Println("meta 변환 error : ", err)
+		}
+
+		rowKey := types.DataKeyToByteArr(dataSlice[i])
+		app.wb.SetCF(app.cfs.GetCFH(0), rowKey, metaByte)
+		app.wb.SetCF(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
 	}
 
-	rowKey := types.DataKeyToByteArr(*data)
-	app.wb.SetCF(app.cfs.GetCFH(0), rowKey, metaByte)
-	app.wb.SetCF(app.cfs.GetCFH(1), rowKey, data.Data)
+
+
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
 }

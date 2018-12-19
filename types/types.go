@@ -12,6 +12,8 @@ type Data struct {
 	Data      []byte `json:"data"`
 }
 
+type DataSlice []Data
+
 type MetaData struct {
 	UserKey []byte `json:"userKey"`
 	Type    string `json:"type"`
