@@ -19,11 +19,6 @@ type MetaData struct {
 	Type    string `json:"type"`
 }
 
-type BetweenQuery struct {
-	Start int64 `json:"start"`
-	Stop  int64 `json:"stop"`
-}
-
 type DataQuery struct {
 	Start   int64  `json:"start"`
 	End     int64  `json:"end"`
@@ -31,6 +26,7 @@ type DataQuery struct {
 	Type    string `json:"type"`
 }
 
+//rowkey = timestamp + userkey + datatype + offset
 func DataKeyToByteArr(data Data) []byte {
 
 	timestamp := make([]byte, 8)

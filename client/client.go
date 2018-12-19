@@ -47,10 +47,32 @@ func (client *Client) WriteData(time time.Time, pubKey string, dataType string, 
 	client.client.BroadcastTxSync(jsonString)
 }
 
-func (client *Client) ReadData(start time.Time, stop time.Time) {
-	jsonString, _ := json.Marshal(types.BetweenQuery{Start: start.Unix(), Stop: stop.Unix()})
+func (client *Client) ReadData(start int64, end int64, pubKey string, dataType string) {
+	var pubKeyBytes []byte
+	if pubKey != "" {
+		var err error
+		pubKeyBytes, err = base64.StdEncoding.DecodeString(pubKey)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 
-	client.client.ABCIQuery("/between", jsonString)
+		if len(pubKeyBytes) != 32 {
+			fmt.Println("public key: ed25519 public key must be 32bytes")
+			os.Exit(1)
+		}
+	}
+
+	if len(dataType) > 20 {
+		fmt.Printf("type: \"%v\" is bigger than 20 bytes", dataType)
+		os.Exit(1)
+	}
+
+	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Type: dataType})
+
+	response, _ := client.client.ABCIQuery("/realdata", jsonString)
+	responseJson, _ := json.MarshalIndent(response, "", "\t")
+	fmt.Println(string(responseJson))
 }
 
 // TODO: implement write all files in specific directory.
@@ -164,6 +186,33 @@ var generateCmd = &cobra.Command{
 	},
 }
 
+var realdataCmd = &cobra.Command{
+	Use:   "realdata start end",
+	Args:  cobra.ExactArgs(2),
+	Short: "Query DB for real data",
+	Long: `Query DB for real data.
+'start' and 'end' are essential. '-p' and '-t' flags are optional.
+If you want to query for only one timestamp, make 'start' and 'end' equal.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		start, err := strconv.ParseInt(args[0], 0, 64)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		end, err := strconv.ParseInt(args[1], 0, 64)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		client := NewClient("http://localhost:26657")
+
+		client.ReadData(start, end, pubKey, dataType)
+
+	},
+}
+
 var queryCmd = &cobra.Command{
 	Use:   "query",
 	Short: "Query something to DB",
@@ -207,4 +256,7 @@ func init() {
 	queryCmd.AddCommand(metadataCmd)
 	metadataCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "", "user's public key (base64)")
 	metadataCmd.Flags().StringVarP(&dataType, "type", "t", "", "data type (max 20 bytes)")
+	queryCmd.AddCommand(realdataCmd)
+	realdataCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "", "user's public key (base64)")
+	realdataCmd.Flags().StringVarP(&dataType, "type", "t", "", "data type (max 20 bytes)")
 }
