@@ -45,13 +45,13 @@ func (client *Client) ReadData(start time.Time, stop time.Time) {
 var pubKey, dataType string
 
 var Cmd = &cobra.Command{
-	Use: "client",
+	Use:   "client",
 	Short: "Paust DB Client Application",
 }
 
 var writeCmd = &cobra.Command{
-	Use: "write [data to write]",
-	Args: cobra.MinimumNArgs(1),
+	Use:   "write [data to write]",
+	Args:  cobra.MinimumNArgs(1),
 	Short: "Run DB Write",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(dataType) > 8 {
@@ -63,7 +63,7 @@ var writeCmd = &cobra.Command{
 }
 
 var writeTestCmd = &cobra.Command{
-	Use: "writeTest",
+	Use:   "writeTest",
 	Short: "Run DB Write Test",
 	Run: func(cmd *cobra.Command, args []string) {
 		client := NewClient("http://localhost:26657")
@@ -75,7 +75,7 @@ var writeTestCmd = &cobra.Command{
 }
 
 var generateCmd = &cobra.Command{
-	Use: "generate",
+	Use:   "generate",
 	Short: "Generate ED25519 Key Pair",
 	Run: func(cmd *cobra.Command, args []string) {
 		priKey, pubKey, err := ed25519.GenerateKey(nil)
@@ -95,6 +95,3 @@ func init() {
 	Cmd.AddCommand(writeTestCmd)
 	Cmd.AddCommand(generateCmd)
 }
-
-
-
