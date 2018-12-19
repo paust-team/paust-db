@@ -58,6 +58,15 @@ func (db *CRocksDB) Get(key []byte) []byte {
 	return res
 }
 
+func (db *CRocksDB) GetCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error) {
+	ro := db.ReadOption()
+	slice, err := db.db.GetCF(ro, cf, key)
+	if err != nil {
+		return nil, err
+	}
+	return slice, nil
+}
+
 // Implements DB.
 func (db *CRocksDB) Has(key []byte) bool {
 	return db.Get(key) != nil
@@ -138,17 +147,50 @@ func (db *CRocksDB) Stats() map[string]string {
 }
 
 //----------------------------------------
+//ColumnFamily handle
+type cRocksDBCF struct {
+	db  *CRocksDB
+	cfs []*gorocksdb.ColumnFamilyHandle
+}
+
+func (db *CRocksDB) NewCFHandles() ColumnFamily {
+	cfs := []*gorocksdb.ColumnFamilyHandle{}
+	return &cRocksDBCF{db, cfs}
+}
+
+// Create ColumnFamily
+func (cf *cRocksDBCF) CreateCF(name string) error {
+	opts := gorocksdb.NewDefaultOptions()
+	opts.SetCreateIfMissingColumnFamilies(true)
+	opts.SetCreateIfMissing(true)
+
+	cfh, err := cf.db.db.CreateColumnFamily(opts, name)
+	if err != nil {
+		return err
+	}
+
+	cf.cfs = append(cf.cfs, cfh)
+
+	return nil
+}
+
+//getter
+func (cf *cRocksDBCF) GetCFH(index int) *gorocksdb.ColumnFamilyHandle {
+	return cf.cfs[index]
+}
+
+//----------------------------------------
 // Batch
+
+type cRocksDBBatch struct {
+	db    *CRocksDB
+	batch *gorocksdb.WriteBatch
+}
 
 // Implements DB.
 func (db *CRocksDB) NewBatch() Batch {
 	batch := gorocksdb.NewWriteBatch()
 	return &cRocksDBBatch{db, batch}
-}
-
-type cRocksDBBatch struct {
-	db    *CRocksDB
-	batch *gorocksdb.WriteBatch
 }
 
 // Implements Batch.
@@ -159,6 +201,16 @@ func (mBatch *cRocksDBBatch) Set(key, value []byte) {
 // Implements Batch.
 func (mBatch *cRocksDBBatch) Delete(key []byte) {
 	mBatch.batch.Delete(key)
+}
+
+// Implements Batch.
+func (mBatch *cRocksDBBatch) SetCF(cf *gorocksdb.ColumnFamilyHandle, key, value []byte) {
+	mBatch.batch.PutCF(cf, key, value)
+}
+
+// Implements Batch.
+func (mBatch *cRocksDBBatch) DeleteCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) {
+	mBatch.batch.DeleteCF(cf, key)
 }
 
 // Implements Batch.
@@ -307,4 +359,12 @@ func (itr cRocksDBIterator) assertIsValid() {
 	if !itr.Valid() {
 		panic("cRocksDBIterator is invalid")
 	}
+}
+
+func (db *CRocksDB) WriteOption() *gorocksdb.WriteOptions {
+	return db.wo
+}
+
+func (db *CRocksDB) ReadOption() *gorocksdb.ReadOptions {
+	return db.ro
 }
