@@ -1,5 +1,6 @@
 package db
 
+import "C"
 import (
 	"bytes"
 	"fmt"
@@ -18,13 +19,8 @@ type CRocksDB struct {
 
 func NewCRocksDB(name string, dir string) (*CRocksDB, error) {
 	dbPath := filepath.Join(dir, name+".db")
-
-	bbto := gorocksdb.NewDefaultBlockBasedTableOptions()
-	bbto.SetBlockCache(gorocksdb.NewLRUCache(1 << 30))
-	opts := gorocksdb.NewDefaultOptions()
-	opts.SetBlockBasedTableFactory(bbto)
-	opts.SetCreateIfMissing(true)
-	db, err := gorocksdb.OpenDb(opts, dbPath)
+	defaultOpts := NewDefaultOption()
+	db, err := gorocksdb.OpenDb(defaultOpts, dbPath)
 	if err != nil {
 		return nil, err
 	}
@@ -39,6 +35,17 @@ func NewCRocksDB(name string, dir string) (*CRocksDB, error) {
 		woSync: woSync,
 	}
 	return database, nil
+}
+
+func NewDefaultOption() *gorocksdb.Options {
+	bbto := gorocksdb.NewDefaultBlockBasedTableOptions()
+	bbto.SetBlockCache(gorocksdb.NewLRUCache(1 << 30))
+	opts := gorocksdb.NewDefaultOptions()
+	opts.SetBlockBasedTableFactory(bbto)
+	opts.SetCreateIfMissing(true)
+	opts.SetCreateIfMissingColumnFamilies(true)
+
+	return opts
 }
 
 // Implements DB.
