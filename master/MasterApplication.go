@@ -65,12 +65,10 @@ func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciType
 
 func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTypes.ResponseBeginBlock {
 	//Commit이 일어나지 않았을 경우에 batch를 flush 한다.
-
 	return abciTypes.ResponseBeginBlock{}
 }
 
 func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
-
 	var dataSlice = types.DataSlice{}
 	err := json.Unmarshal(tx, &dataSlice)
 	if err != nil {
@@ -90,9 +88,6 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		app.wb.SetCF(app.cfs.GetCFH(0), rowKey, metaByte)
 		app.wb.SetCF(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
 	}
-
-
-
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
 }

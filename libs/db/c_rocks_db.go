@@ -1,6 +1,5 @@
 package db
 
-import "C"
 import (
 	"bytes"
 	"fmt"
@@ -193,6 +192,12 @@ func (db *CRocksDB) NewBatch() Batch {
 	return &cRocksDBBatch{db, batch}
 }
 
+
+type cRocksDBBatch struct {
+	db    *CRocksDB
+	batch *gorocksdb.WriteBatch
+}
+
 // Implements Batch.
 func (mBatch *cRocksDBBatch) Set(key, value []byte) {
 	mBatch.batch.Put(key, value)
@@ -368,3 +373,4 @@ func (db *CRocksDB) WriteOption() *gorocksdb.WriteOptions {
 func (db *CRocksDB) ReadOption() *gorocksdb.ReadOptions {
 	return db.ro
 }
+
