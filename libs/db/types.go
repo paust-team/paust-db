@@ -1,5 +1,7 @@
 package db
 
+import "github.com/tecbot/gorocksdb"
+
 // DBs are goroutine safe.
 type DB interface {
 
@@ -7,6 +9,9 @@ type DB interface {
 	// A nil key is interpreted as an empty byteslice.
 	// CONTRACT: key, value readonly []byte
 	Get([]byte) []byte
+
+	//GetCF
+	GetCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error)
 
 	// Has checks if a key exists.
 	// A nil key is interpreted as an empty byteslice.
@@ -52,6 +57,16 @@ type DB interface {
 
 	// Stats returns a map of property values for all keys and the size of the cache.
 	Stats() map[string]string
+
+	//
+	NewCFHandles() ColumnFamily
+}
+
+//----------------------------------------
+// ColumnFamily
+type ColumnFamily interface {
+	CreateCF(name string) error
+	GetCFH(index int) *gorocksdb.ColumnFamilyHandle
 }
 
 //----------------------------------------
@@ -66,6 +81,8 @@ type Batch interface {
 type SetDeleter interface {
 	Set(key, value []byte) // CONTRACT: key, value readonly []byte
 	Delete(key []byte)     // CONTRACT: key readonly []byte
+	SetCF(cf *gorocksdb.ColumnFamilyHandle, key, value []byte)
+	DeleteCF(cf *gorocksdb.ColumnFamilyHandle, key []byte)
 }
 
 //----------------------------------------

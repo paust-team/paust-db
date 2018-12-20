@@ -1,7 +1,7 @@
 package client
 
 import (
-	"bufio"
+
 	"encoding/base64"
 	"encoding/json"
 	"fmt"

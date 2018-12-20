@@ -18,8 +18,8 @@ type MasterApplication struct {
 	serial bool
 	db     *db.CRocksDB
 	wb     db.Batch
-
-	//caches map[int64]types.Data
+	mwb    db.Batch
+	cfs    db.ColumnFamily
 }
 
 func NewMasterApplication(serial bool, dir string) *MasterApplication {
@@ -45,35 +45,49 @@ func (app *MasterApplication) Info(req abciTypes.RequestInfo) abciTypes.Response
 	}
 }
 
+//gas확인
 func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
 	return abciTypes.ResponseCheckTx{Code: code.CodeTypeOK}
 }
 
 func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciTypes.ResponseInitChain {
+	//Create ColumnFamilyHandles
+	app.cfs = app.db.NewCFHandles()
+	//Create ColumnFamily in rocksdb
+	app.cfs.CreateCF("Meta")
+	app.cfs.CreateCF("Data")
 
 	app.wb = app.db.NewBatch()
-	//app.caches = make(map[int64]types.Data)
+	app.mwb = app.db.NewBatch()
 
 	return abciTypes.ResponseInitChain{}
 }
 
 func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTypes.ResponseBeginBlock {
 	//Commit이 일어나지 않았을 경우에 batch를 flush 한다.
-	app.wb = app.db.NewBatch()
 	return abciTypes.ResponseBeginBlock{}
 }
 
 func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
-	var data = &types.Data{}
-	err := json.Unmarshal(tx, data)
+	var dataSlice = types.DataSlice{}
+	err := json.Unmarshal(tx, &dataSlice)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("dataSlice Unmarshal error",err)
 	}
 
-	fmt.Printf("--------- DeliverTx - tx: %v, time: %d, data: %s\n", tx, data.Timestamp, string(data.Data))
+	for i := 0; i < len(dataSlice); i++ {
+		var metaData = &types.MetaData{}
+		metaData.UserKey = dataSlice[i].UserKey
+		metaData.Type = dataSlice[i].Type
+		metaByte, err := json.Marshal(metaData)
+		if err != nil {
+			fmt.Println("meta 변환 error : ", err)
+		}
 
-	rowKey := types.DataKeyToByteArr(*data)
-	app.wb.Set(rowKey, data.Data)
+		rowKey := types.DataKeyToByteArr(dataSlice[i])
+		app.wb.SetCF(app.cfs.GetCFH(0), rowKey, metaByte)
+		app.wb.SetCF(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
+	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
 }
@@ -84,7 +98,12 @@ func (app *MasterApplication) EndBlock(req abciTypes.RequestEndBlock) abciTypes.
 
 func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	resp.Data = app.hash
+	app.mwb.Write()
 	app.wb.Write()
+
+	//Write후 Batch 비우기
+	app.mwb = app.db.NewBatch()
+	app.wb = app.db.NewBatch()
 
 	return
 }
