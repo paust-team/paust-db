@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+    "bufio"
 	"github.com/paust-team/paust-db/types"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/rpc/client"
