@@ -170,13 +170,12 @@ var queryCmd = &cobra.Command{
 }
 
 var metadataCmd = &cobra.Command{
-	Use:   "metadata start end [public key(base64)] [type(max 20 bytes)]",
-	Args:  cobra.RangeArgs(2, 4),
+	Use:   "metadata start end",
+	Args:  cobra.ExactArgs(2),
 	Short: "Query DB for metadata",
 	Long: `Query DB for metadata.
-'start' and 'end' is essential. 'public key' and 'type' is optional.
-If you want to query for specific type for all users, pass public key
-argument as 'none'.`,
+'start' and 'end' are essential. '-p' and '-t' flags are optional.
+If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		start, err := strconv.ParseInt(args[0], 0, 64)
 		if err != nil {
@@ -191,16 +190,8 @@ argument as 'none'.`,
 		}
 
 		client := NewClient("http://localhost:26657")
-		if len(args) == 2 {
-			client.ReadMetaData(start, end, "", "")
-		} else if len(args) == 3 {
-			client.ReadMetaData(start, end, args[2], "")
-		} else if args[2] == "none" {
-			client.ReadMetaData(start, end, "", args[3])
-		} else {
-			client.ReadMetaData(start, end, args[2], args[3])
-		}
 
+		client.ReadMetaData(start, end, pubKey, dataType)
 	},
 }
 
@@ -214,4 +205,6 @@ func init() {
 	Cmd.AddCommand(generateCmd)
 	Cmd.AddCommand(queryCmd)
 	queryCmd.AddCommand(metadataCmd)
+	metadataCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "", "user's public key (base64)")
+	metadataCmd.Flags().StringVarP(&dataType, "type", "t", "", "data type (max 20 bytes)")
 }
