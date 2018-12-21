@@ -72,7 +72,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	var dataSlice = types.DataSlice{}
 	err := json.Unmarshal(tx, &dataSlice)
 	if err != nil {
-		fmt.Println("dataSlice Unmarshal error",err)
+		fmt.Println("dataSlice Unmarshal error", err)
 	}
 
 	for i := 0; i < len(dataSlice); i++ {
