@@ -57,15 +57,6 @@ func (db *CRocksDB) Get(key []byte) []byte {
 	return res
 }
 
-func (db *CRocksDB) GetCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error) {
-	ro := db.ReadOption()
-	slice, err := db.db.GetCF(ro, cf, key)
-	if err != nil {
-		return nil, err
-	}
-	return slice, nil
-}
-
 // Implements DB.
 func (db *CRocksDB) Has(key []byte) bool {
 	return db.Get(key) != nil

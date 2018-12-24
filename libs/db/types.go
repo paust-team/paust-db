@@ -10,9 +10,6 @@ type DB interface {
 	// CONTRACT: key, value readonly []byte
 	Get([]byte) []byte
 
-	//GetCF
-	GetCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error)
-
 	// Has checks if a key exists.
 	// A nil key is interpreted as an empty byteslice.
 	// CONTRACT: key, value readonly []byte
