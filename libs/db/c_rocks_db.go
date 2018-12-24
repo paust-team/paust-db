@@ -148,17 +148,16 @@ func (db *CRocksDB) Stats() map[string]string {
 //----------------------------------------
 //ColumnFamily handle
 type cRocksDBCF struct {
-	db  *CRocksDB
-	cfs []*gorocksdb.ColumnFamilyHandle
+	db                  *CRocksDB
+	columnFamilyHandles []*gorocksdb.ColumnFamilyHandle
 }
 
-func (db *CRocksDB) NewCFHandles() ColumnFamily {
-	cfs := []*gorocksdb.ColumnFamilyHandle{}
-	return &cRocksDBCF{db, cfs}
+func (db *CRocksDB) NewColumnFamilyHandles() ColumnFamily {
+	var columnFamilyHandles []*gorocksdb.ColumnFamilyHandle
+	return &cRocksDBCF{db, columnFamilyHandles}
 }
 
-// Create ColumnFamily
-func (cf *cRocksDBCF) CreateCF(name string) error {
+func (cf *cRocksDBCF) CreateColumnFamily(name string) error {
 	opts := gorocksdb.NewDefaultOptions()
 	opts.SetCreateIfMissingColumnFamilies(true)
 	opts.SetCreateIfMissing(true)
@@ -168,14 +167,13 @@ func (cf *cRocksDBCF) CreateCF(name string) error {
 		return err
 	}
 
-	cf.cfs = append(cf.cfs, cfh)
+	cf.columnFamilyHandles = append(cf.columnFamilyHandles, cfh)
 
 	return nil
 }
 
-//getter
-func (cf *cRocksDBCF) GetCFH(index int) *gorocksdb.ColumnFamilyHandle {
-	return cf.cfs[index]
+func (cf *cRocksDBCF) ColumnFamilyHandle(index int) *gorocksdb.ColumnFamilyHandle {
+	return cf.columnFamilyHandles[index]
 }
 
 //----------------------------------------
@@ -203,12 +201,12 @@ func (mBatch *cRocksDBBatch) Delete(key []byte) {
 }
 
 // Implements Batch.
-func (mBatch *cRocksDBBatch) SetCF(cf *gorocksdb.ColumnFamilyHandle, key, value []byte) {
+func (mBatch *cRocksDBBatch) SetColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key, value []byte) {
 	mBatch.batch.PutCF(cf, key, value)
 }
 
 // Implements Batch.
-func (mBatch *cRocksDBBatch) DeleteCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) {
+func (mBatch *cRocksDBBatch) DeleteColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte) {
 	mBatch.batch.DeleteCF(cf, key)
 }
 
@@ -241,6 +239,11 @@ func (db *CRocksDB) Iterator(start, end []byte) Iterator {
 func (db *CRocksDB) ReverseIterator(start, end []byte) Iterator {
 	itr := db.db.NewIterator(db.ro)
 	return newCRocksDBIterator(itr, start, end, true)
+}
+
+func (db *CRocksDB) IteratorColumnFamily(start, end []byte, cf *gorocksdb.ColumnFamilyHandle) Iterator {
+	itr := db.db.NewIteratorCF(db.ro, cf)
+	return newCRocksDBIterator(itr, start, end, false)
 }
 
 var _ Iterator = (*cRocksDBIterator)(nil)
@@ -346,6 +349,10 @@ func (itr cRocksDBIterator) Next() {
 
 func (itr cRocksDBIterator) Close() {
 	itr.source.Close()
+}
+
+func (itr cRocksDBIterator) Seek(key []byte) {
+	itr.source.Seek(key)
 }
 
 func (itr cRocksDBIterator) assertNoError() {

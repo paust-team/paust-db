@@ -49,24 +49,27 @@ type DB interface {
 	// Closes the connection.
 	Close()
 
-	// Creates a batch for atomic updates.
-	NewBatch() Batch
-
 	// For debugging
 	Print()
 
 	// Stats returns a map of property values for all keys and the size of the cache.
 	Stats() map[string]string
 
-	//
-	NewCFHandles() ColumnFamily
+	// Creates a batch for atomic updates.
+	NewBatch() Batch
+
+	// Specific Column Family Iterator
+	IteratorColumnFamily(start, end []byte, cf *gorocksdb.ColumnFamilyHandle) Iterator
+
+	// Create ColumnFamilyHandle which is nil Slice
+	NewColumnFamilyHandles() ColumnFamily
 }
 
 //----------------------------------------
 // ColumnFamily
 type ColumnFamily interface {
-	CreateCF(name string) error
-	GetCFH(index int) *gorocksdb.ColumnFamilyHandle
+	CreateColumnFamily(name string) error
+	ColumnFamilyHandle(index int) *gorocksdb.ColumnFamilyHandle
 }
 
 //----------------------------------------
@@ -81,8 +84,8 @@ type Batch interface {
 type SetDeleter interface {
 	Set(key, value []byte) // CONTRACT: key, value readonly []byte
 	Delete(key []byte)     // CONTRACT: key readonly []byte
-	SetCF(cf *gorocksdb.ColumnFamilyHandle, key, value []byte)
-	DeleteCF(cf *gorocksdb.ColumnFamilyHandle, key []byte)
+	SetColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key, value []byte)
+	DeleteColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte)
 }
 
 //----------------------------------------
@@ -134,6 +137,9 @@ type Iterator interface {
 
 	// Close releases the Iterator.
 	Close()
+
+	//
+	Seek(key []byte)
 }
 
 // For testing convenience.

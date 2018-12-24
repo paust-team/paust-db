@@ -1,6 +1,7 @@
 package master
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -27,7 +28,7 @@ func NewMasterApplication(serial bool, dir string) *MasterApplication {
 	database, err := db.NewCRocksDB("paustdb", dir)
 
 	if err != nil {
-		println(err)
+		fmt.Println(err)
 	}
 
 	binary.BigEndian.PutUint64(hash, rand.Uint64())
@@ -51,12 +52,15 @@ func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
 }
 
 func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciTypes.ResponseInitChain {
-	//Create ColumnFamilyHandles
-	app.cfs = app.db.NewCFHandles()
-	//Create ColumnFamily in rocksdb
-	app.cfs.CreateCF("Meta")
-	app.cfs.CreateCF("Data")
-
+	app.cfs = app.db.NewColumnFamilyHandles()
+	err := app.cfs.CreateColumnFamily("metadata")
+	if err != nil {
+		fmt.Println(err)
+	}
+	app.cfs.CreateColumnFamily("realdata")
+	if err != nil {
+		fmt.Println(err)
+	}
 	app.wb = app.db.NewBatch()
 	app.mwb = app.db.NewBatch()
 
@@ -64,7 +68,6 @@ func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciType
 }
 
 func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTypes.ResponseBeginBlock {
-	//Commit이 일어나지 않았을 경우에 batch를 flush 한다.
 	return abciTypes.ResponseBeginBlock{}
 }
 
@@ -81,12 +84,12 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		metaData.Type = dataSlice[i].Type
 		metaByte, err := json.Marshal(metaData)
 		if err != nil {
-			fmt.Println("meta 변환 error : ", err)
+			fmt.Println("meta Marshal error : ", err)
 		}
 
-		rowKey := types.DataKeyToByteArr(dataSlice[i])
-		app.wb.SetCF(app.cfs.GetCFH(0), rowKey, metaByte)
-		app.wb.SetCF(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
+		rowKey := types.DataToRowKey(dataSlice[i])
+		app.mwb.SetColumnFamily(app.cfs.ColumnFamilyHandle(0), rowKey, metaByte)
+		app.wb.SetColumnFamily(app.cfs.ColumnFamilyHandle(1), rowKey, dataSlice[i].Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
@@ -101,7 +104,6 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	app.mwb.Write()
 	app.wb.Write()
 
-	//Write후 Batch 비우기
 	app.mwb = app.db.NewBatch()
 	app.wb = app.db.NewBatch()
 
@@ -109,15 +111,65 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 }
 
 func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciTypes.ResponseQuery) {
-	if reqQuery.Path == "/between" {
-		var query = &types.BetweenQuery{}
-		json.Unmarshal(reqQuery.Data, query)
+	if reqQuery.Path == "/metadata" {
+		var query = types.DataQuery{}
+		err := json.Unmarshal(reqQuery.Data, &query)
+		if err != nil {
+			fmt.Println("DataQuery struct unmarshal error", err)
+		}
 
-		fmt.Printf("---- Query - path: /between, query: %v\n", query)
+		metaSlice, _ := app.MetaDataQuery(query)
+		resp.Value, _ = json.Marshal(metaSlice)
 
-		resp.Value = []byte("test")
+	}
+	if reqQuery.Path == "/realdata" {
+		var query = types.DataQuery{}
+		json.Unmarshal(reqQuery.Data, &query)
+
+		dataSlice, _ := app.RealDataQuery(query)
+		resp.Value, _ = json.Marshal(dataSlice)
+
 		return
 	}
 
 	return
+}
+
+func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaResponseSlice, error) {
+	var meta = types.MetaData{}
+	var metaSlice = types.MetaResponseSlice{}
+
+	startByte, endByte := types.CreateStartByteAndEndByte(query)
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.cfs.ColumnFamilyHandle(0))
+	defer itr.Close()
+
+	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+		json.Unmarshal(itr.Value(), &meta)
+		metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		metaSlice = append(metaSlice, metaResp)
+	}
+
+	return metaSlice, nil
+
+}
+
+func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSlice, error) {
+	var data = types.Data{}
+	var dataSlice = types.DataSlice{}
+
+	startByte, endByte := types.CreateStartByteAndEndByte(query)
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.cfs.ColumnFamilyHandle(1))
+	defer itr.Close()
+
+	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+		data = types.RowKeyToData(itr.Key(), itr.Value())
+
+		dataSlice = append(dataSlice, data)
+	}
+
+	return dataSlice, nil
 }
