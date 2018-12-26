@@ -110,48 +110,61 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	/*
 	 * type, UserKey의 nil여부에 따라 4가지 경우가 존재한다.
 	 */
-	if query.Type == "" && query.UserKey == nil {
-		userKey := make([]byte, 32)
-		dType := make([]byte, 20)
-		for i := 0; i < 32; i++ {
-			userKey[i] = 0
+
+	switch {
+	case query.UserKey == nil && query.Type == "":
+		{
+			userKey := make([]byte, 32)
+			dType := make([]byte, 20)
+			for i := 0; i < 32; i++ {
+				userKey[i] = 0x00
+			}
+			for i := 0; i < 20; i++ {
+				dType[i] = 0x00
+			}
+			startByte = append(startByte, userKey...)
+			startByte = append(startByte, dType...)
+			for i := 0; i < 32; i++ {
+				userKey[i] = 0xff
+			}
+			for i := 0; i < 20; i++ {
+				dType[i] = 0xff
+			}
+			endByte = append(endByte, userKey...)
+			endByte = append(endByte, dType...)
 		}
-		for i := 0; i < 20; i++ {
-			dType[i] = 0
+	case query.Type == "":
+		{
+			startByte = append(startByte, query.UserKey...)
+			endByte = append(endByte, query.UserKey...)
+			dType := make([]byte, 20)
+			startByte = append(startByte, dType...)
+			for i := 0; i < 20; i++ {
+				dType[i] = 0xff
+			}
+			endByte = append(endByte, dType...)
 		}
-		startByte = append(startByte, userKey...)
-		startByte = append(startByte, dType...)
-		for i := 0; i < 32; i++ {
-			userKey[i] = 0xff
+	case query.UserKey == nil:
+		{
+			userKey := make([]byte, 32)
+			for i := 0; i < 32; i++ {
+				userKey[i] = 0x00
+			}
+			startByte = append(startByte, userKey...)
+			startByte = append(startByte, []byte(query.Type)...)
+			for i := 0; i < 32; i++ {
+				userKey[i] = 0xff
+			}
+			endByte = append(endByte, userKey...)
+			endByte = append(endByte, []byte(query.Type)...)
 		}
-		for i := 0; i < 20; i++ {
-			dType[i] = 0xff
+	default:
+		{
+			startByte = append(startByte, query.UserKey...)
+			startByte = append(startByte, []byte(query.Type)...)
+			endByte = append(endByte, query.UserKey...)
+			endByte = append(endByte, []byte(query.Type)...)
 		}
-		endByte = append(endByte, userKey...)
-		endByte = append(endByte, dType...)
-	} else if query.Type == "" {
-		startByte = append(startByte, query.UserKey...)
-		endByte = append(endByte, query.UserKey...)
-		dType := make([]byte, 20)
-		startByte = append(startByte, dType...)
-		for i := 0; i < 20; i++ {
-			dType[i] = 0xff
-		}
-		endByte = append(endByte, dType...)
-	} else if query.UserKey == nil {
-		userKey := make([]byte, 32)
-		startByte = append(startByte, userKey...)
-		startByte = append(startByte, []byte(query.Type)...)
-		for i := 0; i < 32; i++ {
-			userKey[i] = 0xff
-		}
-		endByte = append(endByte, userKey...)
-		endByte = append(endByte, []byte(query.Type)...)
-	} else {
-		startByte = append(startByte, query.UserKey...)
-		startByte = append(startByte, []byte(query.Type)...)
-		endByte = append(endByte, query.UserKey...)
-		endByte = append(endByte, []byte(query.Type)...)
 	}
 	startByte = append(startByte, startOffset...)
 	endByte = append(endByte, endOffset...)

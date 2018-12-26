@@ -117,8 +117,9 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 }
 
 func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciTypes.ResponseQuery) {
-	if reqQuery.Path == "/metadata" {
-		var query = types.DataQuery{}
+	var query = types.DataQuery{}
+	switch reqQuery.Path {
+	case "/metadata":
 		err := json.Unmarshal(reqQuery.Data, &query)
 		if err != nil {
 			fmt.Println("DataQuery struct unmarshal error", err)
@@ -127,15 +128,12 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 		metaSlice, _ := app.MetaDataQuery(query)
 		resp.Value, _ = json.Marshal(metaSlice)
 
-	}
-	if reqQuery.Path == "/realdata" {
-		var query = types.DataQuery{}
+	case "/realdata":
 		json.Unmarshal(reqQuery.Data, &query)
 
 		dataSlice, _ := app.RealDataQuery(query)
 		resp.Value, _ = json.Marshal(dataSlice)
 
-		return
 	}
 
 	return
@@ -151,12 +149,40 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 
 	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 		json.Unmarshal(itr.Value(), &meta)
-		metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
-		if err != nil {
-			fmt.Println(err)
+
+		switch {
+		case query.UserKey == nil && query.Type == "":
+			metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+			if err != nil {
+				fmt.Println(err)
+			}
+			metaSlice = append(metaSlice, metaResp)
+		case query.Type == "":
+			if string(query.UserKey) == string(meta.UserKey) {
+				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+				if err != nil {
+					fmt.Println(err)
+				}
+				metaSlice = append(metaSlice, metaResp)
+			}
+		case query.UserKey == nil:
+			if string(query.Type) == string(meta.Type) {
+				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+				if err != nil {
+					fmt.Println(err)
+				}
+				metaSlice = append(metaSlice, metaResp)
+			}
+		default:
+			if string(query.Type) == string(meta.Type) && string(query.UserKey) == string(meta.UserKey) {
+				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+				if err != nil {
+					fmt.Println(err)
+				}
+				metaSlice = append(metaSlice, metaResp)
+			}
 		}
 
-		metaSlice = append(metaSlice, metaResp)
 	}
 
 	return metaSlice, nil
@@ -173,7 +199,6 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 
 	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 		data = types.RowKeyToData(itr.Key(), itr.Value())
-
 		dataSlice = append(dataSlice, data)
 	}
 
