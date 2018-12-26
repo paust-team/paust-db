@@ -57,7 +57,8 @@ func RowKeyToData(key, value []byte) Data {
 	timeOffset := uint64(binary.BigEndian.Uint32(key[60:64]))
 
 	data.Timestamp = int64(timeWindow + timeOffset)
-	data.UserKey = key[8:40]
+	data.UserKey = make([]byte, 32)
+	copy(data.UserKey, key[8:40])
 	data.Type = string(key[40:60])
 	data.Data = value
 
