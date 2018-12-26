@@ -20,7 +20,6 @@ type MasterApplication struct {
 	db     *db.CRocksDB
 	wb     db.Batch
 	mwb    db.Batch
-	cfs    db.ColumnFamily
 }
 
 func NewMasterApplication(serial bool, dir string) *MasterApplication {
@@ -52,15 +51,6 @@ func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
 }
 
 func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciTypes.ResponseInitChain {
-	app.cfs = app.db.NewColumnFamilyHandles()
-	err := app.cfs.CreateColumnFamily("metadata")
-	if err != nil {
-		fmt.Println(err)
-	}
-	app.cfs.CreateColumnFamily("realdata")
-	if err != nil {
-		fmt.Println(err)
-	}
 	app.wb = app.db.NewBatch()
 	app.mwb = app.db.NewBatch()
 
@@ -88,8 +78,8 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		}
 
 		rowKey := types.DataToRowKey(dataSlice[i])
-		app.mwb.SetColumnFamily(app.cfs.ColumnFamilyHandle(0), rowKey, metaByte)
-		app.wb.SetColumnFamily(app.cfs.ColumnFamilyHandle(1), rowKey, dataSlice[i].Data)
+		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(0), rowKey, metaByte)
+		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(1), rowKey, dataSlice[i].Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
@@ -144,7 +134,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 	var metaSlice = types.MetaResponseSlice{}
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
-	itr := app.db.IteratorColumnFamily(startByte, endByte, app.cfs.ColumnFamilyHandle(0))
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(0))
 	//TODO unittest close test
 	defer itr.Close()
 
@@ -195,7 +185,8 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 	var dataSlice = types.DataSlice{}
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
-	itr := app.db.IteratorColumnFamily(startByte, endByte, app.cfs.ColumnFamilyHandle(1))
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(1))
+
 	//TODO unittest close test
 	defer itr.Close()
 
@@ -213,7 +204,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 				dataSlice = append(dataSlice, data)
 			}
 		default:
-			if string(query.Type) == string(data.Type) && string(query.UserKey) == string(data.UserKey){
+			if string(query.Type) == string(data.Type) && string(query.UserKey) == string(data.UserKey) {
 				dataSlice = append(dataSlice, data)
 			}
 		}

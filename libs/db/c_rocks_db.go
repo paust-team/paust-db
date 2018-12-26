@@ -10,28 +10,36 @@ import (
 var _ DB = (*CRocksDB)(nil)
 
 type CRocksDB struct {
-	db     *gorocksdb.DB
-	ro     *gorocksdb.ReadOptions
-	wo     *gorocksdb.WriteOptions
-	woSync *gorocksdb.WriteOptions
+	db                  *gorocksdb.DB
+	ro                  *gorocksdb.ReadOptions
+	wo                  *gorocksdb.WriteOptions
+	woSync              *gorocksdb.WriteOptions
+	columnFamilyHandles gorocksdb.ColumnFamilyHandles
 }
 
 func NewCRocksDB(name string, dir string) (*CRocksDB, error) {
 	dbPath := filepath.Join(dir, name+".db")
+	columnFamilyNames := []string{"default", "metadata", "realdata"}
 	defaultOpts := NewDefaultOption()
-	db, err := gorocksdb.OpenDb(defaultOpts, dbPath)
+	opts := gorocksdb.NewDefaultOptions()
+	db, columnFamilyHandles, err := gorocksdb.OpenDbColumnFamilies(defaultOpts, dbPath, columnFamilyNames, []*gorocksdb.Options{opts, opts, opts})
+	//defer db.Close()
 	if err != nil {
+		fmt.Println("DB open error", err)
 		return nil, err
 	}
+
 	ro := gorocksdb.NewDefaultReadOptions()
 	wo := gorocksdb.NewDefaultWriteOptions()
 	woSync := gorocksdb.NewDefaultWriteOptions()
 	woSync.SetSync(true)
+
 	database := &CRocksDB{
-		db:     db,
-		ro:     ro,
-		wo:     wo,
-		woSync: woSync,
+		db:                  db,
+		ro:                  ro,
+		wo:                  wo,
+		woSync:              woSync,
+		columnFamilyHandles: columnFamilyHandles,
 	}
 	return database, nil
 }
@@ -362,4 +370,8 @@ func (db *CRocksDB) WriteOption() *gorocksdb.WriteOptions {
 
 func (db *CRocksDB) ReadOption() *gorocksdb.ReadOptions {
 	return db.ro
+}
+
+func (db CRocksDB) ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle {
+	return db.columnFamilyHandles[i]
 }
