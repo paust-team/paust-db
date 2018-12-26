@@ -201,8 +201,25 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 
 	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 		data = types.RowKeyToData(itr.Key(), itr.Value())
-		dataSlice = append(dataSlice, data)
+		switch {
+		case query.UserKey == nil && query.Type == "":
+			dataSlice = append(dataSlice, data)
+		case query.Type == "":
+			if string(query.UserKey) == string(data.UserKey) {
+				dataSlice = append(dataSlice, data)
+			}
+		case query.UserKey == nil:
+			if string(query.Type) == string(data.Type) {
+				dataSlice = append(dataSlice, data)
+			}
+		default:
+			if string(query.Type) == string(data.Type) && string(query.UserKey) == string(data.UserKey){
+				dataSlice = append(dataSlice, data)
+			}
+		}
 	}
 
 	return dataSlice, nil
 }
+
+//TODO 단일 스탬프 조회추가?
