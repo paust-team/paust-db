@@ -202,19 +202,17 @@ func (mBatch *cRocksDBBatch) DeleteColumnFamily(cf *gorocksdb.ColumnFamilyHandle
 }
 
 // Implements Batch.
-func (mBatch *cRocksDBBatch) Write() {
+func (mBatch *cRocksDBBatch) Write() error {
 	err := mBatch.db.db.Write(mBatch.db.wo, mBatch.batch)
-	if err != nil {
-		panic(err)
-	}
+
+	return err
 }
 
 // Implements Batch.
-func (mBatch *cRocksDBBatch) WriteSync() {
+func (mBatch *cRocksDBBatch) WriteSync() error {
 	err := mBatch.db.db.Write(mBatch.db.woSync, mBatch.batch)
-	if err != nil {
-		panic(err)
-	}
+
+	return err
 }
 
 //----------------------------------------
