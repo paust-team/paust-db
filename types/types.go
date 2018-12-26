@@ -133,6 +133,7 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 		startByte = append(startByte, query.UserKey...)
 		endByte = append(endByte, query.UserKey...)
 		dType := make([]byte, 20)
+		startByte = append(startByte, dType...)
 		for i := 0; i < 20; i++ {
 			dType[i] = 0xff
 		}
