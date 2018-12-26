@@ -149,7 +149,7 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	} else {
 		startByte = append(startByte, query.UserKey...)
 		startByte = append(startByte, []byte(query.Type)...)
-		endByte = append(startByte, query.UserKey...)
+		endByte = append(endByte, query.UserKey...)
 		endByte = append(endByte, []byte(query.Type)...)
 	}
 	startByte = append(startByte, startOffset...)
