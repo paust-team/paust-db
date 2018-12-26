@@ -59,7 +59,9 @@ func RowKeyToData(key, value []byte) Data {
 	data.Timestamp = int64(timeWindow + timeOffset)
 	data.UserKey = make([]byte, 32)
 	copy(data.UserKey, key[8:40])
-	data.Type = string(key[40:60])
+
+	typeWithoutPadding := deleteTypePadding(key[40:60])
+	data.Type = string(typeWithoutPadding)
 	data.Data = value
 
 	return data
@@ -75,6 +77,18 @@ func typeToByteArr(dType string) []byte {
 		typeArr[i] = 0
 	}
 
+	return typeArr
+}
+
+func deleteTypePadding(keySlice []byte) []byte {
+	typeArr := make([]byte, 20)
+	for i := 0; i < 20; i++ {
+		if keySlice[i] != 0x00 {
+			typeArr[i] = keySlice[i]
+		} else {
+			i = 20
+		}
+	}
 	return typeArr
 }
 
