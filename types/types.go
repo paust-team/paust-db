@@ -81,10 +81,10 @@ func typeToByteArr(dType string) []byte {
 }
 
 func deleteTypePadding(keySlice []byte) []byte {
-	typeArr := make([]byte, 20)
+	typeArr := make([]byte, 0)
 	for i := 0; i < 20; i++ {
 		if keySlice[i] != 0x00 {
-			typeArr[i] = keySlice[i]
+			typeArr = append(typeArr, keySlice[i])
 		} else {
 			i = 20
 		}
