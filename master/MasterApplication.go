@@ -145,6 +145,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.cfs.ColumnFamilyHandle(0))
+	//TODO unittest close test
 	defer itr.Close()
 
 	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
@@ -195,6 +196,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.cfs.ColumnFamilyHandle(1))
+	//TODO unittest close test
 	defer itr.Close()
 
 	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {

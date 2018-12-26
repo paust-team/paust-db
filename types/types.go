@@ -97,16 +97,13 @@ func MetaDataToMetaResponse(key []byte, meta MetaData) (MetaResponse, error) {
 }
 
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
+// Query가 이상 미만이라고 가정한다. offset이 아닌 timestamp사이의 조회이다.
 func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	startByte := make([]byte, 8)
-	startOffset := make([]byte, 4)
 	endByte := make([]byte, 8)
-	endOffset := make([]byte, 4)
 	binary.BigEndian.PutUint64(startByte, uint64((query.Start/1000000000)*1000000000))
-	binary.BigEndian.PutUint64(endByte, uint64((query.End/1000000000)*1000000000))
-	binary.BigEndian.PutUint32(startOffset, uint32(query.Start%1000000000))
-	binary.BigEndian.PutUint32(endOffset, uint32(query.End%1000000000))
-
+	//미만이므로 -1
+	binary.BigEndian.PutUint64(endByte, uint64((query.End/1000000000)-1)*1000000000)
 	/*
 	 * type, UserKey의 nil여부에 따라 4가지 경우가 존재한다.
 	 */
@@ -116,12 +113,6 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 		{
 			userKey := make([]byte, 32)
 			dType := make([]byte, 20)
-			for i := 0; i < 32; i++ {
-				userKey[i] = 0x00
-			}
-			for i := 0; i < 20; i++ {
-				dType[i] = 0x00
-			}
 			startByte = append(startByte, userKey...)
 			startByte = append(startByte, dType...)
 			for i := 0; i < 32; i++ {
@@ -165,6 +156,11 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 			endByte = append(endByte, query.UserKey...)
 			endByte = append(endByte, []byte(query.Type)...)
 		}
+	}
+	startOffset := make([]byte, 4)
+	endOffset := make([]byte, 4)
+	for i := 0; i < 4; i++ {
+		endOffset[i] = 0xff
 	}
 	startByte = append(startByte, startOffset...)
 	endByte = append(endByte, endOffset...)
