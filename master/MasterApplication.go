@@ -78,8 +78,8 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		}
 
 		rowKey := types.DataToRowKey(dataSlice[i])
-		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(0), rowKey, metaByte)
-		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(1), rowKey, dataSlice[i].Data)
+		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(1), rowKey, metaByte)
+		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(2), rowKey, dataSlice[i].Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
@@ -134,7 +134,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 	var metaSlice = types.MetaResponseSlice{}
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
-	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(0))
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(1))
 	//TODO unittest close test
 	defer itr.Close()
 
@@ -185,7 +185,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 	var dataSlice = types.DataSlice{}
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
-	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(1))
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(2))
 
 	//TODO unittest close test
 	defer itr.Close()
