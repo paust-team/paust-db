@@ -401,7 +401,7 @@ func (db CRocksDB) GetInColumnFamily(opts *gorocksdb.ReadOptions, cf *gorocksdb.
 }
 
 //특정한 ColumnFamily 내에서 Set을 실행한다
-func (db CRocksDB) SetColumnFamily(opts *gorocksdb.WriteOptions, cf *gorocksdb.ColumnFamilyHandle, key, value []byte) error {
+func (db CRocksDB) SetInColumnFamily(opts *gorocksdb.WriteOptions, cf *gorocksdb.ColumnFamilyHandle, key, value []byte) error {
 	return db.db.PutCF(opts, cf, key, value)
 }
 

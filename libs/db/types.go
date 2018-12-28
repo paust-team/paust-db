@@ -9,7 +9,7 @@ type DB interface {
 	// A nil key is interpreted as an empty byteslice.
 	// CONTRACT: key, value readonly []byte
 	Get([]byte) []byte
-	GetColumnFamily(opts *gorocksdb.ReadOptions, cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error)
+	GetInColumnFamily(opts *gorocksdb.ReadOptions, cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error)
 
 	// Has checks if a key exists.
 	// A nil key is interpreted as an empty byteslice.
@@ -21,14 +21,14 @@ type DB interface {
 	// CONTRACT: key, value readonly []byte
 	Set([]byte, []byte)
 	SetSync([]byte, []byte)
-	SetColumnFamily(opts *gorocksdb.WriteOptions, cf *gorocksdb.ColumnFamilyHandle, key, value []byte) error
+	SetInColumnFamily(opts *gorocksdb.WriteOptions, cf *gorocksdb.ColumnFamilyHandle, key, value []byte) error
 
 	// Delete deletes the key.
 	// A nil key is interpreted as an empty byteslice.
 	// CONTRACT: key readonly []byte
 	Delete([]byte)
 	DeleteSync([]byte)
-	DeleteColumnFamily(opts *gorocksdb.WriteOptions, cf *gorocksdb.ColumnFamilyHandle, key []byte) error
+	DeleteInColumnFamily(opts *gorocksdb.WriteOptions, cf *gorocksdb.ColumnFamilyHandle, key []byte) error
 
 	// Iterate over a domain of keys in ascending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
