@@ -133,7 +133,7 @@ func (db *CRocksDB) Print() {
 	fmt.Println("--------------Metadata Column Family--------------")
 	for metaItr.SeekToFirst(); metaItr.Valid(); metaItr.Next() {
 		json.Unmarshal(metaItr.Value(), &meta)
-		metaResp, err := types.MetaDataToMetaResponse(metaItr.Key(), meta)
+		metaResp, err := types.MetaDataAndKeyToMetaResponse(metaItr.Key(), meta)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -141,10 +141,12 @@ func (db *CRocksDB) Print() {
 	}
 
 	fmt.Println("--------------Realdata Column Family--------------")
+
 	for realItr.SeekToFirst(); realItr.Valid(); realItr.Next() {
-		data := types.RowKeyToData(realItr.Key(), realItr.Value())
+		data := types.RowKeyAndValueToData(realItr.Key(), realItr.Value())
 		fmt.Println(data)
 	}
+
 }
 
 // Implements DB.

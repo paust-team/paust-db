@@ -3,6 +3,7 @@ package db
 import (
 	"github.com/stretchr/testify/assert"
 	"github.com/tecbot/gorocksdb"
+	"os"
 	"testing"
 )
 

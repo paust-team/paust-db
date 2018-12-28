@@ -142,7 +142,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 	case query.UserKey == nil && query.Type == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			json.Unmarshal(itr.Value(), &meta)
-			metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+			metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -152,7 +152,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			json.Unmarshal(itr.Value(), &meta)
 			if string(query.UserKey) == string(meta.UserKey) {
-				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -163,7 +163,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			json.Unmarshal(itr.Value(), &meta)
 			if string(query.Type) == string(meta.Type) {
-				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -174,7 +174,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			json.Unmarshal(itr.Value(), &meta)
 			if string(query.Type) == string(meta.Type) && string(query.UserKey) == string(meta.UserKey) {
-				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
+				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -200,12 +200,12 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 	switch {
 	case query.UserKey == nil && query.Type == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyToData(itr.Key(), itr.Value())
+			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
 			dataSlice = append(dataSlice, data)
 		}
 	case query.Type == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyToData(itr.Key(), itr.Value())
+			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
 			if string(query.UserKey) == string(data.UserKey) {
 
 				dataSlice = append(dataSlice, data)
@@ -213,7 +213,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 		}
 	case query.UserKey == nil:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyToData(itr.Key(), itr.Value())
+			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
 			if string(query.Type) == string(data.Type) {
 				dataSlice = append(dataSlice, data)
 
@@ -221,7 +221,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 		}
 	default:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyToData(itr.Key(), itr.Value())
+			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
 			if string(query.Type) == string(data.Type) && string(query.UserKey) == string(data.UserKey) {
 				dataSlice = append(dataSlice, data)
 			}

@@ -39,7 +39,7 @@ func DataToRowKey(data Data) []byte {
 	timestamp := make([]byte, 8)
 	dType := make([]byte, 20)
 	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
-	dType = typeToByteArr(data.Type)
+	dType = TypeToByteArr(data.Type)
 
 	rowKey := append(timestamp, data.UserKey...)
 	rowKey = append(rowKey, dType...)
@@ -47,7 +47,11 @@ func DataToRowKey(data Data) []byte {
 	return rowKey
 }
 
-func RowKeyToData(key, value []byte) Data {
+func RowKeyAndValueToData(key, value []byte) Data {
+
+	if len(key) != 60 {
+		fmt.Println("rowkey len error")
+	}
 	data := Data{}
 
 	timestamp := binary.BigEndian.Uint64(key[0:8])
@@ -56,7 +60,7 @@ func RowKeyToData(key, value []byte) Data {
 	data.UserKey = make([]byte, 32)
 	copy(data.UserKey, key[8:40])
 
-	dType := typeWithoutPadding(key[40:60])
+	dType := TypeWithoutPadding(key[40:60])
 	data.Type = string(dType)
 	data.Data = value
 
@@ -64,7 +68,7 @@ func RowKeyToData(key, value []byte) Data {
 }
 
 //string -> byte with padding
-func typeToByteArr(dType string) []byte {
+func TypeToByteArr(dType string) []byte {
 	typeArr := make([]byte, 20)
 	for i := 0; i < len(dType); i++ {
 		typeArr[i] = dType[i]
@@ -76,7 +80,7 @@ func typeToByteArr(dType string) []byte {
 	return typeArr
 }
 
-func typeWithoutPadding(keySlice []byte) []byte {
+func TypeWithoutPadding(keySlice []byte) []byte {
 	typeArr := make([]byte, 0)
 	for i := 0; i < 20; i++ {
 		if keySlice[i] != 0x00 {
@@ -89,7 +93,7 @@ func typeWithoutPadding(keySlice []byte) []byte {
 }
 
 //MetaResponse에서 offset을 추가한 timestamp
-func MetaDataToMetaResponse(key []byte, meta MetaData) (MetaResponse, error) {
+func MetaDataAndKeyToMetaResponse(key []byte, meta MetaData) (MetaResponse, error) {
 	metaResponse := MetaResponse{}
 
 	if len(key) != 60 {
@@ -129,21 +133,23 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	case query.Type == "":
 		{
 			startByte = append(startByte, query.UserKey...)
-			endByte = append(endByte, userKey...)
 			startByte = append(startByte, dType...)
+			endByte = append(endByte, userKey...)
 			endByte = append(endByte, dType...)
 		}
 	case query.UserKey == nil:
 		{
+			typePadding := TypeToByteArr(query.Type)
 			startByte = append(startByte, userKey...)
-			startByte = append(startByte, []byte(query.Type)...)
+			startByte = append(startByte, typePadding...)
 			endByte = append(endByte, userKey...)
 			endByte = append(endByte, dType...)
 		}
 	default:
 		{
+			typePadding := TypeToByteArr(query.Type)
 			startByte = append(startByte, query.UserKey...)
-			startByte = append(startByte, []byte(query.Type)...)
+			startByte = append(startByte, typePadding...)
 			endByte = append(endByte, userKey...)
 			endByte = append(endByte, dType...)
 		}
