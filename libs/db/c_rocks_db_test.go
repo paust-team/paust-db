@@ -31,7 +31,7 @@ func TestDBCRUD(t *testing.T) {
 	)
 
 	//create
-	assert.Nil(t, db.SetColumnFamily(wo, db.ColumnFamilyHandle(0), givenKey, givenVal1))
+	assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(0), givenKey, givenVal1))
 
 	//retrieve
 	value1, err := db.GetInColumnFamily(ro, db.ColumnFamilyHandle(0), givenKey)
@@ -40,7 +40,7 @@ func TestDBCRUD(t *testing.T) {
 	assert.Equal(t, givenVal1, value1.Data())
 
 	//update
-	assert.Nil(t, db.SetColumnFamily(wo, db.ColumnFamilyHandle(0), givenKey, givenVal2))
+	assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(0), givenKey, givenVal2))
 	value2, err := db.GetInColumnFamily(ro, db.ColumnFamilyHandle(0), givenKey)
 	defer value2.Free()
 	assert.Nil(t, err)
@@ -111,13 +111,13 @@ func TestDBIterator(t *testing.T) {
 
 	wo := gorocksdb.NewDefaultWriteOptions()
 	for _, k := range givenKeys1 {
-		assert.Nil(t, db.SetColumnFamily(wo, db.ColumnFamilyHandle(0), k, []byte("defaultVal")))
+		assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(0), k, []byte("defaultVal")))
 	}
 	for _, k := range givenKeys2 {
-		assert.Nil(t, db.SetColumnFamily(wo, db.ColumnFamilyHandle(1), k, []byte("metaVal")))
+		assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(1), k, []byte("metaVal")))
 	}
 	for _, k := range givenKeys3 {
-		assert.Nil(t, db.SetColumnFamily(wo, db.ColumnFamilyHandle(2), k, []byte("realVal")))
+		assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(2), k, []byte("realVal")))
 	}
 
 	iter1 := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(0))
