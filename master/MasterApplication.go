@@ -138,17 +138,19 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 	//TODO unittest close test
 	defer itr.Close()
 
-	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-		json.Unmarshal(itr.Value(), &meta)
-
-		switch {
-		case query.UserKey == nil && query.Type == "":
+	switch {
+	case query.UserKey == nil && query.Type == "":
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			json.Unmarshal(itr.Value(), &meta)
 			metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
 			if err != nil {
 				fmt.Println(err)
 			}
 			metaSlice = append(metaSlice, metaResp)
-		case query.Type == "":
+		}
+	case query.Type == "":
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			json.Unmarshal(itr.Value(), &meta)
 			if string(query.UserKey) == string(meta.UserKey) {
 				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
 				if err != nil {
@@ -156,7 +158,10 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 				}
 				metaSlice = append(metaSlice, metaResp)
 			}
-		case query.UserKey == nil:
+		}
+	case query.UserKey == nil:
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			json.Unmarshal(itr.Value(), &meta)
 			if string(query.Type) == string(meta.Type) {
 				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
 				if err != nil {
@@ -164,7 +169,10 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 				}
 				metaSlice = append(metaSlice, metaResp)
 			}
-		default:
+		}
+	default:
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			json.Unmarshal(itr.Value(), &meta)
 			if string(query.Type) == string(meta.Type) && string(query.UserKey) == string(meta.UserKey) {
 				metaResp, err := types.MetaDataToMetaResponse(itr.Key(), meta)
 				if err != nil {
@@ -186,31 +194,38 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(2))
-
 	//TODO unittest close test
 	defer itr.Close()
 
-	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-		data = types.RowKeyToData(itr.Key(), itr.Value())
-		switch {
-		case query.UserKey == nil && query.Type == "":
+	switch {
+	case query.UserKey == nil && query.Type == "":
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			data = types.RowKeyToData(itr.Key(), itr.Value())
 			dataSlice = append(dataSlice, data)
-		case query.Type == "":
+		}
+	case query.Type == "":
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			data = types.RowKeyToData(itr.Key(), itr.Value())
 			if string(query.UserKey) == string(data.UserKey) {
+
 				dataSlice = append(dataSlice, data)
 			}
-		case query.UserKey == nil:
+		}
+	case query.UserKey == nil:
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			data = types.RowKeyToData(itr.Key(), itr.Value())
 			if string(query.Type) == string(data.Type) {
 				dataSlice = append(dataSlice, data)
+
 			}
-		default:
+		}
+	default:
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			data = types.RowKeyToData(itr.Key(), itr.Value())
 			if string(query.Type) == string(data.Type) && string(query.UserKey) == string(data.UserKey) {
 				dataSlice = append(dataSlice, data)
 			}
 		}
 	}
-
 	return dataSlice, nil
 }
-
-//TODO 단일 스탬프 조회추가?
