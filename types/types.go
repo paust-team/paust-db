@@ -35,33 +35,29 @@ type MetaResponse struct {
 
 type MetaResponseSlice []MetaResponse
 
-//rowkey = timestamp + userkey + datatype + offset
 func DataToRowKey(data Data) []byte {
 	timestamp := make([]byte, 8)
-	offset := make([]byte, 4)
 	dType := make([]byte, 20)
-	binary.BigEndian.PutUint64(timestamp, uint64((data.Timestamp/1000000000)*1000000000))
-	binary.BigEndian.PutUint32(offset, uint32(data.Timestamp%1000000000))
+	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
 	dType = typeToByteArr(data.Type)
 
 	rowKey := append(timestamp, data.UserKey...)
 	rowKey = append(rowKey, dType...)
-	rowKey = append(rowKey, offset...)
 
 	return rowKey
 }
 
 func RowKeyToData(key, value []byte) Data {
 	data := Data{}
-	timeWindow := binary.BigEndian.Uint64(key[0:8])
-	timeOffset := uint64(binary.BigEndian.Uint32(key[60:64]))
 
-	data.Timestamp = int64(timeWindow + timeOffset)
+	timestamp := binary.BigEndian.Uint64(key[0:8])
+
+	data.Timestamp = int64(timestamp)
 	data.UserKey = make([]byte, 32)
 	copy(data.UserKey, key[8:40])
 
-	typeWithoutPadding := deleteTypePadding(key[40:60])
-	data.Type = string(typeWithoutPadding)
+	dType := typeWithoutPadding(key[40:60])
+	data.Type = string(dType)
 	data.Data = value
 
 	return data
@@ -80,7 +76,7 @@ func typeToByteArr(dType string) []byte {
 	return typeArr
 }
 
-func deleteTypePadding(keySlice []byte) []byte {
+func typeWithoutPadding(keySlice []byte) []byte {
 	typeArr := make([]byte, 0)
 	for i := 0; i < 20; i++ {
 		if keySlice[i] != 0x00 {
@@ -96,14 +92,13 @@ func deleteTypePadding(keySlice []byte) []byte {
 func MetaDataToMetaResponse(key []byte, meta MetaData) (MetaResponse, error) {
 	metaResponse := MetaResponse{}
 
-	if len(key) != 64 {
+	if len(key) != 60 {
 		return metaResponse, errors.New("invalid byte array length")
 	}
 
 	timestamp := binary.BigEndian.Uint64(key[0:8])
-	offset := binary.BigEndian.Uint32(key[60:64])
 
-	metaResponse.Timestamp = int64(timestamp + uint64(offset))
+	metaResponse.Timestamp = int64(timestamp)
 	metaResponse.UserKey = meta.UserKey
 	metaResponse.Type = meta.Type
 
@@ -112,73 +107,47 @@ func MetaDataToMetaResponse(key []byte, meta MetaData) (MetaResponse, error) {
 }
 
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
-// Query가 이상 미만이라고 가정한다. offset이 아닌 timestamp사이의 조회이다.
 func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	startByte := make([]byte, 8)
 	endByte := make([]byte, 8)
-	binary.BigEndian.PutUint64(startByte, uint64((query.Start/1000000000)*1000000000))
-	//미만이므로 -1
-	binary.BigEndian.PutUint64(endByte, uint64((query.End/1000000000)-1)*1000000000)
+
+	binary.BigEndian.PutUint64(startByte, uint64(query.Start))
+	binary.BigEndian.PutUint64(endByte, uint64(query.End))
 	/*
 	 * type, UserKey의 nil여부에 따라 4가지 경우가 존재한다.
 	 */
-
+	userKey := make([]byte, 32)
+	dType := make([]byte, 20)
 	switch {
 	case query.UserKey == nil && query.Type == "":
 		{
-			userKey := make([]byte, 32)
-			dType := make([]byte, 20)
 			startByte = append(startByte, userKey...)
 			startByte = append(startByte, dType...)
-			for i := 0; i < 32; i++ {
-				userKey[i] = 0xff
-			}
-			for i := 0; i < 20; i++ {
-				dType[i] = 0xff
-			}
 			endByte = append(endByte, userKey...)
 			endByte = append(endByte, dType...)
 		}
 	case query.Type == "":
 		{
 			startByte = append(startByte, query.UserKey...)
-			endByte = append(endByte, query.UserKey...)
-			dType := make([]byte, 20)
+			endByte = append(endByte, userKey...)
 			startByte = append(startByte, dType...)
-			for i := 0; i < 20; i++ {
-				dType[i] = 0xff
-			}
 			endByte = append(endByte, dType...)
 		}
 	case query.UserKey == nil:
 		{
-			userKey := make([]byte, 32)
-			for i := 0; i < 32; i++ {
-				userKey[i] = 0x00
-			}
 			startByte = append(startByte, userKey...)
 			startByte = append(startByte, []byte(query.Type)...)
-			for i := 0; i < 32; i++ {
-				userKey[i] = 0xff
-			}
 			endByte = append(endByte, userKey...)
-			endByte = append(endByte, []byte(query.Type)...)
+			endByte = append(endByte, dType...)
 		}
 	default:
 		{
 			startByte = append(startByte, query.UserKey...)
 			startByte = append(startByte, []byte(query.Type)...)
-			endByte = append(endByte, query.UserKey...)
-			endByte = append(endByte, []byte(query.Type)...)
+			endByte = append(endByte, userKey...)
+			endByte = append(endByte, dType...)
 		}
 	}
-	startOffset := make([]byte, 4)
-	endOffset := make([]byte, 4)
-	for i := 0; i < 4; i++ {
-		endOffset[i] = 0xff
-	}
-	startByte = append(startByte, startOffset...)
-	endByte = append(endByte, endOffset...)
 
 	return startByte, endByte
 
