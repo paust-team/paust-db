@@ -2,7 +2,9 @@ package db
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/paust-team/paust-db/types"
 	"github.com/tecbot/gorocksdb"
 	"path/filepath"
 )
@@ -122,18 +124,31 @@ func (db *CRocksDB) Close() {
 
 // Implements DB.
 func (db *CRocksDB) Print() {
-	itr := db.Iterator(nil, nil)
-	defer itr.Close()
-	for ; itr.Valid(); itr.Next() {
-		key := itr.Key()
-		value := itr.Value()
-		fmt.Printf("[%X]:\t[%X]\n", key, value)
+	var meta = types.MetaData{}
+
+	metaItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(1))
+	defer metaItr.Close()
+	realItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(2))
+	defer realItr.Close()
+	fmt.Println("--------------Metadata Column Family--------------")
+	for metaItr.SeekToFirst(); metaItr.Valid(); metaItr.Next() {
+		json.Unmarshal(metaItr.Value(), &meta)
+		metaResp, err := types.MetaDataToMetaResponse(metaItr.Key(), meta)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(metaResp)
+	}
+
+	fmt.Println("--------------Realdata Column Family--------------")
+	for realItr.SeekToFirst(); realItr.Valid(); realItr.Next() {
+		data := types.RowKeyToData(realItr.Key(), realItr.Value())
+		fmt.Println(data)
 	}
 }
 
 // Implements DB.
 func (db *CRocksDB) Stats() map[string]string {
-	// TODO: Find the available properties for the C LevelDB implementation
 	keys := []string{}
 
 	stats := make(map[string]string)
@@ -352,6 +367,10 @@ func (itr cRocksDBIterator) Seek(key []byte) {
 	itr.source.Seek(key)
 }
 
+func (itr cRocksDBIterator) SeekToFirst() {
+	itr.source.SeekToFirst()
+}
+
 func (itr cRocksDBIterator) assertNoError() {
 	if err := itr.source.Err(); err != nil {
 		panic(err)
@@ -374,4 +393,18 @@ func (db *CRocksDB) ReadOption() *gorocksdb.ReadOptions {
 
 func (db CRocksDB) ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle {
 	return db.columnFamilyHandles[i]
+}
+
+//특정한 ColumnFamily 내에서 Get을 실행한다
+func (db CRocksDB) GetInColumnFamily(opts *gorocksdb.ReadOptions, cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error) {
+	return db.db.GetCF(opts, cf, key)
+}
+
+//특정한 ColumnFamily 내에서 Set을 실행한다
+func (db CRocksDB) SetColumnFamily(opts *gorocksdb.WriteOptions, cf *gorocksdb.ColumnFamilyHandle, key, value []byte) error {
+	return db.db.PutCF(opts, cf, key, value)
+}
+
+func (db CRocksDB) DeleteInColumnFamily(opts *gorocksdb.WriteOptions, cf *gorocksdb.ColumnFamilyHandle, key []byte) error {
+	return db.db.DeleteCF(opts, cf, key)
 }
