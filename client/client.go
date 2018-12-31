@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"github.com/paust-team/paust-db/types"
 	"github.com/spf13/cobra"
+	"github.com/tendermint/tendermint/abci/example/code"
+	nm "github.com/tendermint/tendermint/node"
 	"github.com/tendermint/tendermint/rpc/client"
+	ctypes "github.com/tendermint/tendermint/rpc/core/types"
 	"golang.org/x/crypto/ed25519"
 	"io"
 	"io/ioutil"
@@ -30,7 +33,15 @@ func NewClient(remote string) *Client {
 	}
 }
 
-func (client *Client) WriteData(time time.Time, pubKey string, dataType string, data []byte) {
+func NewLocalClient(node *nm.Node) *Client {
+	c := client.NewLocal(node)
+
+	return &Client{
+		client: c,
+	}
+}
+
+func (client *Client) WriteData(time time.Time, pubKey string, dataType string, data []byte) (*ctypes.ResultBroadcastTx, error) {
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(pubKey)
 	if err != nil {
 		fmt.Println(err)
@@ -44,10 +55,11 @@ func (client *Client) WriteData(time time.Time, pubKey string, dataType string, 
 
 	jsonString, _ := json.Marshal(types.DataSlice{types.Data{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Type: dataType, Data: data}})
 
-	client.client.BroadcastTxSync(jsonString)
+	bres, err := client.client.BroadcastTxSync(jsonString)
+	return bres, err
 }
 
-func (client *Client) ReadData(start int64, end int64, pubKey string, dataType string) {
+func (client *Client) ReadData(start int64, end int64, pubKey string, dataType string) (*ctypes.ResultABCIQuery, error) {
 	var pubKeyBytes []byte
 	if pubKey != "" {
 		var err error
@@ -70,24 +82,24 @@ func (client *Client) ReadData(start int64, end int64, pubKey string, dataType s
 
 	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Type: dataType})
 
-	response, _ := client.client.ABCIQuery("/realdata", jsonString)
-	responseJson, _ := json.MarshalIndent(response, "", "\t")
-	fmt.Println(string(responseJson))
+	res, err := client.client.ABCIQuery("/realdata", jsonString)
+	return res, err
 }
 
 // TODO: implement write all files in specific directory.
 // TODO: implement split large size data to many transactions.
-func (client *Client) WriteFile(file string) {
+func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	client.client.BroadcastTxSync(bytes)
+	bres, err := client.client.BroadcastTxSync(bytes)
+	return bres, err
 }
 
-func (client *Client) WriteStdin() {
+func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 	in := bufio.NewReader(os.Stdin)
 	bytes, err := in.ReadBytes(0x00)
 	if err != io.EOF {
@@ -95,10 +107,11 @@ func (client *Client) WriteStdin() {
 		os.Exit(1)
 	}
 
-	client.client.BroadcastTxSync(bytes)
+	bres, err := client.client.BroadcastTxSync(bytes)
+	return bres, err
 }
 
-func (client *Client) ReadMetaData(start int64, end int64, pubKey string, dataType string) {
+func (client *Client) ReadMetaData(start int64, end int64, pubKey string, dataType string) (*ctypes.ResultABCIQuery, error) {
 	var pubKeyBytes []byte
 	if pubKey != "" {
 		var err error
@@ -120,12 +133,11 @@ func (client *Client) ReadMetaData(start int64, end int64, pubKey string, dataTy
 
 	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Type: dataType})
 
-	response, _ := client.client.ABCIQuery("/metadata", jsonString)
-	responseJson, _ := json.MarshalIndent(response, "", "\t")
-	fmt.Println(string(responseJson))
+	res, err := client.client.ABCIQuery("/metadata", jsonString)
+	return res, err
 }
 
-var pubKey, dataType, filePath string
+var writePubKey, writeDataType, pubKey, dataType, filePath string
 
 var Cmd = &cobra.Command{
 	Use:   "client",
@@ -149,12 +161,40 @@ var writeCmd = &cobra.Command{
 
 		client := NewClient("http://localhost:26657")
 
-		if stdin == true {
-			client.WriteStdin()
-		} else if filePath != "" {
-			client.WriteFile(filePath)
-		} else {
-			client.WriteData(time.Now(), pubKey, dataType, []byte(strings.Join(args, " ")))
+		switch {
+		case stdin == true:
+			bres, err := client.WriteStdin()
+			if err != nil {
+				fmt.Printf("err: %+v", err)
+				os.Exit(1)
+			}
+			if bres.Code == code.CodeTypeOK {
+				fmt.Println("Write success.")
+			} else {
+				fmt.Println("Write fail.")
+			}
+		case filePath != "":
+			bres, err := client.WriteFile(filePath)
+			if err != nil {
+				fmt.Printf("err: %+v", err)
+				os.Exit(1)
+			}
+			if bres.Code == code.CodeTypeOK {
+				fmt.Println("Write success.")
+			} else {
+				fmt.Println("Write fail.")
+			}
+		default:
+			bres, err := client.WriteData(time.Now(), writePubKey, writeDataType, []byte(strings.Join(args, " ")))
+			if err != nil {
+				fmt.Printf("err: %+v", err)
+				os.Exit(1)
+			}
+			if bres.Code == code.CodeTypeOK {
+				fmt.Println("Write success.")
+			} else {
+				fmt.Println("Write fail.")
+			}
 		}
 	},
 }
@@ -208,8 +248,13 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 		client := NewClient("http://localhost:26657")
 
-		client.ReadData(start, end, pubKey, dataType)
+		res, err := client.ReadData(start, end, pubKey, dataType)
+		if err != nil {
+			fmt.Printf("err: %+v", err)
+			os.Exit(1)
+		}
 
+		fmt.Println(string(res.Response.Value))
 	},
 }
 
@@ -240,13 +285,19 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 		client := NewClient("http://localhost:26657")
 
-		client.ReadMetaData(start, end, pubKey, dataType)
+		res, err := client.ReadMetaData(start, end, pubKey, dataType)
+		if err != nil {
+			fmt.Printf("err: %+v", err)
+			os.Exit(1)
+		}
+
+		fmt.Println(string(res.Response.Value))
 	},
 }
 
 func init() {
-	writeCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
-	writeCmd.Flags().StringVarP(&dataType, "type", "t", "test", "Data type (max 20 bytes)")
+	writeCmd.Flags().StringVarP(&writePubKey, "pubkey", "p", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
+	writeCmd.Flags().StringVarP(&writeDataType, "type", "t", "test", "Data type (max 20 bytes)")
 	writeCmd.Flags().StringVarP(&filePath, "file", "f", "", "File path")
 	writeCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
 	Cmd.AddCommand(writeCmd)
