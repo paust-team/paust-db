@@ -10,7 +10,7 @@ type Data struct {
 	//Timestamp는 client에서 nano단위로 들어옴.
 	Timestamp int64  `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
-	Qualifier string `json:"type"`
+	Qualifier string `json:"qualifier"`
 	Data      []byte `json:"data"`
 }
 
@@ -18,32 +18,32 @@ type DataSlice []Data
 
 type MetaData struct {
 	UserKey   []byte `json:"userKey"`
-	Qualifier string `json:"type"`
+	Qualifier string `json:"qualifier"`
 }
 
 type DataQuery struct {
 	Start     int64  `json:"start"`
 	End       int64  `json:"end"`
 	UserKey   []byte `json:"userKey"`
-	Qualifier string `json:"type"`
+	Qualifier string `json:"qualifier"`
 }
 
 type MetaResponse struct {
 	Timestamp int64  `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
-	Qualifier string `json:"type"`
+	Qualifier string `json:"qualifier"`
 }
 
 type MetaResponseSlice []MetaResponse
 
 func DataToRowKey(data Data) []byte {
 	timestamp := make([]byte, 8)
-	dType := make([]byte, 20)
+	qualifier := make([]byte, 20)
 	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
-	dType = TypeToByteArr(data.Qualifier)
+	qualifier = QualifierToByteArr(data.Qualifier)
 
 	rowKey := append(timestamp, data.UserKey...)
-	rowKey = append(rowKey, dType...)
+	rowKey = append(rowKey, qualifier...)
 
 	return rowKey
 }
@@ -61,36 +61,36 @@ func RowKeyAndValueToData(key, value []byte) Data {
 	data.UserKey = make([]byte, 32)
 	copy(data.UserKey, key[8:40])
 
-	dType := TypeWithoutPadding(key[40:60])
-	data.Qualifier = string(dType)
+	qualifier := QualifierWithoutPadding(key[40:60])
+	data.Qualifier = string(qualifier)
 	data.Data = value
 
 	return data
 }
 
 //string -> byte with padding
-func TypeToByteArr(dType string) []byte {
-	typeArr := make([]byte, 20)
-	for i := 0; i < len(dType); i++ {
-		typeArr[i] = dType[i]
+func QualifierToByteArr(qualifier string) []byte {
+	qualifierArr := make([]byte, 20)
+	for i := 0; i < len(qualifier); i++ {
+		qualifierArr[i] = qualifier[i]
 	}
-	for i := len(dType); i < 20; i++ {
-		typeArr[i] = 0
+	for i := len(qualifier); i < 20; i++ {
+		qualifierArr[i] = 0
 	}
 
-	return typeArr
+	return qualifierArr
 }
 
-func TypeWithoutPadding(keySlice []byte) []byte {
-	typeArr := make([]byte, 0)
+func QualifierWithoutPadding(keySlice []byte) []byte {
+	qualifierArr := make([]byte, 0)
 	for i := 0; i < 20; i++ {
 		if keySlice[i] != 0x00 {
-			typeArr = append(typeArr, keySlice[i])
+			qualifierArr = append(qualifierArr, keySlice[i])
 		} else {
 			i = 20
 		}
 	}
-	return typeArr
+	return qualifierArr
 }
 
 //MetaResponse에서 offset을 추가한 timestamp
@@ -122,37 +122,37 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	 * type, UserKey의 nil여부에 따라 4가지 경우가 존재한다.
 	 */
 	userKey := make([]byte, 32)
-	dType := make([]byte, 20)
+	qualifier := make([]byte, 20)
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
 		{
 			startByte = append(startByte, userKey...)
-			startByte = append(startByte, dType...)
+			startByte = append(startByte, qualifier...)
 			endByte = append(endByte, userKey...)
-			endByte = append(endByte, dType...)
+			endByte = append(endByte, qualifier...)
 		}
 	case query.Qualifier == "":
 		{
 			startByte = append(startByte, query.UserKey...)
-			startByte = append(startByte, dType...)
+			startByte = append(startByte, qualifier...)
 			endByte = append(endByte, userKey...)
-			endByte = append(endByte, dType...)
+			endByte = append(endByte, qualifier...)
 		}
 	case query.UserKey == nil:
 		{
-			typePadding := TypeToByteArr(query.Qualifier)
+			typePadding := QualifierToByteArr(query.Qualifier)
 			startByte = append(startByte, userKey...)
 			startByte = append(startByte, typePadding...)
 			endByte = append(endByte, userKey...)
-			endByte = append(endByte, dType...)
+			endByte = append(endByte, qualifier...)
 		}
 	default:
 		{
-			typePadding := TypeToByteArr(query.Qualifier)
+			typePadding := QualifierToByteArr(query.Qualifier)
 			startByte = append(startByte, query.UserKey...)
 			startByte = append(startByte, typePadding...)
 			endByte = append(endByte, userKey...)
-			endByte = append(endByte, dType...)
+			endByte = append(endByte, qualifier...)
 		}
 	}
 

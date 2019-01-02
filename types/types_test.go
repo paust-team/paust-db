@@ -49,7 +49,7 @@ func TestTypeToByteArr(t *testing.T) {
 		0x0, 0x0, 0x0, 0x0}
 
 	//when
-	actualVal := TypeToByteArr(givenType)
+	actualVal := QualifierToByteArr(givenType)
 
 	//then
 	assert.Equal(t, expectValue, actualVal)
@@ -62,7 +62,7 @@ func TestTypeWithoutPadding(t *testing.T) {
 	expectValue := []byte{0x43, 0x6f, 0x6d, 0x70, 0x75, 0x74, 0x65, 0x72}
 
 	//when
-	actualValue := TypeWithoutPadding(givenKeySlice)
+	actualValue := QualifierWithoutPadding(givenKeySlice)
 
 	//then
 	assert.Equal(t, expectValue, actualValue)
