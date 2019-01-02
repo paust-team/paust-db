@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/suite"
 	"github.com/tecbot/gorocksdb"
 	"os"
 	"testing"
@@ -13,23 +13,49 @@ const (
 	perm   = 0777
 )
 
-func TestNewCRocksDB(t *testing.T) {
-	SetDir()
-	db, err := NewCRocksDB(dbName, dir)
-	defer db.Close()
-	assert.NotNil(t, db)
-	assert.Nil(t, err)
+type DBSuite struct {
+	suite.Suite
+	DB	*CRocksDB
+}
 
+func (suite *DBSuite) SetupTest() {
+	var err error
+	SetDir()
+	suite.DB, err = NewCRocksDB(dbName, dir)
+
+	suite.NotNil(suite.DB, "db open error %v", err)
+	suite.Nil(err, "db open error %v", err)
+
+}
+
+func (suite *DBSuite) TearDownTest() {
+	suite.DB.Close()
 	os.RemoveAll(dir)
 }
 
-func TestDBCRUD(t *testing.T) {
-	SetDir()
-	db, err := NewCRocksDB(dbName, dir)
-	defer db.Close()
-	assert.NotNil(t, db)
-	assert.Nil(t, err)
+func (suite *DBSuite) TestDBCreateRetrieve() {
 
+	var (
+		givenKey  = []byte("hello")
+		givenVal = []byte("world1")
+		wo        = gorocksdb.NewDefaultWriteOptions()
+		ro        = gorocksdb.NewDefaultReadOptions()
+	)
+	defer wo.Destroy()
+	defer ro.Destroy()
+
+	//create
+	err := suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(0), givenKey, givenVal)
+	suite.Nil(err, "Default columnfamily Set error : %v", err)
+
+	//retrieve
+	value1, err1 := suite.DB.GetInColumnFamily(ro, suite.DB.ColumnFamilyHandle(0), givenKey)
+	defer value1.Free()
+	suite.Nil(err1, "Default columnfamily Get error : %v", err1)
+	suite.Equal(givenVal, value1.Data())
+}
+
+func (suite *DBSuite) TestDBUpdate() {
 	var (
 		givenKey  = []byte("hello")
 		givenVal1 = []byte("world1")
@@ -37,143 +63,158 @@ func TestDBCRUD(t *testing.T) {
 		wo        = gorocksdb.NewDefaultWriteOptions()
 		ro        = gorocksdb.NewDefaultReadOptions()
 	)
+	defer wo.Destroy()
+	defer ro.Destroy()
 
 	//create
-	assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(0), givenKey, givenVal1))
-
-	//retrieve
-	value1, err := db.GetInColumnFamily(ro, db.ColumnFamilyHandle(0), givenKey)
-	defer value1.Free()
-	assert.Nil(t, err)
-	assert.Equal(t, givenVal1, value1.Data())
+	err := suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(0), givenKey, givenVal1)
+	suite.Nil(err, "Default columnfamily Set error : %v", err)
 
 	//update
-	assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(0), givenKey, givenVal2))
-	value2, err := db.GetInColumnFamily(ro, db.ColumnFamilyHandle(0), givenKey)
+	suite.Nil(suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(0), givenKey, givenVal2))
+	value2, err2 := suite.DB.GetInColumnFamily(ro, suite.DB.ColumnFamilyHandle(0), givenKey)
 	defer value2.Free()
-	assert.Nil(t, err)
-	assert.Equal(t, givenVal2, value2.Data())
+	suite.Nil(err2, "Default columnfamily Update error : %v", err2)
+	suite.Equal(givenVal2, value2.Data())
 
-	//delete
-	assert.Nil(t, db.DeleteInColumnFamily(wo, db.ColumnFamilyHandle(0), givenKey))
-	value3, err := db.GetInColumnFamily(ro, db.ColumnFamilyHandle(0), givenKey)
-
-	assert.Nil(t, err)
-	assert.Nil(t, value3.Data())
-
-	os.RemoveAll(dir)
 }
 
-func TestColumnFamilyBatchPutGet(t *testing.T) {
-	SetDir()
-	db, err := NewCRocksDB(dbName, dir)
-	defer db.Close()
-	assert.NotNil(t, db)
-	assert.Nil(t, err)
+func (suite *DBSuite) TestDBDelete() {
+	var (
+		givenKey  = []byte("hello")
+		givenVal = []byte("world1")
+		wo        = gorocksdb.NewDefaultWriteOptions()
+		ro        = gorocksdb.NewDefaultReadOptions()
+	)
+	defer wo.Destroy()
+	defer ro.Destroy()
 
-	assert.Equal(t, 3, len(db.columnFamilyHandles), "The number of ColumnFamilyHandles should be 3")
-	defer db.columnFamilyHandles[0].Destroy()
-	defer db.columnFamilyHandles[1].Destroy()
-	defer db.columnFamilyHandles[2].Destroy()
+	//create
+	err := suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(0), givenKey, givenVal)
+	suite.Nil(err, "Default columnfamily Set error : %v", err)
 
+	//delete
+	err3 := suite.DB.DeleteInColumnFamily(wo, suite.DB.ColumnFamilyHandle(0), givenKey)
+	suite.Nil(err3, "Default columnfamily Delete error : %v", err3)
+
+	value3, err4 := suite.DB.GetInColumnFamily(ro, suite.DB.ColumnFamilyHandle(0), givenKey)
+	defer value3.Free()
+	suite.Nil(err4, "Default columnfamily Get error : %v", err4)
+	suite.Nil(value3.Data())
+}
+
+func (suite *DBSuite) TestColumnFamilyLength() {
+	suite.Equal(3, len(suite.DB.columnFamilyHandles), "The number of ColumnFamilys should be 3")
+}
+
+func (suite *DBSuite) TestColumnFamilyBatchPutGet() {
 	wo := gorocksdb.NewDefaultWriteOptions()
 	defer wo.Destroy()
+
+	givenKey := []byte("Key")
+	givenValue := []byte("Value")
+
+	batch := suite.DB.NewBatch()
+	batch.SetColumnFamily(suite.DB.ColumnFamilyHandle(0), givenKey, givenValue)
+	batchWriteErr := batch.Write()
+	suite.Nil(batchWriteErr, "Batch MetaColumnFamily Write Error : %v", batchWriteErr)
+
 	ro := gorocksdb.NewDefaultReadOptions()
 	defer ro.Destroy()
 
-	metaGivenKey := []byte("metaKey")
-	metaGivenValue := []byte("metaValue")
-	realGivenKey := []byte("realKey")
-	realGivenValue := []byte("realValue")
-
-	metaBatch := db.NewBatch()
-	metaBatch.SetColumnFamily(db.columnFamilyHandles[1], metaGivenKey, metaGivenValue)
-	assert.Nil(t, metaBatch.Write())
-
-	metaActualValue, err := db.GetInColumnFamily(ro, db.ColumnFamilyHandle(1), metaGivenKey)
-	defer metaActualValue.Free()
-	assert.Nil(t, err)
-	assert.Equal(t, metaGivenValue, metaActualValue.Data())
-
-	realBatch := db.NewBatch()
-	realBatch.SetColumnFamily(db.columnFamilyHandles[2], realGivenKey, realGivenValue)
-	assert.Nil(t, realBatch.Write())
-
-	realActualValue, err := db.GetInColumnFamily(ro, db.ColumnFamilyHandle(2), realGivenKey)
-	defer realActualValue.Free()
-	assert.Nil(t, err)
-	assert.Equal(t, realGivenValue, realActualValue.Data())
-
-	os.RemoveAll(dir)
+	actualValue, err1 := suite.DB.GetInColumnFamily(ro, suite.DB.ColumnFamilyHandle(0), givenKey)
+	defer actualValue.Free()
+	suite.Nil(err1, "MetaColumnFamily Get Error : %v", err1)
+	suite.Equal(givenValue, actualValue.Data())
 }
 
-func TestPrint(t *testing.T) {
-	SetDir()
-	db, err := NewCRocksDB(dbName, dir)
-	defer db.Close()
-	assert.NotNil(t, db)
-	assert.Nil(t, err)
-
-	db.Print()
-
-	os.RemoveAll(dir)
-}
-
-func TestDBIterator(t *testing.T) {
-	SetDir()
-	db, err := NewCRocksDB(dbName, dir)
-	defer db.Close()
-	assert.NotNil(t, db)
-	assert.Nil(t, err)
-
+func (suite *DBSuite) TestDBIteratorDefault() {
 	// insert Keys
 	givenKeys1 := [][]byte{[]byte("default1"), []byte("default2"), []byte("default3")}
-	givenKeys2 := [][]byte{[]byte("meta1"), []byte("meta2"), []byte("meta3")}
-	givenKeys3 := [][]byte{[]byte("real1"), []byte("real2"), []byte("real3")}
 
 	wo := gorocksdb.NewDefaultWriteOptions()
 	for _, k := range givenKeys1 {
-		assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(0), k, []byte("defaultVal")))
-	}
-	for _, k := range givenKeys2 {
-		assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(1), k, []byte("metaVal")))
-	}
-	for _, k := range givenKeys3 {
-		assert.Nil(t, db.SetInColumnFamily(wo, db.ColumnFamilyHandle(2), k, []byte("realVal")))
+		suite.Nil(suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(0), k, []byte("defaultVal")))
 	}
 
-	iter1 := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(0))
+	iter1 := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(0))
 	defer iter1.Close()
-	iter2 := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(1))
-	defer iter2.Close()
-	iter3 := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(2))
-	defer iter3.Close()
 
 	var actualKeys1 [][]byte
-	var actualKeys2 [][]byte
-	var actualKeys3 [][]byte
+
 	for iter1.SeekToFirst(); iter1.Valid(); iter1.Next() {
 		key := make([]byte, 8)
 		copy(key, iter1.Key())
 		actualKeys1 = append(actualKeys1, key)
 	}
-	assert.Equal(t, givenKeys1, actualKeys1)
+	suite.Equal(givenKeys1, actualKeys1)
+}
 
-	for iter2.SeekToFirst(); iter2.Valid(); iter2.Next() {
-		key := make([]byte, 5)
-		copy(key, iter2.Key())
-		actualKeys2 = append(actualKeys2, key)
+func (suite *DBSuite) TestDBIteratorMetaColumnFamily() {
+	// insert Keys
+	givenKeys := [][]byte{[]byte("meta1"), []byte("meta2"), []byte("meta3")}
+
+	wo := gorocksdb.NewDefaultWriteOptions()
+	for _, k := range givenKeys {
+		suite.Nil(suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(1), k, []byte("metaVal")))
 	}
-	assert.Equal(t, givenKeys2, actualKeys2)
 
-	for iter3.SeekToFirst(); iter3.Valid(); iter3.Next() {
+	iter := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(1))
+	defer iter.Close()
+
+	var actualKeys [][]byte
+
+	for iter.SeekToFirst(); iter.Valid(); iter.Next() {
 		key := make([]byte, 5)
-		copy(key, iter3.Key())
-		actualKeys3 = append(actualKeys3, key)
+		copy(key, iter.Key())
+		actualKeys = append(actualKeys, key)
 	}
-	assert.Equal(t, givenKeys3, actualKeys3)
 
-	os.RemoveAll(dir)
+	suite.Equal(givenKeys, actualKeys)
+
+}
+
+func (suite *DBSuite) TestDBIteratorRealColumnFamily() {
+	// insert Keys
+	givenKeys := [][]byte{[]byte("real1"), []byte("real2"), []byte("real3")}
+
+	wo := gorocksdb.NewDefaultWriteOptions()
+	for _, k := range givenKeys {
+		suite.Nil(suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(2), k, []byte("realVal")))
+	}
+
+	iter := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(2))
+	defer iter.Close()
+
+	var actualKeys [][]byte
+
+	for iter.SeekToFirst(); iter.Valid(); iter.Next() {
+		key := make([]byte, 5)
+		copy(key, iter.Key())
+		actualKeys = append(actualKeys, key)
+	}
+	suite.Equal(givenKeys, actualKeys)
+}
+
+func (suite *DBSuite) TestPrint() {
+	// insert Keys
+	key := []byte{0x15, 0x74, 0x6f, 0x3d, 0x98, 0x65, 0x1f, 0x98, 0xa2, 0x29, 0x9d, 0xf1, 0x97, 0x73, 0x81,
+		0x41, 0xf3, 0x17, 0xd0, 0x8f, 0xa, 0x12, 0x54, 0xf2, 0x6, 0xfc, 0xf5, 0x56, 0x8c, 0x62, 0xf, 0xb5, 0x4a, 0x95,
+		0xfa, 0x59, 0x3f, 0x27, 0x40, 0x71, 0x74, 0x65, 0x73, 0x74, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+		0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
+	value := []byte("test1")
+	wo := gorocksdb.NewDefaultWriteOptions()
+	defer wo.Destroy()
+
+	suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(0), key, value)
+	suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(1), key, value)
+	suite.DB.SetInColumnFamily(wo, suite.DB.ColumnFamilyHandle(2), key, value)
+
+	suite.DB.Print()
+}
+
+func TestSuite(t *testing.T) {
+	suite.Run(t, new(DBSuite))
 }
 
 func SetDir() {
