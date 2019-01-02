@@ -13,7 +13,7 @@ const (
 )
 
 func TestNewCRocksDB(t *testing.T) {
-	dirSetting()
+	SetDir()
 	db, err := NewCRocksDB(dbName, dir)
 	defer db.Close()
 	if db == nil || err != nil {
@@ -23,7 +23,7 @@ func TestNewCRocksDB(t *testing.T) {
 }
 
 func TestDBCRUD(t *testing.T) {
-	dirSetting()
+	SetDir()
 	db, err := NewCRocksDB(dbName, dir)
 	defer db.Close()
 	if db == nil || err != nil {
@@ -65,7 +65,7 @@ func TestDBCRUD(t *testing.T) {
 }
 
 func TestColumnFamilyBatchPutGet(t *testing.T) {
-	dirSetting()
+	SetDir()
 	db, err := NewCRocksDB(dbName, dir)
 	defer db.Close()
 	if db == nil || err != nil {
@@ -109,7 +109,7 @@ func TestColumnFamilyBatchPutGet(t *testing.T) {
 }
 
 func TestPrint(t *testing.T) {
-	dirSetting()
+	SetDir()
 	db, err := NewCRocksDB(dbName, dir)
 	defer db.Close()
 	if db == nil || err != nil {
@@ -122,7 +122,7 @@ func TestPrint(t *testing.T) {
 }
 
 func TestDBIterator(t *testing.T) {
-	dirSetting()
+	SetDir()
 	db, err := NewCRocksDB(dbName, dir)
 	defer db.Close()
 	if db == nil || err != nil {
@@ -179,7 +179,7 @@ func TestDBIterator(t *testing.T) {
 	os.RemoveAll(dir)
 }
 
-func dirSetting() {
+func SetDir() {
 	os.RemoveAll(dir)
 	os.Mkdir(dir, 0777)
 }
