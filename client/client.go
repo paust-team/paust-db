@@ -42,7 +42,7 @@ func (client *Client) WriteData(time time.Time, pubKey string, dataType string, 
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.DataSlice{types.Data{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Type: dataType, Data: data}})
+	jsonString, _ := json.Marshal(types.DataSlice{types.Data{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: dataType, Data: data}})
 
 	client.client.BroadcastTxSync(jsonString)
 }
@@ -68,7 +68,7 @@ func (client *Client) ReadData(start int64, end int64, pubKey string, dataType s
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Type: dataType})
+	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Qualifier: dataType})
 
 	response, _ := client.client.ABCIQuery("/realdata", jsonString)
 	responseJson, _ := json.MarshalIndent(response, "", "\t")
@@ -118,7 +118,7 @@ func (client *Client) ReadMetaData(start int64, end int64, pubKey string, dataTy
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Type: dataType})
+	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Qualifier: dataType})
 
 	response, _ := client.client.ABCIQuery("/metadata", jsonString)
 	responseJson, _ := json.MarshalIndent(response, "", "\t")

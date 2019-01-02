@@ -71,7 +71,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	for i := 0; i < len(dataSlice); i++ {
 		var metaData = &types.MetaData{}
 		metaData.UserKey = dataSlice[i].UserKey
-		metaData.Type = dataSlice[i].Type
+		metaData.Qualifier = dataSlice[i].Qualifier
 		metaByte, err := json.Marshal(metaData)
 		if err != nil {
 			fmt.Println("meta Marshal error : ", err)
@@ -139,7 +139,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 	defer itr.Close()
 
 	switch {
-	case query.UserKey == nil && query.Type == "":
+	case query.UserKey == nil && query.Qualifier == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			json.Unmarshal(itr.Value(), &meta)
 			metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
@@ -148,7 +148,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 			}
 			metaSlice = append(metaSlice, metaResp)
 		}
-	case query.Type == "":
+	case query.Qualifier == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			json.Unmarshal(itr.Value(), &meta)
 			if string(query.UserKey) == string(meta.UserKey) {
@@ -162,7 +162,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 	case query.UserKey == nil:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			json.Unmarshal(itr.Value(), &meta)
-			if string(query.Type) == string(meta.Type) {
+			if string(query.Qualifier) == string(meta.Qualifier) {
 				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
@@ -173,7 +173,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 	default:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			json.Unmarshal(itr.Value(), &meta)
-			if string(query.Type) == string(meta.Type) && string(query.UserKey) == string(meta.UserKey) {
+			if string(query.Qualifier) == string(meta.Qualifier) && string(query.UserKey) == string(meta.UserKey) {
 				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
@@ -198,12 +198,12 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 	defer itr.Close()
 
 	switch {
-	case query.UserKey == nil && query.Type == "":
+	case query.UserKey == nil && query.Qualifier == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
 			dataSlice = append(dataSlice, data)
 		}
-	case query.Type == "":
+	case query.Qualifier == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
 			if string(query.UserKey) == string(data.UserKey) {
@@ -214,7 +214,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 	case query.UserKey == nil:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
-			if string(query.Type) == string(data.Type) {
+			if string(query.Qualifier) == string(data.Qualifier) {
 				dataSlice = append(dataSlice, data)
 
 			}
@@ -222,7 +222,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 	default:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
 			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
-			if string(query.Type) == string(data.Type) && string(query.UserKey) == string(data.UserKey) {
+			if string(query.Qualifier) == string(data.Qualifier) && string(query.UserKey) == string(data.UserKey) {
 				dataSlice = append(dataSlice, data)
 			}
 		}

@@ -10,28 +10,28 @@ type Data struct {
 	//Timestamp는 client에서 nano단위로 들어옴.
 	Timestamp int64  `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
-	Type      string `json:"type"`
+	Qualifier string `json:"type"`
 	Data      []byte `json:"data"`
 }
 
 type DataSlice []Data
 
 type MetaData struct {
-	UserKey []byte `json:"userKey"`
-	Type    string `json:"type"`
+	UserKey   []byte `json:"userKey"`
+	Qualifier string `json:"type"`
 }
 
 type DataQuery struct {
-	Start   int64  `json:"start"`
-	End     int64  `json:"end"`
-	UserKey []byte `json:"userKey"`
-	Type    string `json:"type"`
+	Start     int64  `json:"start"`
+	End       int64  `json:"end"`
+	UserKey   []byte `json:"userKey"`
+	Qualifier string `json:"type"`
 }
 
 type MetaResponse struct {
 	Timestamp int64  `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
-	Type      string `json:"type"`
+	Qualifier string `json:"type"`
 }
 
 type MetaResponseSlice []MetaResponse
@@ -40,7 +40,7 @@ func DataToRowKey(data Data) []byte {
 	timestamp := make([]byte, 8)
 	dType := make([]byte, 20)
 	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
-	dType = TypeToByteArr(data.Type)
+	dType = TypeToByteArr(data.Qualifier)
 
 	rowKey := append(timestamp, data.UserKey...)
 	rowKey = append(rowKey, dType...)
@@ -62,7 +62,7 @@ func RowKeyAndValueToData(key, value []byte) Data {
 	copy(data.UserKey, key[8:40])
 
 	dType := TypeWithoutPadding(key[40:60])
-	data.Type = string(dType)
+	data.Qualifier = string(dType)
 	data.Data = value
 
 	return data
@@ -105,7 +105,7 @@ func MetaDataAndKeyToMetaResponse(key []byte, meta MetaData) (MetaResponse, erro
 
 	metaResponse.Timestamp = int64(timestamp)
 	metaResponse.UserKey = meta.UserKey
-	metaResponse.Type = meta.Type
+	metaResponse.Qualifier = meta.Qualifier
 
 	return metaResponse, nil
 
@@ -124,14 +124,14 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	userKey := make([]byte, 32)
 	dType := make([]byte, 20)
 	switch {
-	case query.UserKey == nil && query.Type == "":
+	case query.UserKey == nil && query.Qualifier == "":
 		{
 			startByte = append(startByte, userKey...)
 			startByte = append(startByte, dType...)
 			endByte = append(endByte, userKey...)
 			endByte = append(endByte, dType...)
 		}
-	case query.Type == "":
+	case query.Qualifier == "":
 		{
 			startByte = append(startByte, query.UserKey...)
 			startByte = append(startByte, dType...)
@@ -140,7 +140,7 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 		}
 	case query.UserKey == nil:
 		{
-			typePadding := TypeToByteArr(query.Type)
+			typePadding := TypeToByteArr(query.Qualifier)
 			startByte = append(startByte, userKey...)
 			startByte = append(startByte, typePadding...)
 			endByte = append(endByte, userKey...)
@@ -148,7 +148,7 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 		}
 	default:
 		{
-			typePadding := TypeToByteArr(query.Type)
+			typePadding := TypeToByteArr(query.Qualifier)
 			startByte = append(startByte, query.UserKey...)
 			startByte = append(startByte, typePadding...)
 			endByte = append(endByte, userKey...)
