@@ -126,10 +126,20 @@ func (db *CRocksDB) Close() {
 func (db *CRocksDB) Print() {
 	var meta = types.MetaData{}
 
+	defaultItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(0))
+	defer defaultItr.Close()
+
 	metaItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(1))
 	defer metaItr.Close()
 	realItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(2))
 	defer realItr.Close()
+
+	fmt.Println("--------------Default Column Family--------------")
+	for defaultItr.SeekToFirst(); defaultItr.Valid(); defaultItr.Next() {
+		fmt.Println("key : ", defaultItr.Key())
+		fmt.Println("value : ",defaultItr.Value())
+	}
+
 	fmt.Println("--------------Metadata Column Family--------------")
 	for metaItr.SeekToFirst(); metaItr.Valid(); metaItr.Next() {
 		json.Unmarshal(metaItr.Value(), &meta)
@@ -137,14 +147,16 @@ func (db *CRocksDB) Print() {
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println(metaResp)
+		fmt.Println("key : ", metaItr.Key())
+		fmt.Println("value : ", metaResp)
 	}
 
 	fmt.Println("--------------Realdata Column Family--------------")
 
 	for realItr.SeekToFirst(); realItr.Valid(); realItr.Next() {
 		data := types.RowKeyAndValueToData(realItr.Key(), realItr.Value())
-		fmt.Println(data)
+		fmt.Println("key : ", realItr.Key())
+		fmt.Println("value: ", data)
 	}
 
 }
