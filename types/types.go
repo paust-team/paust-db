@@ -119,7 +119,7 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	binary.BigEndian.PutUint64(startByte, uint64(query.Start))
 	binary.BigEndian.PutUint64(endByte, uint64(query.End))
 	/*
-	 * type, UserKey의 nil여부에 따라 4가지 경우가 존재한다.
+	 * Qualifier, UserKey의 nil여부에 따라 4가지 경우가 존재한다.
 	 */
 	userKey := make([]byte, 32)
 	qualifier := make([]byte, 20)
@@ -140,17 +140,17 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 		}
 	case query.UserKey == nil:
 		{
-			typePadding := QualifierToByteArr(query.Qualifier)
+			qualifierPadding := QualifierToByteArr(query.Qualifier)
 			startByte = append(startByte, userKey...)
-			startByte = append(startByte, typePadding...)
+			startByte = append(startByte, qualifierPadding...)
 			endByte = append(endByte, userKey...)
 			endByte = append(endByte, qualifier...)
 		}
 	default:
 		{
-			typePadding := QualifierToByteArr(query.Qualifier)
+			qualifierPadding := QualifierToByteArr(query.Qualifier)
 			startByte = append(startByte, query.UserKey...)
-			startByte = append(startByte, typePadding...)
+			startByte = append(startByte, qualifierPadding...)
 			endByte = append(endByte, userKey...)
 			endByte = append(endByte, qualifier...)
 		}

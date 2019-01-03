@@ -42,20 +42,20 @@ func TestRowKeyAndValueToData(t *testing.T) {
 	assert.Equal(t, expectData, actualData)
 }
 
-func TestTypeToByteArr(t *testing.T) {
+func TestQualifierToByteArr(t *testing.T) {
 	//given
-	givenType := "Computer"
+	givenQualifier := "Computer"
 	expectValue := []byte{0x43, 0x6f, 0x6d, 0x70, 0x75, 0x74, 0x65, 0x72, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0}
 
 	//when
-	actualVal := QualifierToByteArr(givenType)
+	actualVal := QualifierToByteArr(givenQualifier)
 
 	//then
 	assert.Equal(t, expectValue, actualVal)
 }
 
-func TestTypeWithoutPadding(t *testing.T) {
+func TestQualifierWithoutPadding(t *testing.T) {
 	//given
 	givenKeySlice := []byte{0x43, 0x6f, 0x6d, 0x70, 0x75, 0x74, 0x65, 0x72, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0}
