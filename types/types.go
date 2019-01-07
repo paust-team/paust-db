@@ -8,52 +8,45 @@ type Data struct {
 	//Timestamp는 client에서 nano단위로 들어옴.
 	Timestamp int64  `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
-	Type      string `json:"type"`
+	Qualifier string `json:"qualifier"`
 	Data      []byte `json:"data"`
 }
 
 type DataSlice []Data
 
 type MetaData struct {
-	UserKey []byte `json:"userKey"`
-	Type    string `json:"type"`
+	UserKey   []byte `json:"userKey"`
+	Qualifier string `json:"qualifier"`
 }
 
 type DataQuery struct {
-	Start   int64  `json:"start"`
-	End     int64  `json:"end"`
-	UserKey []byte `json:"userKey"`
-	Type    string `json:"type"`
+	Start     int64  `json:"start"`
+	End       int64  `json:"end"`
+	UserKey   []byte `json:"userKey"`
+	Qualifier string `json:"qualifier"`
 }
 
-//rowkey = timestamp + userkey + datatype + offset
-func DataKeyToByteArr(data Data) []byte {
-
+func DataToRowKey(data Data) []byte {
 	timestamp := make([]byte, 8)
-	binary.BigEndian.PutUint64(timestamp, uint64((data.Timestamp/1000000000)*1000000000))
+	qualifier := make([]byte, 20)
+	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
+	qualifier = QualifierToByteArr(data.Qualifier)
 
-	offset := make([]byte, 4)
-	binary.BigEndian.PutUint32(offset, uint32(data.Timestamp%1000000000))
+	rowKey := append(timestamp, data.UserKey...)
+	rowKey = append(rowKey, qualifier...)
 
-	dType := make([]byte, 20)
-	dType = typeToByteArr(data.Type)
-
-	ret := append(timestamp, data.UserKey...)
-	ret = append(ret, dType...)
-	ret = append(ret, offset...)
-
-	return ret
+	return rowKey
 }
 
 //string -> byte with padding
-func typeToByteArr(dType string) []byte {
-	ret := make([]byte, 20)
-	for i := 0; i < len(dType); i++ {
-		ret[i] = dType[i]
+func QualifierToByteArr(qualifier string) []byte {
+	qualifierArr := make([]byte, 20)
+	for i := 0; i < len(qualifier); i++ {
+		qualifierArr[i] = qualifier[i]
 	}
-	for i := len(dType); i < 20; i++ {
-		ret[i] = 0
+	for i := len(qualifier); i < 20; i++ {
+		qualifierArr[i] = 0
 	}
 
-	return ret
+	return qualifierArr
 }
