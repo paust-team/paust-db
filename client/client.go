@@ -41,7 +41,7 @@ func NewLocalClient(node *nm.Node) *Client {
 	}
 }
 
-func (client *Client) WriteData(time time.Time, pubKey string, dataType string, data []byte) (*ctypes.ResultBroadcastTx, error) {
+func (client *Client) WriteData(time time.Time, pubKey string, qualifier string, data []byte) (*ctypes.ResultBroadcastTx, error) {
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(pubKey)
 	if err != nil {
 		fmt.Println(err)
@@ -53,13 +53,13 @@ func (client *Client) WriteData(time time.Time, pubKey string, dataType string, 
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.DataSlice{types.Data{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Type: dataType, Data: data}})
+	jsonString, _ := json.Marshal(types.DataSlice{types.Data{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
 	return bres, err
 }
 
-func (client *Client) ReadData(start int64, end int64, pubKey string, dataType string) (*ctypes.ResultABCIQuery, error) {
+func (client *Client) ReadData(start int64, end int64, pubKey string, qualifier string) (*ctypes.ResultABCIQuery, error) {
 	var pubKeyBytes []byte
 	if pubKey != "" {
 		var err error
@@ -75,12 +75,12 @@ func (client *Client) ReadData(start int64, end int64, pubKey string, dataType s
 		}
 	}
 
-	if len(dataType) > 20 {
-		fmt.Printf("type: \"%v\" is bigger than 20 bytes", dataType)
+	if len(qualifier) > 20 {
+		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes", qualifier)
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Type: dataType})
+	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Qualifier: qualifier})
 
 	res, err := client.client.ABCIQuery("/realdata", jsonString)
 	return res, err
@@ -111,7 +111,7 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 	return bres, err
 }
 
-func (client *Client) ReadMetaData(start int64, end int64, pubKey string, dataType string) (*ctypes.ResultABCIQuery, error) {
+func (client *Client) ReadMetaData(start int64, end int64, pubKey string, qualifier string) (*ctypes.ResultABCIQuery, error) {
 	var pubKeyBytes []byte
 	if pubKey != "" {
 		var err error
@@ -126,18 +126,18 @@ func (client *Client) ReadMetaData(start int64, end int64, pubKey string, dataTy
 			os.Exit(1)
 		}
 	}
-	if len(dataType) > 20 {
-		fmt.Printf("type: \"%v\" is bigger than 20 bytes", dataType)
+	if len(qualifier) > 20 {
+		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes", qualifier)
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Type: dataType})
+	jsonString, _ := json.Marshal(types.DataQuery{Start: start, End: end, UserKey: pubKeyBytes, Qualifier: qualifier})
 
 	res, err := client.client.ABCIQuery("/metadata", jsonString)
 	return res, err
 }
 
-var writePubKey, writeDataType, pubKey, dataType, filePath string
+var writePubKey, writeQualifier, pubKey, qualifier, filePath string
 
 var Cmd = &cobra.Command{
 	Use:   "client",
@@ -150,8 +150,8 @@ var writeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		stdin, _ := cmd.Flags().GetBool("stdin")
 
-		if len(dataType) > 20 {
-			log.Fatalf("type: \"%v\" is bigger than 20 bytes", dataType)
+		if len(writeQualifier) > 20 {
+			log.Fatalf("qualifier: \"%v\" is bigger than 20 bytes", writeQualifier)
 		}
 
 		if stdin == false && filePath == "" && len(args) == 0 {
@@ -185,7 +185,7 @@ var writeCmd = &cobra.Command{
 				fmt.Println("Write fail.")
 			}
 		default:
-			bres, err := client.WriteData(time.Now(), writePubKey, writeDataType, []byte(strings.Join(args, " ")))
+			bres, err := client.WriteData(time.Now(), writePubKey, writeQualifier, []byte(strings.Join(args, " ")))
 			if err != nil {
 				fmt.Printf("err: %+v", err)
 				os.Exit(1)
@@ -206,7 +206,7 @@ var writeTestCmd = &cobra.Command{
 		client := NewClient("http://localhost:26657")
 
 		for i := 0; i < 3; i++ {
-			client.WriteData(time.Now(), "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", dataType, []byte(fmt.Sprintf("test-%d", i)))
+			client.WriteData(time.Now(), "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", writeQualifier, []byte(fmt.Sprintf("test-%d", i)))
 		}
 	},
 }
@@ -231,7 +231,7 @@ var realdataCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Short: "Query DB for real data",
 	Long: `Query DB for real data.
-'start' and 'end' are essential. '-p' and '-t' flags are optional.
+'start' and 'end' are essential. '-p' and '-q' flags are optional.
 If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		start, err := strconv.ParseInt(args[0], 0, 64)
@@ -248,7 +248,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 		client := NewClient("http://localhost:26657")
 
-		res, err := client.ReadData(start, end, pubKey, dataType)
+		res, err := client.ReadData(start, end, pubKey, qualifier)
 		if err != nil {
 			fmt.Printf("err: %+v", err)
 			os.Exit(1)
@@ -268,7 +268,7 @@ var metadataCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(2),
 	Short: "Query DB for metadata",
 	Long: `Query DB for metadata.
-'start' and 'end' are essential. '-p' and '-t' flags are optional.
+'start' and 'end' are essential. '-p' and '-q' flags are optional.
 If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		start, err := strconv.ParseInt(args[0], 0, 64)
@@ -285,7 +285,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 		client := NewClient("http://localhost:26657")
 
-		res, err := client.ReadMetaData(start, end, pubKey, dataType)
+		res, err := client.ReadMetaData(start, end, pubKey, qualifier)
 		if err != nil {
 			fmt.Printf("err: %+v", err)
 			os.Exit(1)
@@ -297,7 +297,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 func init() {
 	writeCmd.Flags().StringVarP(&writePubKey, "pubkey", "p", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
-	writeCmd.Flags().StringVarP(&writeDataType, "type", "t", "test", "Data type (max 20 bytes)")
+	writeCmd.Flags().StringVarP(&writeQualifier, "qualifier", "q", "test", "Data qualifier (max 20 bytes)")
 	writeCmd.Flags().StringVarP(&filePath, "file", "f", "", "File path")
 	writeCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
 	Cmd.AddCommand(writeCmd)
@@ -306,8 +306,8 @@ func init() {
 	Cmd.AddCommand(queryCmd)
 	queryCmd.AddCommand(metadataCmd)
 	metadataCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "", "user's public key (base64)")
-	metadataCmd.Flags().StringVarP(&dataType, "type", "t", "", "data type (max 20 bytes)")
+	metadataCmd.Flags().StringVarP(&qualifier, "qualifier", "q", "", "data qualifier (max 20 bytes)")
 	queryCmd.AddCommand(realdataCmd)
 	realdataCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "", "user's public key (base64)")
-	realdataCmd.Flags().StringVarP(&dataType, "type", "t", "", "data type (max 20 bytes)")
+	realdataCmd.Flags().StringVarP(&qualifier, "qualifier", "q", "", "data qualifier (max 20 bytes)")
 }
