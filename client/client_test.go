@@ -15,8 +15,8 @@ var node *nm.Node
 var testDir string
 
 const (
-	TestPubKey   = "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE="
-	TestDataType = "testType"
+	TestPubKey    = "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE="
+	TestQualifier = "testQualifier"
 )
 
 type ClientTestSuite struct {
