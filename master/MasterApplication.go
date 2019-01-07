@@ -78,15 +78,15 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	for i := 0; i < len(dataSlice); i++ {
 		var metaData = &types.MetaData{}
 		metaData.UserKey = dataSlice[i].UserKey
-		metaData.Type = dataSlice[i].Type
+		metaData.Qualifier = dataSlice[i].Qualifier
 		metaByte, err := json.Marshal(metaData)
 		if err != nil {
 			fmt.Println("meta 변환 error : ", err)
 		}
 
-		rowKey := types.DataKeyToByteArr(dataSlice[i])
+		rowKey := types.DataToRowKey(dataSlice[i])
 		app.wb.SetCF(app.cfs.GetCFH(0), rowKey, metaByte)
-		app.wb.SetCF(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
+		app.mwb.SetCF(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
