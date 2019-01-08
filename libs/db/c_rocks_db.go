@@ -213,11 +213,12 @@ func (mBatch *cRocksDBBatch) DeleteCF(cf *gorocksdb.ColumnFamilyHandle, key []by
 }
 
 // Implements Batch.
-func (mBatch *cRocksDBBatch) Write() {
+func (mBatch *cRocksDBBatch) Write() error{
 	err := mBatch.db.db.Write(mBatch.db.wo, mBatch.batch)
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 // Implements Batch.
