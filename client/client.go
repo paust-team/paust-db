@@ -172,6 +172,7 @@ var writeCmd = &cobra.Command{
 				fmt.Println("Write success.")
 			} else {
 				fmt.Println("Write fail.")
+				fmt.Println(bres.Log)
 			}
 		case filePath != "":
 			bres, err := client.WriteFile(filePath)
@@ -183,6 +184,7 @@ var writeCmd = &cobra.Command{
 				fmt.Println("Write success.")
 			} else {
 				fmt.Println("Write fail.")
+				fmt.Println(bres.Log)
 			}
 		default:
 			bres, err := client.WriteData(time.Now(), writePubKey, writeQualifier, []byte(strings.Join(args, " ")))
@@ -194,6 +196,7 @@ var writeCmd = &cobra.Command{
 				fmt.Println("Write success.")
 			} else {
 				fmt.Println("Write fail.")
+				fmt.Println(bres.Log)
 			}
 		}
 	},
