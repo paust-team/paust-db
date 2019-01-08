@@ -58,15 +58,8 @@ type DB interface {
 	// Stats returns a map of property values for all keys and the size of the cache.
 	Stats() map[string]string
 
-	//
-	NewCFHandles() ColumnFamily
-}
-
-//----------------------------------------
-// ColumnFamily
-type ColumnFamily interface {
-	CreateCF(name string) error
-	GetCFH(index int) *gorocksdb.ColumnFamilyHandle
+	//Get specific columnFamilyhandle
+	ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle
 }
 
 //----------------------------------------

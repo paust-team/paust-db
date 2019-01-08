@@ -10,16 +10,27 @@ import (
 var _ DB = (*CRocksDB)(nil)
 
 type CRocksDB struct {
-	db     *gorocksdb.DB
-	ro     *gorocksdb.ReadOptions
-	wo     *gorocksdb.WriteOptions
-	woSync *gorocksdb.WriteOptions
+	db                  *gorocksdb.DB
+	ro                  *gorocksdb.ReadOptions
+	wo                  *gorocksdb.WriteOptions
+	woSync              *gorocksdb.WriteOptions
+	columnFamilyHandles gorocksdb.ColumnFamilyHandles
 }
 
-func NewCRocksDB(name string, dir string) (*CRocksDB, error) {
+func NewCRocksDB(name, dir string) (*CRocksDB, error) {
 	dbPath := filepath.Join(dir, name+".db")
-	defaultOpts := NewDefaultOption()
-	db, err := gorocksdb.OpenDb(defaultOpts, dbPath)
+	columnFamilyNames := []string{"default", "metadata", "realdata"}
+
+	bbto := gorocksdb.NewDefaultBlockBasedTableOptions()
+	bbto.SetBlockCache(gorocksdb.NewLRUCache(1 << 30))
+	defaultOpts := gorocksdb.NewDefaultOptions()
+	defaultOpts.SetBlockBasedTableFactory(bbto)
+	defaultOpts.SetCreateIfMissing(true)
+	defaultOpts.SetCreateIfMissingColumnFamilies(true)
+
+	opts := gorocksdb.NewDefaultOptions()
+	db, columnFamilyHandles, err := gorocksdb.OpenDbColumnFamilies(defaultOpts, dbPath, columnFamilyNames, []*gorocksdb.Options{opts, opts, opts})
+
 	if err != nil {
 		return nil, err
 	}
@@ -28,23 +39,13 @@ func NewCRocksDB(name string, dir string) (*CRocksDB, error) {
 	woSync := gorocksdb.NewDefaultWriteOptions()
 	woSync.SetSync(true)
 	database := &CRocksDB{
-		db:     db,
-		ro:     ro,
-		wo:     wo,
-		woSync: woSync,
+		db:                  db,
+		ro:                  ro,
+		wo:                  wo,
+		woSync:              woSync,
+		columnFamilyHandles: columnFamilyHandles,
 	}
 	return database, nil
-}
-
-func NewDefaultOption() *gorocksdb.Options {
-	bbto := gorocksdb.NewDefaultBlockBasedTableOptions()
-	bbto.SetBlockCache(gorocksdb.NewLRUCache(1 << 30))
-	opts := gorocksdb.NewDefaultOptions()
-	opts.SetBlockBasedTableFactory(bbto)
-	opts.SetCreateIfMissing(true)
-	opts.SetCreateIfMissingColumnFamilies(true)
-
-	return opts
 }
 
 // Implements DB.
@@ -145,37 +146,8 @@ func (db *CRocksDB) Stats() map[string]string {
 	return stats
 }
 
-//----------------------------------------
-//ColumnFamily handle
-type cRocksDBCF struct {
-	db  *CRocksDB
-	cfs []*gorocksdb.ColumnFamilyHandle
-}
-
-func (db *CRocksDB) NewCFHandles() ColumnFamily {
-	cfs := []*gorocksdb.ColumnFamilyHandle{}
-	return &cRocksDBCF{db, cfs}
-}
-
-// Create ColumnFamily
-func (cf *cRocksDBCF) CreateCF(name string) error {
-	opts := gorocksdb.NewDefaultOptions()
-	opts.SetCreateIfMissingColumnFamilies(true)
-	opts.SetCreateIfMissing(true)
-
-	cfh, err := cf.db.db.CreateColumnFamily(opts, name)
-	if err != nil {
-		return err
-	}
-
-	cf.cfs = append(cf.cfs, cfh)
-
-	return nil
-}
-
-//getter
-func (cf *cRocksDBCF) GetCFH(index int) *gorocksdb.ColumnFamilyHandle {
-	return cf.cfs[index]
+func (db CRocksDB) ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle {
+	return db.columnFamilyHandles[i]
 }
 
 //----------------------------------------
