@@ -32,12 +32,15 @@ func NewCRocksDB(name, dir string) (*CRocksDB, error) {
 	db, columnFamilyHandles, err := gorocksdb.OpenDbColumnFamilies(defaultOpts, dbPath, columnFamilyNames, []*gorocksdb.Options{opts, opts, opts})
 
 	if err != nil {
+		fmt.Println("DB open error", err)
 		return nil, err
 	}
+
 	ro := gorocksdb.NewDefaultReadOptions()
 	wo := gorocksdb.NewDefaultWriteOptions()
 	woSync := gorocksdb.NewDefaultWriteOptions()
 	woSync.SetSync(true)
+
 	database := &CRocksDB{
 		db:                  db,
 		ro:                  ro,
@@ -48,6 +51,49 @@ func NewCRocksDB(name, dir string) (*CRocksDB, error) {
 	return database, nil
 }
 
+func (db CRocksDB) GetInColumnFamily(index int, key []byte) (*gorocksdb.Slice, error) {
+	return db.db.GetCF(db.ro, db.ColumnFamilyHandle(index), key)
+}
+
+func (db CRocksDB) SetInColumnFamily(index int, key, value []byte) error {
+	return db.db.PutCF(db.wo, db.ColumnFamilyHandle(index), key, value)
+}
+
+func (db *CRocksDB) IteratorColumnFamily(start, end []byte, cf *gorocksdb.ColumnFamilyHandle) Iterator {
+	itr := db.db.NewIteratorCF(db.ro, cf)
+	return newCRocksDBIterator(itr, start, end, false)
+}
+
+// Implements DB.
+func (db *CRocksDB) NewBatch() Batch {
+	batch := gorocksdb.NewWriteBatch()
+	return &cRocksDBBatch{db, batch}
+}
+
+// Implements DB.
+func (db *CRocksDB) DB() *gorocksdb.DB {
+	return db.db
+}
+
+// Implements DB.
+func (db *CRocksDB) WriteOption() *gorocksdb.WriteOptions {
+	return db.wo
+}
+
+// Implements DB.
+func (db *CRocksDB) ReadOption() *gorocksdb.ReadOptions {
+	return db.ro
+}
+
+// Implements DB.
+func (db CRocksDB) ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle {
+	return db.columnFamilyHandles[i]
+}
+
+/*
+	Below DB methods are for test
+*/
+
 // Implements DB.
 func (db *CRocksDB) Get(key []byte) []byte {
 	key = nonNilBytes(key)
@@ -56,15 +102,6 @@ func (db *CRocksDB) Get(key []byte) []byte {
 		panic(err)
 	}
 	return res
-}
-
-func (db *CRocksDB) GetInColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error) {
-	ro := db.ReadOption()
-	slice, err := db.db.GetCF(ro, cf, key)
-	if err != nil {
-		return nil, err
-	}
-	return slice, nil
 }
 
 // Implements DB.
@@ -110,8 +147,21 @@ func (db *CRocksDB) DeleteSync(key []byte) {
 	}
 }
 
-func (db *CRocksDB) DB() *gorocksdb.DB {
-	return db.db
+// Implements DB.
+func (db CRocksDB) DeleteInColumnFamily(index int, key []byte) error {
+	return db.db.DeleteCF(db.wo, db.ColumnFamilyHandle(index), key)
+}
+
+// Implements DB.
+func (db *CRocksDB) Iterator(start, end []byte) Iterator {
+	itr := db.db.NewIterator(db.ro)
+	return newCRocksDBIterator(itr, start, end, false)
+}
+
+// Implements DB.
+func (db *CRocksDB) ReverseIterator(start, end []byte) Iterator {
+	itr := db.db.NewIterator(db.ro)
+	return newCRocksDBIterator(itr, start, end, true)
 }
 
 // Implements DB.
@@ -135,7 +185,6 @@ func (db *CRocksDB) Print() {
 
 // Implements DB.
 func (db *CRocksDB) Stats() map[string]string {
-	// TODO: Find the available properties for the C LevelDB implementation
 	keys := []string{}
 
 	stats := make(map[string]string)
@@ -146,32 +195,13 @@ func (db *CRocksDB) Stats() map[string]string {
 	return stats
 }
 
-func (db CRocksDB) ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle {
-	return db.columnFamilyHandles[i]
-}
-
 //----------------------------------------
 // Batch
+var _ Batch = (*cRocksDBBatch)(nil)
 
 type cRocksDBBatch struct {
 	db    *CRocksDB
 	batch *gorocksdb.WriteBatch
-}
-
-// Implements DB.
-func (db *CRocksDB) NewBatch() Batch {
-	batch := gorocksdb.NewWriteBatch()
-	return &cRocksDBBatch{db, batch}
-}
-
-// Implements Batch.
-func (mBatch *cRocksDBBatch) Set(key, value []byte) {
-	mBatch.batch.Put(key, value)
-}
-
-// Implements Batch.
-func (mBatch *cRocksDBBatch) Delete(key []byte) {
-	mBatch.batch.Delete(key)
 }
 
 // Implements Batch.
@@ -192,6 +222,10 @@ func (mBatch *cRocksDBBatch) Write() error {
 	return nil
 }
 
+/*
+	Below Batch methods are for test
+*/
+
 // Implements Batch.
 func (mBatch *cRocksDBBatch) WriteSync() error {
 	if err := mBatch.db.db.Write(mBatch.db.woSync, mBatch.batch); err != nil {
@@ -200,21 +234,18 @@ func (mBatch *cRocksDBBatch) WriteSync() error {
 	return nil
 }
 
+// Implements Batch.
+func (mBatch *cRocksDBBatch) Set(key, value []byte) {
+	mBatch.batch.Put(key, value)
+}
+
+// Implements Batch.
+func (mBatch *cRocksDBBatch) Delete(key []byte) {
+	mBatch.batch.Delete(key)
+}
+
 //----------------------------------------
 // Iterator
-// NOTE This is almost identical to db/go_level_db.Iterator
-// Before creating a third version, refactor.
-
-func (db *CRocksDB) Iterator(start, end []byte) Iterator {
-	itr := db.db.NewIterator(db.ro)
-	return newCRocksDBIterator(itr, start, end, false)
-}
-
-func (db *CRocksDB) ReverseIterator(start, end []byte) Iterator {
-	itr := db.db.NewIterator(db.ro)
-	return newCRocksDBIterator(itr, start, end, true)
-}
-
 var _ Iterator = (*cRocksDBIterator)(nil)
 
 type cRocksDBIterator struct {
@@ -294,6 +325,16 @@ func (itr cRocksDBIterator) Valid() bool {
 	return true
 }
 
+func (itr cRocksDBIterator) Next() {
+	itr.assertNoError()
+	itr.assertIsValid()
+	if itr.isReverse {
+		itr.source.Prev()
+	} else {
+		itr.source.Next()
+	}
+}
+
 func (itr cRocksDBIterator) Key() []byte {
 	itr.assertNoError()
 	itr.assertIsValid()
@@ -306,18 +347,16 @@ func (itr cRocksDBIterator) Value() []byte {
 	return itr.source.Value().Data()
 }
 
-func (itr cRocksDBIterator) Next() {
-	itr.assertNoError()
-	itr.assertIsValid()
-	if itr.isReverse {
-		itr.source.Prev()
-	} else {
-		itr.source.Next()
-	}
-}
-
 func (itr cRocksDBIterator) Close() {
 	itr.source.Close()
+}
+
+func (itr cRocksDBIterator) Seek(key []byte) {
+	itr.source.Seek(key)
+}
+
+func (itr cRocksDBIterator) SeekToFirst() {
+	itr.source.SeekToFirst()
 }
 
 func (itr cRocksDBIterator) assertNoError() {
@@ -330,12 +369,4 @@ func (itr cRocksDBIterator) assertIsValid() {
 	if !itr.Valid() {
 		panic("cRocksDBIterator is invalid")
 	}
-}
-
-func (db *CRocksDB) WriteOption() *gorocksdb.WriteOptions {
-	return db.wo
-}
-
-func (db *CRocksDB) ReadOption() *gorocksdb.ReadOptions {
-	return db.ro
 }
