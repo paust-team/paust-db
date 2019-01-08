@@ -19,7 +19,6 @@ type MasterApplication struct {
 	db     *db.CRocksDB
 	wb     db.Batch
 	mwb    db.Batch
-	cfs    db.ColumnFamily
 }
 
 func NewMasterApplication(serial bool, dir string) *MasterApplication {
@@ -55,12 +54,6 @@ func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
 }
 
 func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciTypes.ResponseInitChain {
-	//Create ColumnFamilyHandles
-	app.cfs = app.db.NewCFHandles()
-	//Create ColumnFamily in rocksdb
-	app.cfs.CreateCF("Meta")
-	app.cfs.CreateCF("RealData")
-
 	app.wb = app.db.NewBatch()
 	app.mwb = app.db.NewBatch()
 
@@ -88,8 +81,8 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		}
 
 		rowKey := types.DataToRowKey(dataSlice[i])
-		app.wb.SetColumnFamily(app.cfs.GetCFH(0), rowKey, metaByte)
-		app.wb.SetColumnFamily(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
+		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(1), rowKey, metaByte)
+		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(2), rowKey, dataSlice[i].Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
