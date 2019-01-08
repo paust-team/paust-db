@@ -84,7 +84,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 			fmt.Println("meta 변환 error : ", err)
 		}
 
-		rowKey := types.DataKeyToByteArr(dataSlice[i])
+		rowKey := types.DataToRowKey(dataSlice[i])
 		app.wb.SetCF(app.cfs.GetCFH(0), rowKey, metaByte)
 		app.wb.SetCF(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
 	}
@@ -110,7 +110,7 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 
 func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciTypes.ResponseQuery) {
 	if reqQuery.Path == "/between" {
-		var query = &types.BetweenQuery{}
+		var query = &types.DataQuery{}
 		json.Unmarshal(reqQuery.Data, query)
 
 		fmt.Printf("---- Query - path: /between, query: %v\n", query)
