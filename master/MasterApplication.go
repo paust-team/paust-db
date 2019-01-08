@@ -88,8 +88,8 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		}
 
 		rowKey := types.DataToRowKey(dataSlice[i])
-		app.wb.SetCF(app.cfs.GetCFH(0), rowKey, metaByte)
-		app.wb.SetCF(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
+		app.wb.SetColumnFamily(app.cfs.GetCFH(0), rowKey, metaByte)
+		app.wb.SetColumnFamily(app.cfs.GetCFH(1), rowKey, dataSlice[i].Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
