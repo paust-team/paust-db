@@ -10,8 +10,8 @@ type DB interface {
 	// CONTRACT: key, value readonly []byte
 	Get([]byte) []byte
 
-	//GetCF
-	GetCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error)
+	//GetInColumnFamily
+	GetInColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error)
 
 	// Has checks if a key exists.
 	// A nil key is interpreted as an empty byteslice.
@@ -81,8 +81,8 @@ type Batch interface {
 type SetDeleter interface {
 	Set(key, value []byte) // CONTRACT: key, value readonly []byte
 	Delete(key []byte)     // CONTRACT: key readonly []byte
-	SetCF(cf *gorocksdb.ColumnFamilyHandle, key, value []byte)
-	DeleteCF(cf *gorocksdb.ColumnFamilyHandle, key []byte)
+	SetColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key, value []byte)
+	DeleteColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte)
 }
 
 //----------------------------------------

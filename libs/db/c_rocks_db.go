@@ -57,7 +57,7 @@ func (db *CRocksDB) Get(key []byte) []byte {
 	return res
 }
 
-func (db *CRocksDB) GetCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error) {
+func (db *CRocksDB) GetInColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error) {
 	ro := db.ReadOption()
 	slice, err := db.db.GetCF(ro, cf, key)
 	if err != nil {
@@ -203,12 +203,12 @@ func (mBatch *cRocksDBBatch) Delete(key []byte) {
 }
 
 // Implements Batch.
-func (mBatch *cRocksDBBatch) SetCF(cf *gorocksdb.ColumnFamilyHandle, key, value []byte) {
+func (mBatch *cRocksDBBatch) SetColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key, value []byte) {
 	mBatch.batch.PutCF(cf, key, value)
 }
 
 // Implements Batch.
-func (mBatch *cRocksDBBatch) DeleteCF(cf *gorocksdb.ColumnFamilyHandle, key []byte) {
+func (mBatch *cRocksDBBatch) DeleteColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte) {
 	mBatch.batch.DeleteCF(cf, key)
 }
 
