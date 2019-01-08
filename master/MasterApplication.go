@@ -101,9 +101,7 @@ func (app *MasterApplication) EndBlock(req abciTypes.RequestEndBlock) abciTypes.
 
 func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	resp.Data = app.hash
-	app.mwb.Write()
 	err := app.mwb.Write()
-	app.wb.Write()
 	if err != nil {
 		fmt.Println(err)
 	}
