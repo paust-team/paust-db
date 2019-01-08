@@ -55,7 +55,7 @@ func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciType
 	app.cfs = app.db.NewCFHandles()
 	//Create ColumnFamily in rocksdb
 	app.cfs.CreateCF("Meta")
-	app.cfs.CreateCF("Data")
+	app.cfs.CreateCF("RealData")
 
 	app.wb = app.db.NewBatch()
 	app.mwb = app.db.NewBatch()
