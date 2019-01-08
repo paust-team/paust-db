@@ -14,7 +14,6 @@ import (
 	"golang.org/x/crypto/ed25519"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -76,7 +75,7 @@ func (client *Client) ReadData(start int64, end int64, pubKey string, qualifier 
 	}
 
 	if len(qualifier) > 20 {
-		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes", qualifier)
+		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", qualifier)
 		os.Exit(1)
 	}
 
@@ -127,7 +126,7 @@ func (client *Client) ReadMetaData(start int64, end int64, pubKey string, qualif
 		}
 	}
 	if len(qualifier) > 20 {
-		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes", qualifier)
+		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", qualifier)
 		os.Exit(1)
 	}
 
@@ -151,7 +150,8 @@ var writeCmd = &cobra.Command{
 		stdin, _ := cmd.Flags().GetBool("stdin")
 
 		if len(writeQualifier) > 20 {
-			log.Fatalf("qualifier: \"%v\" is bigger than 20 bytes", writeQualifier)
+			fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", writeQualifier)
+			os.Exit(1)
 		}
 
 		if stdin == false && filePath == "" && len(args) == 0 {
@@ -165,7 +165,7 @@ var writeCmd = &cobra.Command{
 		case stdin == true:
 			bres, err := client.WriteStdin()
 			if err != nil {
-				fmt.Printf("err: %+v", err)
+				fmt.Printf("err: %v\n", err)
 				os.Exit(1)
 			}
 			if bres.Code == code.CodeTypeOK {
@@ -177,7 +177,7 @@ var writeCmd = &cobra.Command{
 		case filePath != "":
 			bres, err := client.WriteFile(filePath)
 			if err != nil {
-				fmt.Printf("err: %+v", err)
+				fmt.Printf("err: %v\n", err)
 				os.Exit(1)
 			}
 			if bres.Code == code.CodeTypeOK {
@@ -189,7 +189,7 @@ var writeCmd = &cobra.Command{
 		default:
 			bres, err := client.WriteData(time.Now(), writePubKey, writeQualifier, []byte(strings.Join(args, " ")))
 			if err != nil {
-				fmt.Printf("err: %+v", err)
+				fmt.Printf("err: %v\n", err)
 				os.Exit(1)
 			}
 			if bres.Code == code.CodeTypeOK {
@@ -253,7 +253,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 		res, err := client.ReadData(start, end, pubKey, qualifier)
 		if err != nil {
-			fmt.Printf("err: %+v", err)
+			fmt.Printf("err: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -290,7 +290,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 		res, err := client.ReadMetaData(start, end, pubKey, qualifier)
 		if err != nil {
-			fmt.Printf("err: %+v", err)
+			fmt.Printf("err: %v\n", err)
 			os.Exit(1)
 		}
 
