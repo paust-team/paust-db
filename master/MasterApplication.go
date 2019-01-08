@@ -101,12 +101,11 @@ func (app *MasterApplication) EndBlock(req abciTypes.RequestEndBlock) abciTypes.
 
 func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	resp.Data = app.hash
-	err := app.mwb.Write()
-	if err != nil {
+	if err := app.mwb.Write(); err != nil {
 		fmt.Println(err)
 	}
-	err = app.wb.Write()
-	if err != nil {
+
+	if err := app.wb.Write(); err != nil {
 		fmt.Println(err)
 	}
 

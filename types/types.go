@@ -26,7 +26,6 @@ type DataQuery struct {
 	Qualifier string `json:"qualifier"`
 }
 
-
 func DataToRowKey(data RealData) []byte {
 	timestamp := make([]byte, 8)
 	qualifier := make([]byte, 20)

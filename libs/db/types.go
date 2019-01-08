@@ -75,7 +75,7 @@ type ColumnFamily interface {
 type Batch interface {
 	SetDeleter
 	Write() error
-	WriteSync()
+	WriteSync() error
 }
 
 type SetDeleter interface {
