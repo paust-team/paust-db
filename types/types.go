@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 )
 
-type Data struct {
+type RealData struct {
 	//Timestamp는 client에서 nano단위로 들어옴.
 	Timestamp int64  `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
@@ -12,7 +12,7 @@ type Data struct {
 	Data      []byte `json:"data"`
 }
 
-type DataSlice []Data
+type DataSlice []RealData
 
 type MetaData struct {
 	UserKey   []byte `json:"userKey"`
@@ -27,7 +27,7 @@ type DataQuery struct {
 }
 
 
-func DataToRowKey(data Data) []byte {
+func DataToRowKey(data RealData) []byte {
 	timestamp := make([]byte, 8)
 	qualifier := make([]byte, 20)
 	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))

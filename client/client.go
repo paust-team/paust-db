@@ -53,7 +53,7 @@ func (client *Client) WriteData(time time.Time, pubKey string, qualifier string,
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.DataSlice{types.Data{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
+	jsonString, _ := json.Marshal(types.DataSlice{types.RealData{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
 	return bres, err
@@ -297,7 +297,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 func init() {
 	writeCmd.Flags().StringVarP(&writePubKey, "pubkey", "p", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
-	writeCmd.Flags().StringVarP(&writeQualifier, "qualifier", "q", "test", "Data qualifier (max 20 bytes)")
+	writeCmd.Flags().StringVarP(&writeQualifier, "qualifier", "q", "test", "RealData qualifier (max 20 bytes)")
 	writeCmd.Flags().StringVarP(&filePath, "file", "f", "", "File path")
 	writeCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
 	Cmd.AddCommand(writeCmd)
