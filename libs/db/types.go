@@ -4,31 +4,38 @@ import "github.com/tecbot/gorocksdb"
 
 // DBs are goroutine safe.
 type DB interface {
+	// Get value from specific ColumnFamily
+	GetInColumnFamily(index int, key []byte) (*gorocksdb.Slice, error)
 
-	// Get returns nil iff key doesn't exist.
-	// A nil key is interpreted as an empty byteslice.
-	// CONTRACT: key, value readonly []byte
+	// Set value In specific ColumnFamily
+	SetInColumnFamily(index int, key, value []byte) error
+
+	// Specific Column Family Iterator
+	IteratorColumnFamily(start, end []byte, cf *gorocksdb.ColumnFamilyHandle) Iterator
+
+	// Creates a batch for atomic updates.
+	NewBatch() Batch
+
+	// Getter
+	DB() *gorocksdb.DB
+	WriteOption() *gorocksdb.WriteOptions
+	ReadOption() *gorocksdb.ReadOptions
+	ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle
+
+	/*
+		Below DB method are for Test
+	*/
+
 	Get([]byte) []byte
 
-	//GetInColumnFamily
-	GetInColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte) (*gorocksdb.Slice, error)
-
-	// Has checks if a key exists.
-	// A nil key is interpreted as an empty byteslice.
-	// CONTRACT: key, value readonly []byte
 	Has(key []byte) bool
 
-	// Set sets the key.
-	// A nil key is interpreted as an empty byteslice.
-	// CONTRACT: key, value readonly []byte
 	Set([]byte, []byte)
 	SetSync([]byte, []byte)
 
-	// Delete deletes the key.
-	// A nil key is interpreted as an empty byteslice.
-	// CONTRACT: key readonly []byte
 	Delete([]byte)
 	DeleteSync([]byte)
+	DeleteInColumnFamily(index int, key []byte) error
 
 	// Iterate over a domain of keys in ascending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
@@ -49,17 +56,11 @@ type DB interface {
 	// Closes the connection.
 	Close()
 
-	// Creates a batch for atomic updates.
-	NewBatch() Batch
-
 	// For debugging
 	Print()
 
 	// Stats returns a map of property values for all keys and the size of the cache.
 	Stats() map[string]string
-
-	//Get specific columnFamilyhandle
-	ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle
 }
 
 //----------------------------------------
@@ -72,26 +73,16 @@ type Batch interface {
 }
 
 type SetDeleter interface {
-	Set(key, value []byte) // CONTRACT: key, value readonly []byte
-	Delete(key []byte)     // CONTRACT: key readonly []byte
 	SetColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key, value []byte)
 	DeleteColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key []byte)
+
+	//Set Delete For Test
+	Set(key, value []byte) // CONTRACT: key, value readonly []byte
+	Delete(key []byte)     // CONTRACT: key readonly []byte
 }
 
 //----------------------------------------
 // Iterator
-
-/*
-	Usage:
-
-	var itr Iterator = ...
-	defer itr.Close()
-
-	for ; itr.Valid(); itr.Next() {
-		k, v := itr.Key(); itr.Value()
-		// ...
-	}
-*/
 type Iterator interface {
 
 	// The start & end (exclusive) limits to iterate over.
@@ -127,11 +118,16 @@ type Iterator interface {
 
 	// Close releases the Iterator.
 	Close()
-}
 
-// For testing convenience.
-func bz(s string) []byte {
-	return []byte(s)
+	//
+	Seek(key []byte)
+
+	//
+	SeekToFirst()
+
+	assertNoError()
+
+	assertIsValid()
 }
 
 // We defensively turn nil keys or values into []byte{} for
