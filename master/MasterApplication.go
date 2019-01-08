@@ -27,7 +27,7 @@ func NewMasterApplication(serial bool, dir string) *MasterApplication {
 	database, err := db.NewCRocksDB("paustdb", dir)
 
 	if err != nil {
-		println(err)
+		fmt.Println(err)
 	}
 
 	binary.BigEndian.PutUint64(hash, rand.Uint64())
@@ -39,13 +39,11 @@ func NewMasterApplication(serial bool, dir string) *MasterApplication {
 }
 
 func (app *MasterApplication) Info(req abciTypes.RequestInfo) abciTypes.ResponseInfo {
-	fmt.Println("------------- Master - Info req: " + req.String())
 	return abciTypes.ResponseInfo{
 		Data: fmt.Sprintf("---- Info"),
 	}
 }
 
-//gas확인
 func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
 	var dataSlice = types.DataSlice{}
 	err := json.Unmarshal(tx, &dataSlice)
@@ -70,7 +68,6 @@ func (app *MasterApplication) InitChain(req abciTypes.RequestInitChain) abciType
 }
 
 func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTypes.ResponseBeginBlock {
-	//Commit이 일어나지 않았을 경우에 batch를 flush 한다.
 	return abciTypes.ResponseBeginBlock{}
 }
 
@@ -78,7 +75,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	var dataSlice = types.DataSlice{}
 	err := json.Unmarshal(tx, &dataSlice)
 	if err != nil {
-		fmt.Println("dataSlice Unmarshal error", err)
+		fmt.Println("dataSlice unmarshal error", err)
 	}
 
 	for i := 0; i < len(dataSlice); i++ {
@@ -87,7 +84,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		metaData.Qualifier = dataSlice[i].Qualifier
 		metaByte, err := json.Marshal(metaData)
 		if err != nil {
-			fmt.Println("meta 변환 error : ", err)
+			fmt.Println("meta marshal error : ", err)
 		}
 
 		rowKey := types.DataToRowKey(dataSlice[i])
