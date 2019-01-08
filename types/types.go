@@ -26,16 +26,13 @@ type DataQuery struct {
 	Qualifier string `json:"qualifier"`
 }
 
-//rowkey = timestamp + userkey + datatype + offset
-func DataKeyToByteArr(data Data) []byte {
 
+func DataToRowKey(data Data) []byte {
 	timestamp := make([]byte, 8)
-	binary.BigEndian.PutUint64(timestamp, uint64((data.Timestamp/1000000000)*1000000000))
 	qualifier := make([]byte, 20)
+	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
 	qualifier = QualifierToByteArr(data.Qualifier)
 
-	offset := make([]byte, 4)
-	binary.BigEndian.PutUint32(offset, uint32(data.Timestamp%1000000000))
 	rowKey := append(timestamp, data.UserKey...)
 	rowKey = append(rowKey, qualifier...)
 
@@ -53,9 +50,4 @@ func QualifierToByteArr(qualifier string) []byte {
 	}
 
 	return qualifierArr
-}
-
-	}
-	}
-
 }
