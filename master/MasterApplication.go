@@ -47,6 +47,12 @@ func (app *MasterApplication) Info(req abciTypes.RequestInfo) abciTypes.Response
 
 //gas확인
 func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
+	var dataSlice = types.DataSlice{}
+	err := json.Unmarshal(tx, &dataSlice)
+	if err != nil {
+		return abciTypes.ResponseCheckTx{Code: code.CodeTypeEncodingError, Log: err.Error()}
+	}
+
 	return abciTypes.ResponseCheckTx{Code: code.CodeTypeOK}
 }
 
