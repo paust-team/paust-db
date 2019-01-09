@@ -51,23 +51,26 @@ func NewCRocksDB(name, dir string) (*CRocksDB, error) {
 	return database, nil
 }
 
+// Implements DB.
 func (db CRocksDB) GetDataFromColumnFamily(index int, key []byte) (*gorocksdb.Slice, error) {
 	return db.db.GetCF(db.ro, db.ColumnFamilyHandle(index), key)
 }
 
-func (db CRocksDB) SetDataInColumnFamily(index int, key, value []byte) error {
+// Implements DB.
+func (db *CRocksDB) SetDataInColumnFamily(index int, key, value []byte) error {
 	return db.db.PutCF(db.wo, db.ColumnFamilyHandle(index), key, value)
 }
 
-func (db *CRocksDB) IteratorColumnFamily(start, end []byte, cf *gorocksdb.ColumnFamilyHandle) Iterator {
+// Implements DB.
+func (db CRocksDB) IteratorColumnFamily(start, end []byte, cf *gorocksdb.ColumnFamilyHandle) Iterator {
 	itr := db.db.NewIteratorCF(db.ro, cf)
 	return newCRocksDBIterator(itr, start, end, false)
 }
 
 // Implements DB.
-func (db *CRocksDB) NewBatch() Batch {
+func (db CRocksDB) NewBatch() Batch {
 	batch := gorocksdb.NewWriteBatch()
-	return &cRocksDBBatch{db, batch}
+	return &cRocksDBBatch{&db, batch}
 }
 
 // Implements DB.
@@ -95,7 +98,7 @@ func (db CRocksDB) ColumnFamilyHandle(i int) *gorocksdb.ColumnFamilyHandle {
 */
 
 // Implements DB.
-func (db *CRocksDB) Get(key []byte) []byte {
+func (db CRocksDB) Get(key []byte) []byte {
 	key = nonNilBytes(key)
 	res, err := db.db.GetBytes(db.ro, key)
 	if err != nil {
@@ -105,7 +108,7 @@ func (db *CRocksDB) Get(key []byte) []byte {
 }
 
 // Implements DB.
-func (db *CRocksDB) Has(key []byte) bool {
+func (db CRocksDB) Has(key []byte) bool {
 	return db.Get(key) != nil
 }
 
@@ -148,18 +151,18 @@ func (db *CRocksDB) DeleteSync(key []byte) {
 }
 
 // Implements DB.
-func (db CRocksDB) DeleteInColumnFamily(index int, key []byte) error {
+func (db *CRocksDB) DeleteInColumnFamily(index int, key []byte) error {
 	return db.db.DeleteCF(db.wo, db.ColumnFamilyHandle(index), key)
 }
 
 // Implements DB.
-func (db *CRocksDB) Iterator(start, end []byte) Iterator {
+func (db CRocksDB) Iterator(start, end []byte) Iterator {
 	itr := db.db.NewIterator(db.ro)
 	return newCRocksDBIterator(itr, start, end, false)
 }
 
 // Implements DB.
-func (db *CRocksDB) ReverseIterator(start, end []byte) Iterator {
+func (db CRocksDB) ReverseIterator(start, end []byte) Iterator {
 	itr := db.db.NewIterator(db.ro)
 	return newCRocksDBIterator(itr, start, end, true)
 }
@@ -173,7 +176,7 @@ func (db *CRocksDB) Close() {
 }
 
 // Implements DB.
-func (db *CRocksDB) Print() {
+func (db CRocksDB) Print() {
 	itr := db.Iterator(nil, nil)
 	defer itr.Close()
 	for ; itr.Valid(); itr.Next() {
@@ -184,7 +187,7 @@ func (db *CRocksDB) Print() {
 }
 
 // Implements DB.
-func (db *CRocksDB) Stats() map[string]string {
+func (db CRocksDB) Stats() map[string]string {
 	keys := []string{}
 
 	stats := make(map[string]string)
@@ -196,7 +199,7 @@ func (db *CRocksDB) Stats() map[string]string {
 }
 
 // Implements DB.
-func (db *CRocksDB) ColumnFamilyHandles() gorocksdb.ColumnFamilyHandles {
+func (db CRocksDB) ColumnFamilyHandles() gorocksdb.ColumnFamilyHandles {
 	return db.columnFamilyHandles
 }
 
