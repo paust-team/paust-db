@@ -5,10 +5,10 @@ import "github.com/tecbot/gorocksdb"
 // DBs are goroutine safe.
 type DB interface {
 	// Get value from specific ColumnFamily
-	GetInColumnFamily(index int, key []byte) (*gorocksdb.Slice, error)
+	GetDataFromColumnFamily(index int, key []byte) (*gorocksdb.Slice, error)
 
 	// Set value In specific ColumnFamily
-	SetInColumnFamily(index int, key, value []byte) error
+	SetDataInColumnFamily(index int, key, value []byte) error
 
 	// Specific Column Family Iterator
 	IteratorColumnFamily(start, end []byte, cf *gorocksdb.ColumnFamilyHandle) Iterator

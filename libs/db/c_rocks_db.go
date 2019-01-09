@@ -51,11 +51,11 @@ func NewCRocksDB(name, dir string) (*CRocksDB, error) {
 	return database, nil
 }
 
-func (db CRocksDB) GetInColumnFamily(index int, key []byte) (*gorocksdb.Slice, error) {
+func (db CRocksDB) GetDataFromColumnFamily(index int, key []byte) (*gorocksdb.Slice, error) {
 	return db.db.GetCF(db.ro, db.ColumnFamilyHandle(index), key)
 }
 
-func (db CRocksDB) SetInColumnFamily(index int, key, value []byte) error {
+func (db CRocksDB) SetDataInColumnFamily(index int, key, value []byte) error {
 	return db.db.PutCF(db.wo, db.ColumnFamilyHandle(index), key, value)
 }
 
