@@ -1,6 +1,7 @@
 package master
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
