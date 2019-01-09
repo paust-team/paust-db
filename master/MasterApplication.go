@@ -110,15 +110,146 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 }
 
 func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciTypes.ResponseQuery) {
-	if reqQuery.Path == "/between" {
-		var query = &types.DataQuery{}
-		json.Unmarshal(reqQuery.Data, query)
+	var query = types.DataQuery{}
+	switch reqQuery.Path {
+	case "/metadata":
+		err := json.Unmarshal(reqQuery.Data, &query)
+		if err != nil {
+			fmt.Println("DataQuery struct unmarshal error", err)
+		}
 
-		fmt.Printf("---- Query - path: /between, query: %v\n", query)
+		metaSlice, _ := app.MetaDataQuery(query)
+		resp.Value, _ = json.Marshal(metaSlice)
 
-		resp.Value = []byte("test")
-		return
+	case "/realdata":
+		err := json.Unmarshal(reqQuery.Data, &query)
+		if err != nil {
+			fmt.Println("DataQuery struct unmarshal error", err)
+		}
+
+		dataSlice, _ := app.RealDataQuery(query)
+		resp.Value, _ = json.Marshal(dataSlice)
+
 	}
 
 	return
+}
+
+func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaResponseSlice, error) {
+	var meta = types.MetaData{}
+	var metaSlice = types.MetaResponseSlice{}
+
+	startByte, endByte := types.CreateStartByteAndEndByte(query)
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(1))
+	//TODO unittest close test
+	defer itr.Close()
+
+	switch {
+	case query.UserKey == nil && query.Qualifier == "":
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			json.Unmarshal(itr.Value(), &meta)
+			metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
+			if err != nil {
+				fmt.Println(err)
+			}
+			metaSlice = append(metaSlice, metaResp)
+		}
+	case query.Qualifier == "":
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			json.Unmarshal(itr.Value(), &meta)
+			if string(query.UserKey) == string(meta.UserKey) {
+				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
+				if err != nil {
+					fmt.Println(err)
+				}
+				metaSlice = append(metaSlice, metaResp)
+			}
+		}
+	case query.UserKey == nil:
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			json.Unmarshal(itr.Value(), &meta)
+			if string(query.Qualifier) == string(meta.Qualifier) {
+				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
+				if err != nil {
+					fmt.Println(err)
+				}
+				metaSlice = append(metaSlice, metaResp)
+			}
+		}
+	default:
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			json.Unmarshal(itr.Value(), &meta)
+			if string(query.Qualifier) == string(meta.Qualifier) && string(query.UserKey) == string(meta.UserKey) {
+				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
+				if err != nil {
+					fmt.Println(err)
+				}
+				metaSlice = append(metaSlice, metaResp)
+			}
+		}
+
+	}
+
+	return metaSlice, nil
+
+}
+
+func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSlice, error) {
+	var data = types.RealData{}
+	var dataSlice = types.DataSlice{}
+
+	startByte, endByte := types.CreateStartByteAndEndByte(query)
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(2))
+	//TODO unittest close test
+	defer itr.Close()
+
+	switch {
+	case query.UserKey == nil && query.Qualifier == "":
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
+			dataSlice = append(dataSlice, data)
+		}
+	case query.Qualifier == "":
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
+			if string(query.UserKey) == string(data.UserKey) {
+
+				dataSlice = append(dataSlice, data)
+			}
+		}
+	case query.UserKey == nil:
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
+			if string(query.Qualifier) == string(data.Qualifier) {
+				dataSlice = append(dataSlice, data)
+
+			}
+		}
+	default:
+		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
+			if string(query.Qualifier) == string(data.Qualifier) && string(query.UserKey) == string(data.UserKey) {
+				dataSlice = append(dataSlice, data)
+			}
+		}
+	}
+
+	return dataSlice, nil
+}
+
+// For Test
+func (app MasterApplication) Hash() []byte {
+	return app.hash
+}
+
+func (app MasterApplication) DB() *db.CRocksDB {
+	return app.db
+}
+
+func (app MasterApplication) WB() db.Batch {
+	return app.wb
+}
+
+func (app MasterApplication) MWB() db.Batch {
+	return app.mwb
 }
