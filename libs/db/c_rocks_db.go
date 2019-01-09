@@ -27,7 +27,6 @@ func NewCRocksDB(name, dir string) (*CRocksDB, error) {
 	defaultOpts.SetBlockBasedTableFactory(bbto)
 	defaultOpts.SetCreateIfMissing(true)
 	defaultOpts.SetCreateIfMissingColumnFamilies(true)
-	defaultOpts.SetCompression(gorocksdb.LZ4Compression)
 
 	opts := gorocksdb.NewDefaultOptions()
 	db, columnFamilyHandles, err := gorocksdb.OpenDbColumnFamilies(defaultOpts, dbPath, columnFamilyNames, []*gorocksdb.Options{opts, opts, opts})
