@@ -135,7 +135,7 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 	return
 }
 
-func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaResponseSlice, error) {
+func (app *MasterApplication) metaDataQuery(query types.DataQuery) (types.MetaResponseSlice, error) {
 	var meta = types.MetaData{}
 	var metaSlice = types.MetaResponseSlice{}
 
@@ -194,7 +194,7 @@ func (app *MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaRe
 
 }
 
-func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSlice, error) {
+func (app *MasterApplication) realDataQuery(query types.DataQuery) (types.DataSlice, error) {
 	var data = types.RealData{}
 	var dataSlice = types.DataSlice{}
 
@@ -237,7 +237,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 	return dataSlice, nil
 }
 
-// For Test
+// Below method ares all For Test
 func (app MasterApplication) Hash() []byte {
 	return app.hash
 }
@@ -252,4 +252,12 @@ func (app MasterApplication) WB() db.Batch {
 
 func (app MasterApplication) MWB() db.Batch {
 	return app.mwb
+}
+
+func (app MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSlice, error) {
+	return app.realDataQuery(query)
+}
+
+func (app MasterApplication) MetaDataQuery(query types.DataQuery) (types.MetaResponseSlice, error) {
+	return app.metaDataQuery(query)
 }

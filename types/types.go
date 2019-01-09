@@ -36,9 +36,16 @@ type MetaResponse struct {
 
 type MetaResponseSlice []MetaResponse
 
+const (
+	TimeLen      = 8
+	UserKeyLen   = 32
+	QualifierLen = 20
+	RowKeyLen    = 60
+)
+
 func DataToRowKey(data RealData) []byte {
-	timestamp := make([]byte, 8)
-	qualifier := make([]byte, 20)
+	timestamp := make([]byte, TimeLen)
+	qualifier := make([]byte, QualifierLen)
 	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
 	qualifier = QualifierToByteArr(data.Qualifier)
 
@@ -50,11 +57,11 @@ func DataToRowKey(data RealData) []byte {
 
 //string -> byte with padding
 func QualifierToByteArr(qualifier string) []byte {
-	qualifierArr := make([]byte, 20)
+	qualifierArr := make([]byte, QualifierLen)
 	for i := 0; i < len(qualifier); i++ {
 		qualifierArr[i] = qualifier[i]
 	}
-	for i := len(qualifier); i < 20; i++ {
+	for i := len(qualifier); i < QualifierLen; i++ {
 		qualifierArr[i] = 0
 	}
 
@@ -63,18 +70,18 @@ func QualifierToByteArr(qualifier string) []byte {
 
 func RowKeyAndValueToRealData(key, value []byte) RealData {
 
-	if len(key) != 60 {
+	if len(key) != RowKeyLen {
 		fmt.Println("rowkey len error len :", len(key))
 	}
 	realData := RealData{}
 
-	timestamp := binary.BigEndian.Uint64(key[0:8])
+	timestamp := binary.BigEndian.Uint64(key[0:TimeLen])
 
 	realData.Timestamp = int64(timestamp)
-	realData.UserKey = make([]byte, 32)
-	copy(realData.UserKey, key[8:40])
+	realData.UserKey = make([]byte, UserKeyLen)
+	copy(realData.UserKey, key[TimeLen:TimeLen+UserKeyLen])
 
-	qualifier := QualifierWithoutPadding(key[40:60])
+	qualifier := QualifierWithoutPadding(key[TimeLen+UserKeyLen : RowKeyLen])
 	realData.Qualifier = string(qualifier)
 	realData.Data = value
 
@@ -83,11 +90,11 @@ func RowKeyAndValueToRealData(key, value []byte) RealData {
 
 func QualifierWithoutPadding(keySlice []byte) []byte {
 	qualifierArr := make([]byte, 0)
-	for i := 0; i < 20; i++ {
+	for i := 0; i < QualifierLen; i++ {
 		if keySlice[i] != 0x00 {
 			qualifierArr = append(qualifierArr, keySlice[i])
 		} else {
-			i = 20
+			i = QualifierLen
 		}
 	}
 	return qualifierArr
@@ -97,11 +104,11 @@ func QualifierWithoutPadding(keySlice []byte) []byte {
 func MetaDataAndKeyToMetaResponse(key []byte, meta MetaData) (MetaResponse, error) {
 	metaResponse := MetaResponse{}
 
-	if len(key) != 60 {
+	if len(key) != RowKeyLen {
 		return metaResponse, errors.New("row key len error")
 	}
 
-	timestamp := binary.BigEndian.Uint64(key[0:8])
+	timestamp := binary.BigEndian.Uint64(key[0:TimeLen])
 
 	metaResponse.Timestamp = int64(timestamp)
 	metaResponse.UserKey = meta.UserKey
@@ -121,8 +128,8 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	/*
 	 * Qualifier, UserKey의 nil여부에 따라 4가지 경우가 존재한다.
 	 */
-	userKey := make([]byte, 32)
-	qualifier := make([]byte, 20)
+	userKey := make([]byte, UserKeyLen)
+	qualifier := make([]byte, QualifierLen)
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
 		{

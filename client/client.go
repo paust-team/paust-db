@@ -48,7 +48,7 @@ func (client *Client) WriteData(time time.Time, pubKey string, qualifier string,
 		os.Exit(1)
 	}
 
-	if len(pubKeyBytes) != 32 {
+	if len(pubKeyBytes) != types.UserKeyLen {
 		fmt.Println("public key: ed25519 public key must be 32bytes")
 		os.Exit(1)
 	}
@@ -69,13 +69,13 @@ func (client *Client) ReadData(start int64, end int64, pubKey string, qualifier 
 			os.Exit(1)
 		}
 
-		if len(pubKeyBytes) != 32 {
+		if len(pubKeyBytes) != types.UserKeyLen {
 			fmt.Println("public key: ed25519 public key must be 32bytes")
 			os.Exit(1)
 		}
 	}
 
-	if len(qualifier) > 20 {
+	if len(qualifier) > types.QualifierLen {
 		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes", qualifier)
 		os.Exit(1)
 	}
@@ -121,12 +121,12 @@ func (client *Client) ReadMetaData(start int64, end int64, pubKey string, qualif
 			os.Exit(1)
 		}
 
-		if len(pubKeyBytes) != 32 {
+		if len(pubKeyBytes) != types.UserKeyLen {
 			fmt.Println("public key: ed25519 public key must be 32bytes")
 			os.Exit(1)
 		}
 	}
-	if len(qualifier) > 20 {
+	if len(qualifier) > types.QualifierLen {
 		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes", qualifier)
 		os.Exit(1)
 	}
@@ -150,7 +150,7 @@ var writeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		stdin, _ := cmd.Flags().GetBool("stdin")
 
-		if len(writeQualifier) > 20 {
+		if len(writeQualifier) > types.QualifierLen {
 			log.Fatalf("qualifier: \"%v\" is bigger than 20 bytes", writeQualifier)
 		}
 
