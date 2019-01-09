@@ -1,6 +1,5 @@
 package db_test
 
-
 func (suite *DBSuite) TestDBIteratorDefault() {
 	// insert Keys
 	givenKeys := [][]byte{[]byte("default1"), []byte("default2"), []byte("default3")}

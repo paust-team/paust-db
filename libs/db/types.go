@@ -64,7 +64,6 @@ type DB interface {
 
 	// Get all ColumnFamily handles
 	ColumnFamilyHandles() gorocksdb.ColumnFamilyHandles
-
 }
 
 //----------------------------------------
