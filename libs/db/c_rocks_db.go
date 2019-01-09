@@ -195,6 +195,11 @@ func (db *CRocksDB) Stats() map[string]string {
 	return stats
 }
 
+// Implements DB.
+func (db *CRocksDB) ColumnFamilyHandles() gorocksdb.ColumnFamilyHandles {
+	return db.columnFamilyHandles
+}
+
 //----------------------------------------
 // Batch
 var _ Batch = (*cRocksDBBatch)(nil)
