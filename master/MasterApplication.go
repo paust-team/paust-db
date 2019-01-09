@@ -206,12 +206,12 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
+			data = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
 			dataSlice = append(dataSlice, data)
 		}
 	case query.Qualifier == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
+			data = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
 			if string(query.UserKey) == string(data.UserKey) {
 
 				dataSlice = append(dataSlice, data)
@@ -219,7 +219,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 		}
 	case query.UserKey == nil:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
+			data = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
 			if string(query.Qualifier) == string(data.Qualifier) {
 				dataSlice = append(dataSlice, data)
 
@@ -227,7 +227,7 @@ func (app *MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSl
 		}
 	default:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyAndValueToData(itr.Key(), itr.Value())
+			data = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
 			if string(query.Qualifier) == string(data.Qualifier) && string(query.UserKey) == string(data.UserKey) {
 				dataSlice = append(dataSlice, data)
 			}

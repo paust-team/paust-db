@@ -61,7 +61,7 @@ func QualifierToByteArr(qualifier string) []byte {
 	return qualifierArr
 }
 
-func RowKeyAndValueToData(key, value []byte) RealData {
+func RowKeyAndValueToRealData(key, value []byte) RealData {
 
 	if len(key) != 60 {
 		fmt.Println("rowkey len error len :", len(key))

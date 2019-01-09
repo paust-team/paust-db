@@ -37,7 +37,7 @@ func TestRowKeyAndValueToData(t *testing.T) {
 	expectData := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte{0x10, 0xff}}
 
 	//when
-	actualData := types.RowKeyAndValueToData(givenRowKey, givenValue)
+	actualData := types.RowKeyAndValueToRealData(givenRowKey, givenValue)
 
 	//then
 	assert.Equal(t, expectData, actualData)

@@ -209,7 +209,7 @@ func (db *CRocksDB) Print() {
 	fmt.Println("--------------Realdata Column Family--------------")
 
 	for realItr.SeekToFirst(); realItr.Valid(); realItr.Next() {
-		data := types.RowKeyAndValueToData(realItr.Key(), realItr.Value())
+		data := types.RowKeyAndValueToRealData(realItr.Key(), realItr.Value())
 		fmt.Println("key : ", realItr.Key())
 		fmt.Println("value: ", data)
 	}
