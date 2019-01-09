@@ -99,11 +99,11 @@ func (suite *DBSuite) TestDBCreateRetrieveInColumnFamily() {
 	)
 
 	//create
-	err := suite.DB.SetInColumnFamily(0, givenKey, givenVal)
+	err := suite.DB.SetDataInColumnFamily(0, givenKey, givenVal)
 	suite.Nil(err, "Default columnfamily Set error : %v", err)
 
 	//retrieve
-	value, err := suite.DB.GetInColumnFamily(0, givenKey)
+	value, err := suite.DB.GetDataFromColumnFamily(0, givenKey)
 	defer value.Free()
 	suite.Nil(err, "Default columnfamily Get error : %v", err)
 	suite.Equal(givenVal, value.Data())
@@ -117,12 +117,12 @@ func (suite *DBSuite) TestDBUpdateInColumnFamily() {
 	)
 
 	//create
-	err := suite.DB.SetInColumnFamily(0, givenKey, givenVal1)
+	err := suite.DB.SetDataInColumnFamily(0, givenKey, givenVal1)
 	suite.Nil(err, "Default columnfamily Set error : %v", err)
 
 	//update
-	suite.Nil(suite.DB.SetInColumnFamily(0, givenKey, givenVal2))
-	value, err := suite.DB.GetInColumnFamily(0, givenKey)
+	suite.Nil(suite.DB.SetDataInColumnFamily(0, givenKey, givenVal2))
+	value, err := suite.DB.GetDataFromColumnFamily(0, givenKey)
 	defer value.Free()
 	suite.Nil(err, "Default columnfamily Update error : %v", err)
 	suite.Equal(givenVal2, value.Data())
@@ -136,14 +136,14 @@ func (suite *DBSuite) TestDBDeleteInColumnFamily() {
 	)
 
 	//create
-	err := suite.DB.SetInColumnFamily(0, givenKey, givenVal)
+	err := suite.DB.SetDataInColumnFamily(0, givenKey, givenVal)
 	suite.Nil(err, "Default columnfamily Set error : %v", err)
 
 	//delete
 	err = suite.DB.DeleteInColumnFamily(0, givenKey)
 	suite.Nil(err, "Default columnfamily Delete error : %v", err)
 
-	value, err := suite.DB.GetInColumnFamily(0, givenKey)
+	value, err := suite.DB.GetDataFromColumnFamily(0, givenKey)
 	defer value.Free()
 	suite.Nil(err, "Default columnfamily Get error : %v", err)
 	suite.Nil(value.Data())
@@ -163,7 +163,7 @@ func (suite *DBSuite) TestColumnFamilyBatchPutGet() {
 	batchWriteErr := batch.Write()
 	suite.Nil(batchWriteErr, "Batch MetaColumnFamily Write Error : %v", batchWriteErr)
 
-	actualValue, err1 := suite.DB.GetInColumnFamily(0, givenKey)
+	actualValue, err1 := suite.DB.GetDataFromColumnFamily(0, givenKey)
 	defer actualValue.Free()
 	suite.Nil(err1, "MetaColumnFamily Get Error : %v", err1)
 	suite.Equal(givenValue, actualValue.Data())
@@ -174,7 +174,7 @@ func (suite *DBSuite) TestDBIteratorDefault() {
 	givenKeys := [][]byte{[]byte("default1"), []byte("default2"), []byte("default3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetInColumnFamily(0, k, []byte("defaultVal")))
+		suite.Nil(suite.DB.SetDataInColumnFamily(0, k, []byte("defaultVal")))
 	}
 
 	iter := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(0))
@@ -195,7 +195,7 @@ func (suite *DBSuite) TestDBIteratorMetaColumnFamily() {
 	givenKeys := [][]byte{[]byte("meta1"), []byte("meta2"), []byte("meta3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetInColumnFamily(1, k, []byte("metaVal")))
+		suite.Nil(suite.DB.SetDataInColumnFamily(1, k, []byte("metaVal")))
 	}
 
 	iter := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(1))
@@ -218,7 +218,7 @@ func (suite *DBSuite) TestDBIteratorRealColumnFamily() {
 	givenKeys := [][]byte{[]byte("real1"), []byte("real2"), []byte("real3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetInColumnFamily(2, k, []byte("realVal")))
+		suite.Nil(suite.DB.SetDataInColumnFamily(2, k, []byte("realVal")))
 	}
 
 	iter := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(2))
