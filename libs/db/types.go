@@ -61,6 +61,10 @@ type DB interface {
 
 	// Stats returns a map of property values for all keys and the size of the cache.
 	Stats() map[string]string
+
+	// Get all ColumnFamily handles
+	ColumnFamilyHandles() gorocksdb.ColumnFamilyHandles
+
 }
 
 //----------------------------------------
