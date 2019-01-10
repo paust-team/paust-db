@@ -98,36 +98,66 @@ func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) 
 	return bres, err
 }
 
-func (client *Client) WriteDirectory(dir string, recursive bool) {
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			fmt.Printf("directory traverse err: %v\n", err)
-			os.Exit(1)
-		}
-
-		switch {
-		case recursive == false && info.IsDir() == true && path != dir:
-			return filepath.SkipDir
-		case ".json" == filepath.Ext(path) && info.IsDir() == false:
-			bres, err := client.WriteFile(path)
+func (client *Client) WriteFilesInDir(dir string, recursive bool) {
+	if recursive == true {
+		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				fmt.Printf("err: %v\n", err)
+				fmt.Printf("directory traverse err: %v\n", err)
 				os.Exit(1)
 			}
-			if bres.Code == code.CodeTypeOK {
-				fmt.Printf("%s: write success.\n", path)
+
+			if info.IsDir() == false && ".json" == filepath.Ext(path) {
+				bres, err := client.WriteFile(path)
+				if err != nil {
+					fmt.Printf("WriteFile: %v\n", err)
+					os.Exit(1)
+				}
+				if bres.Code == code.CodeTypeOK {
+					fmt.Printf("%s: write success.\n", path)
+				} else {
+					fmt.Printf("%s: write fail.\n", path)
+					fmt.Println(bres.Log)
+				}
+				return nil
 			} else {
-				fmt.Printf("%s: write fail.\n", path)
-				fmt.Println(bres.Log)
+				return nil
 			}
-			return nil
-		default:
-			return nil
+		})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
-	})
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	} else {
+		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				fmt.Printf("directory traverse err: %v\n", err)
+				os.Exit(1)
+			}
+
+			switch {
+			case info.IsDir() == true && path != dir:
+				return filepath.SkipDir
+			case info.IsDir() == false && ".json" == filepath.Ext(path):
+				bres, err := client.WriteFile(path)
+				if err != nil {
+					fmt.Printf("WriteFile: %v\n", err)
+					os.Exit(1)
+				}
+				if bres.Code == code.CodeTypeOK {
+					fmt.Printf("%s: write success.\n", path)
+				} else {
+					fmt.Printf("%s: write fail.\n", path)
+					fmt.Println(bres.Log)
+				}
+				return nil
+			default:
+				return nil
+			}
+		})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 	}
 }
 
@@ -230,7 +260,7 @@ var writeCmd = &cobra.Command{
 				fmt.Println(bres.Log)
 			}
 		case directoryPath != "":
-			client.WriteDirectory(directoryPath, recursive)
+			client.WriteFilesInDir(directoryPath, recursive)
 		default:
 			bres, err := client.WriteData(time.Now(), writePubKey, writeQualifier, []byte(strings.Join(args, " ")))
 			if err != nil {

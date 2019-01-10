@@ -67,7 +67,7 @@ func (suite *ClientTestSuite) TestClient_WriteFile() {
 	mempool.Flush()
 }
 
-func (suite *ClientTestSuite) TestClient_WriteDirectory() {
+func (suite *ClientTestSuite) TestClient_WriteFilesInDir() {
 	require := require.New(suite.T())
 
 	var fileBytes [][]byte
@@ -76,11 +76,11 @@ func (suite *ClientTestSuite) TestClient_WriteDirectory() {
 	initMempoolSize := mempool.Size()
 
 	err := filepath.Walk(TestDirectory, func(path string, info os.FileInfo, err error) error {
-		require.Nil(err, "directory traverse err: %v\n", err)
+		require.Nil(err, "directory traverse err: %+v", err)
 		switch {
 		case info.IsDir() == true && path != TestDirectory:
 			return filepath.SkipDir
-		case ".json" == filepath.Ext(path) && info.IsDir() == false:
+		case info.IsDir() == false && ".json" == filepath.Ext(path):
 			bytes, err := ioutil.ReadFile(path)
 			require.Nil(err, "file read err: %+v", err)
 			fileBytes = append(fileBytes, bytes)
@@ -91,7 +91,7 @@ func (suite *ClientTestSuite) TestClient_WriteDirectory() {
 	})
 	require.Nil(err, "directory traverse err: %+v", err)
 
-	suite.dbClient.WriteDirectory(TestDirectory, false)
+	suite.dbClient.WriteFilesInDir(TestDirectory, false)
 
 	require.Equal(initMempoolSize+len(fileBytes), mempool.Size())
 
@@ -103,7 +103,7 @@ func (suite *ClientTestSuite) TestClient_WriteDirectory() {
 	mempool.Flush()
 }
 
-func (suite *ClientTestSuite) TestClient_WriteDirectoryRecursive() {
+func (suite *ClientTestSuite) TestClient_WriteFilesInDirRecursive() {
 	require := require.New(suite.T())
 
 	var fileBytes [][]byte
@@ -112,8 +112,8 @@ func (suite *ClientTestSuite) TestClient_WriteDirectoryRecursive() {
 	initMempoolSize := mempool.Size()
 
 	err := filepath.Walk(TestDirectory, func(path string, info os.FileInfo, err error) error {
-		require.Nil(err, "directory traverse err: %v\n", err)
-		if ".json" == filepath.Ext(path) && info.IsDir() == false {
+		require.Nil(err, "directory traverse err: %+v", err)
+		if info.IsDir() == false && ".json" == filepath.Ext(path) {
 			bytes, err := ioutil.ReadFile(path)
 			require.Nil(err, "file read err: %+v", err)
 			fileBytes = append(fileBytes, bytes)
@@ -124,7 +124,7 @@ func (suite *ClientTestSuite) TestClient_WriteDirectoryRecursive() {
 	})
 	require.Nil(err, "directory traverse err: %+v", err)
 
-	suite.dbClient.WriteDirectory(TestDirectory, true)
+	suite.dbClient.WriteFilesInDir(TestDirectory, true)
 
 	require.Equal(initMempoolSize+len(fileBytes), mempool.Size())
 
