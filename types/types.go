@@ -14,7 +14,7 @@ type RealData struct {
 	Data      []byte `json:"data"`
 }
 
-type DataSlice []RealData
+type RealDataSlice []RealData
 
 type MetaData struct {
 	UserKey   []byte `json:"userKey"`
@@ -40,7 +40,7 @@ const (
 	TimeLen      = 8
 	UserKeyLen   = 32
 	QualifierLen = 20
-	RowKeyLen    = 60
+	RowKeyLen    = TimeLen + UserKeyLen + QualifierLen
 )
 
 func DataToRowKey(data RealData) []byte {

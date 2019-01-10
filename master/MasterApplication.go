@@ -45,8 +45,8 @@ func (app *MasterApplication) Info(req abciTypes.RequestInfo) abciTypes.Response
 }
 
 func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
-	var dataSlice = types.DataSlice{}
-	err := json.Unmarshal(tx, &dataSlice)
+	var realDataSlice = types.RealDataSlice{}
+	err := json.Unmarshal(tx, &realDataSlice)
 	if err != nil {
 		return abciTypes.ResponseCheckTx{Code: code.CodeTypeEncodingError, Log: err.Error()}
 	}
@@ -66,24 +66,24 @@ func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTy
 }
 
 func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
-	var dataSlice = types.DataSlice{}
-	err := json.Unmarshal(tx, &dataSlice)
+	var realDataSlice = types.RealDataSlice{}
+	err := json.Unmarshal(tx, &realDataSlice)
 	if err != nil {
-		fmt.Println("dataSlice unmarshal error", err)
+		fmt.Println("realDataSlice unmarshal error", err)
 	}
 
-	for i := 0; i < len(dataSlice); i++ {
+	for i := 0; i < len(realDataSlice); i++ {
 		var metaData = &types.MetaData{}
-		metaData.UserKey = dataSlice[i].UserKey
-		metaData.Qualifier = dataSlice[i].Qualifier
+		metaData.UserKey = realDataSlice[i].UserKey
+		metaData.Qualifier = realDataSlice[i].Qualifier
 		metaByte, err := json.Marshal(metaData)
 		if err != nil {
 			fmt.Println("meta marshal error : ", err)
 		}
 
-		rowKey := types.DataToRowKey(dataSlice[i])
+		rowKey := types.DataToRowKey(realDataSlice[i])
 		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(1), rowKey, metaByte)
-		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(2), rowKey, dataSlice[i].Data)
+		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(2), rowKey, realDataSlice[i].Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
@@ -127,8 +127,8 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 			fmt.Println("DataQuery struct unmarshal error", err)
 		}
 
-		dataSlice, _ := app.RealDataQuery(query)
-		resp.Value, _ = json.Marshal(dataSlice)
+		realDataSlice, _ := app.RealDataQuery(query)
+		resp.Value, _ = json.Marshal(realDataSlice)
 
 	}
 
@@ -194,9 +194,9 @@ func (app *MasterApplication) metaDataQuery(query types.DataQuery) (types.MetaRe
 
 }
 
-func (app *MasterApplication) realDataQuery(query types.DataQuery) (types.DataSlice, error) {
-	var data = types.RealData{}
-	var dataSlice = types.DataSlice{}
+func (app *MasterApplication) realDataQuery(query types.DataQuery) (types.RealDataSlice, error) {
+	var realData = types.RealData{}
+	var realDataSlice = types.RealDataSlice{}
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(2))
@@ -206,35 +206,33 @@ func (app *MasterApplication) realDataQuery(query types.DataQuery) (types.DataSl
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
-			dataSlice = append(dataSlice, data)
+			realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
+			realDataSlice = append(realDataSlice, realData)
 		}
 	case query.Qualifier == "":
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
-			if string(query.UserKey) == string(data.UserKey) {
-
-				dataSlice = append(dataSlice, data)
+			realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
+			if string(query.UserKey) == string(realData.UserKey) {
+				realDataSlice = append(realDataSlice, realData)
 			}
 		}
 	case query.UserKey == nil:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
-			if string(query.Qualifier) == string(data.Qualifier) {
-				dataSlice = append(dataSlice, data)
-
+			realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
+			if string(query.Qualifier) == string(realData.Qualifier) {
+				realDataSlice = append(realDataSlice, realData)
 			}
 		}
 	default:
 		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			data = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
-			if string(query.Qualifier) == string(data.Qualifier) && string(query.UserKey) == string(data.UserKey) {
-				dataSlice = append(dataSlice, data)
+			realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
+			if string(query.Qualifier) == string(realData.Qualifier) && string(query.UserKey) == string(realData.UserKey) {
+				realDataSlice = append(realDataSlice, realData)
 			}
 		}
 	}
 
-	return dataSlice, nil
+	return realDataSlice, nil
 }
 
 // Below method ares all For Test
@@ -254,7 +252,7 @@ func (app MasterApplication) MWB() db.Batch {
 	return app.mwb
 }
 
-func (app MasterApplication) RealDataQuery(query types.DataQuery) (types.DataSlice, error) {
+func (app MasterApplication) RealDataQuery(query types.DataQuery) (types.RealDataSlice, error) {
 	return app.realDataQuery(query)
 }
 

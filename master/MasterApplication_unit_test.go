@@ -24,16 +24,16 @@ func (suite *MasterSuite) TestMasterApplication_CheckTx() {
 		RightCase
 	*/
 	//given
-	dataSlice := types.DataSlice{}
+	realDataSlice := types.RealDataSlice{}
 
 	pubKeyBytes, _ := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
-	data1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("aw")}
-	data2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("goog")}
+	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("aw")}
+	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("goog")}
 
-	dataSlice = append(dataSlice, data1)
-	dataSlice = append(dataSlice, data2)
+	realDataSlice = append(realDataSlice, realData1)
+	realDataSlice = append(realDataSlice, realData2)
 
-	jsonString, _ := json.Marshal(dataSlice)
+	jsonString, _ := json.Marshal(realDataSlice)
 
 	//when
 	res := suite.app.CheckTx(jsonString)
@@ -88,19 +88,19 @@ func (suite *MasterSuite) TestMasterApplication_DeliverTx() {
 	//given
 	suite.TestMasterApplication_InitChain()
 
-	dataSlice := types.DataSlice{}
+	realDataSlice := types.RealDataSlice{}
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	suite.Nil(err)
 	pubKeyBytes2, err2 := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
 	suite.Nil(err2)
 
-	data1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
-	data2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
-	data3 := types.RealData{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
-	dataSlice = append(dataSlice, data1)
-	dataSlice = append(dataSlice, data2)
-	dataSlice = append(dataSlice, data3)
-	tx, err3 := json.Marshal(dataSlice)
+	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
+	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
+	realData3 := types.RealData{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
+	realDataSlice = append(realDataSlice, realData1)
+	realDataSlice = append(realDataSlice, realData2)
+	realDataSlice = append(realDataSlice, realData3)
+	tx, err3 := json.Marshal(realDataSlice)
 	suite.Nil(err3)
 
 	//when
@@ -144,8 +144,8 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	pubKeyBytes2, err := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
 	suite.Nil(err)
-	data1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
-	data2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
+	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
+	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
 
 	metaData1 := types.MetaResponse{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
 	metaData2 := types.MetaResponse{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
@@ -162,9 +162,9 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 	res := suite.app.Query(req)
 
 	//then
-	realDataSlice := types.DataSlice{}
-	realDataSlice = append(realDataSlice, data1)
-	realDataSlice = append(realDataSlice, data2)
+	realDataSlice := types.RealDataSlice{}
+	realDataSlice = append(realDataSlice, realData1)
+	realDataSlice = append(realDataSlice, realData2)
 	value, err := json.Marshal(realDataSlice)
 	suite.Nil(err)
 
@@ -295,7 +295,7 @@ func (suite *MasterSuite) TestMasterApplication_RealDataQuery() {
 	suite.Nil(err)
 
 	//then
-	expectRes := types.DataSlice{}
+	expectRes := types.RealDataSlice{}
 	expectRes = append(expectRes, realData1, realData2, realData3)
 	suite.Equal(expectRes, res)
 
@@ -309,7 +309,7 @@ func (suite *MasterSuite) TestMasterApplication_RealDataQuery() {
 	suite.Nil(err)
 
 	//then
-	expectRes2 := types.DataSlice{}
+	expectRes2 := types.RealDataSlice{}
 	expectRes2 = append(expectRes2, realData1, realData2)
 	suite.Equal(expectRes2, res2)
 
@@ -323,7 +323,7 @@ func (suite *MasterSuite) TestMasterApplication_RealDataQuery() {
 	suite.Nil(err)
 
 	//then
-	expectRes3 := types.DataSlice{}
+	expectRes3 := types.RealDataSlice{}
 	expectRes3 = append(expectRes3, realData2, realData3)
 	suite.Equal(expectRes3, res3)
 
@@ -337,7 +337,7 @@ func (suite *MasterSuite) TestMasterApplication_RealDataQuery() {
 	suite.Nil(err)
 
 	//then
-	expectRes4 := types.DataSlice{}
+	expectRes4 := types.RealDataSlice{}
 	expectRes4 = append(expectRes4, realData1)
 	suite.Equal(expectRes4, res4)
 }

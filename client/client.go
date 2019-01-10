@@ -53,7 +53,7 @@ func (client *Client) WriteData(time time.Time, pubKey string, qualifier string,
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.DataSlice{types.RealData{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
+	jsonString, _ := json.Marshal(types.RealDataSlice{types.RealData{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
 	return bres, err
