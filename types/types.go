@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/thoas/go-funk"
 )
 
 type RealData struct {
@@ -48,11 +49,9 @@ func DataToRowKey(data RealData) []byte {
 	qualifier := make([]byte, QualifierLen)
 	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
 	qualifier = QualifierToByteArr(data.Qualifier)
+	rowKey := funk.FlattenDeep([][]byte{timestamp, data.UserKey, qualifier})
 
-	rowKey := append(timestamp, data.UserKey...)
-	rowKey = append(rowKey, qualifier...)
-
-	return rowKey
+	return rowKey.([]byte)
 }
 
 //string -> byte with padding
@@ -120,48 +119,48 @@ func MetaDataAndKeyToMetaResponse(key []byte, meta MetaData) (MetaResponse, erro
 
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
 func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
-	startByte := make([]byte, 8)
-	endByte := make([]byte, 8)
+	startTimestamp := make([]byte, TimeLen)
+	endTimestamp := make([]byte, TimeLen)
 
-	binary.BigEndian.PutUint64(startByte, uint64(query.Start))
-	binary.BigEndian.PutUint64(endByte, uint64(query.End))
+	binary.BigEndian.PutUint64(startTimestamp, uint64(query.Start))
+	binary.BigEndian.PutUint64(endTimestamp, uint64(query.End))
+
+	userKey := make([]byte, UserKeyLen)
+	qualifier := make([]byte, QualifierLen)
+
+	startByte := make([]byte, RowKeyLen)
+	endByte := make([]byte, RowKeyLen)
 	/*
 	 * Qualifier, UserKey의 nil여부에 따라 4가지 경우가 존재한다.
 	 */
-	userKey := make([]byte, UserKeyLen)
-	qualifier := make([]byte, QualifierLen)
+
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
 		{
-			startByte = append(startByte, userKey...)
-			startByte = append(startByte, qualifier...)
-			endByte = append(endByte, userKey...)
-			endByte = append(endByte, qualifier...)
+			start := funk.FlattenDeep([][]byte{startTimestamp, userKey, qualifier})
+			startByte = start.([]byte)
 		}
 	case query.Qualifier == "":
 		{
-			startByte = append(startByte, query.UserKey...)
-			startByte = append(startByte, qualifier...)
-			endByte = append(endByte, userKey...)
-			endByte = append(endByte, qualifier...)
+			start := funk.FlattenDeep([][]byte{startTimestamp, query.UserKey, qualifier})
+			startByte = start.([]byte)
+
 		}
 	case query.UserKey == nil:
 		{
 			qualifierPadding := QualifierToByteArr(query.Qualifier)
-			startByte = append(startByte, userKey...)
-			startByte = append(startByte, qualifierPadding...)
-			endByte = append(endByte, userKey...)
-			endByte = append(endByte, qualifier...)
+			start := funk.FlattenDeep([][]byte{startTimestamp, userKey, qualifierPadding})
+			startByte = start.([]byte)
 		}
 	default:
 		{
 			qualifierPadding := QualifierToByteArr(query.Qualifier)
-			startByte = append(startByte, query.UserKey...)
-			startByte = append(startByte, qualifierPadding...)
-			endByte = append(endByte, userKey...)
-			endByte = append(endByte, qualifier...)
+			start := funk.FlattenDeep([][]byte{startTimestamp, query.UserKey, qualifierPadding})
+			startByte = start.([]byte)
 		}
 	}
+	end := funk.FlattenDeep([][]byte{endTimestamp, userKey, qualifier})
+	endByte = end.([]byte)
 
 	return startByte, endByte
 

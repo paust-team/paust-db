@@ -6,6 +6,7 @@ import (
 	"github.com/paust-team/paust-db/types"
 	"github.com/tendermint/tendermint/abci/example/code"
 	abciTypes "github.com/tendermint/tendermint/abci/types"
+	"github.com/thoas/go-funk"
 )
 
 func (suite *MasterSuite) TestMasterApplication_Info() {
@@ -24,15 +25,12 @@ func (suite *MasterSuite) TestMasterApplication_CheckTx() {
 		RightCase
 	*/
 	//given
-	realDataSlice := types.RealDataSlice{}
 
 	pubKeyBytes, _ := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("aw")}
 	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("goog")}
 
-	realDataSlice = append(realDataSlice, realData1)
-	realDataSlice = append(realDataSlice, realData2)
-
+	realDataSlice := funk.FlattenDeep([]types.RealData{realData1, realData2}).([]types.RealData)
 	jsonString, _ := json.Marshal(realDataSlice)
 
 	//when
@@ -88,7 +86,6 @@ func (suite *MasterSuite) TestMasterApplication_DeliverTx() {
 	//given
 	suite.TestMasterApplication_InitChain()
 
-	realDataSlice := types.RealDataSlice{}
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	suite.Nil(err)
 	pubKeyBytes2, err2 := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
@@ -97,9 +94,8 @@ func (suite *MasterSuite) TestMasterApplication_DeliverTx() {
 	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
 	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
 	realData3 := types.RealData{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
-	realDataSlice = append(realDataSlice, realData1)
-	realDataSlice = append(realDataSlice, realData2)
-	realDataSlice = append(realDataSlice, realData3)
+
+	realDataSlice := funk.FlattenDeep([]types.RealData{realData1, realData2, realData3})
 	tx, err3 := json.Marshal(realDataSlice)
 	suite.Nil(err3)
 
@@ -147,9 +143,9 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
 	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
 
-	metaData1 := types.MetaResponse{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
-	metaData2 := types.MetaResponse{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
-	metaData3 := types.MetaResponse{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt"}
+	metaRes1 := types.MetaResponse{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
+	metaRes2 := types.MetaResponse{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
+	metaRes3 := types.MetaResponse{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt"}
 
 	/**
 	RealData query
@@ -162,9 +158,7 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 	res := suite.app.Query(req)
 
 	//then
-	realDataSlice := types.RealDataSlice{}
-	realDataSlice = append(realDataSlice, realData1)
-	realDataSlice = append(realDataSlice, realData2)
+	realDataSlice := funk.FlattenDeep([]types.RealData{realData1, realData2})
 	value, err := json.Marshal(realDataSlice)
 	suite.Nil(err)
 
@@ -182,11 +176,8 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 	res2 := suite.app.Query(req2)
 
 	//then
-	metaDataSlice := types.MetaResponseSlice{}
-	metaDataSlice = append(metaDataSlice, metaData1)
-	metaDataSlice = append(metaDataSlice, metaData2)
-	metaDataSlice = append(metaDataSlice, metaData3)
-	value2, err := json.Marshal(metaDataSlice)
+	metaResSlice := funk.FlattenDeep([]types.MetaResponse{metaRes1, metaRes2, metaRes3})
+	value2, err := json.Marshal(metaResSlice)
 	suite.Nil(err)
 
 	expectRes2 := abciTypes.ResponseQuery{Value: value2}
