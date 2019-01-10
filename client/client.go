@@ -14,8 +14,8 @@ import (
 	"golang.org/x/crypto/ed25519"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -76,7 +76,7 @@ func (client *Client) ReadData(start int64, end int64, pubKey string, qualifier 
 	}
 
 	if len(qualifier) > 20 {
-		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes", qualifier)
+		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", qualifier)
 		os.Exit(1)
 	}
 
@@ -86,7 +86,6 @@ func (client *Client) ReadData(start int64, end int64, pubKey string, qualifier 
 	return res, err
 }
 
-// TODO: implement write all files in specific directory.
 // TODO: implement split large size data to many transactions.
 func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) {
 	bytes, err := ioutil.ReadFile(file)
@@ -97,6 +96,69 @@ func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) 
 
 	bres, err := client.client.BroadcastTxSync(bytes)
 	return bres, err
+}
+
+func (client *Client) WriteFilesInDir(dir string, recursive bool) {
+	if recursive == true {
+		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				fmt.Printf("directory traverse err: %v\n", err)
+				os.Exit(1)
+			}
+
+			if info.IsDir() == false && ".json" == filepath.Ext(path) {
+				bres, err := client.WriteFile(path)
+				if err != nil {
+					fmt.Printf("WriteFile: %v\n", err)
+					os.Exit(1)
+				}
+				if bres.Code == code.CodeTypeOK {
+					fmt.Printf("%s: write success.\n", path)
+				} else {
+					fmt.Printf("%s: write fail.\n", path)
+					fmt.Println(bres.Log)
+				}
+				return nil
+			} else {
+				return nil
+			}
+		})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	} else {
+		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				fmt.Printf("directory traverse err: %v\n", err)
+				os.Exit(1)
+			}
+
+			switch {
+			case info.IsDir() == true && path != dir:
+				return filepath.SkipDir
+			case info.IsDir() == false && ".json" == filepath.Ext(path):
+				bres, err := client.WriteFile(path)
+				if err != nil {
+					fmt.Printf("WriteFile: %v\n", err)
+					os.Exit(1)
+				}
+				if bres.Code == code.CodeTypeOK {
+					fmt.Printf("%s: write success.\n", path)
+				} else {
+					fmt.Printf("%s: write fail.\n", path)
+					fmt.Println(bres.Log)
+				}
+				return nil
+			default:
+				return nil
+			}
+		})
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
 }
 
 func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
@@ -127,7 +189,7 @@ func (client *Client) ReadMetaData(start int64, end int64, pubKey string, qualif
 		}
 	}
 	if len(qualifier) > 20 {
-		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes", qualifier)
+		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", qualifier)
 		os.Exit(1)
 	}
 
@@ -137,7 +199,7 @@ func (client *Client) ReadMetaData(start int64, end int64, pubKey string, qualif
 	return res, err
 }
 
-var writePubKey, writeQualifier, pubKey, qualifier, filePath string
+var writePubKey, writeQualifier, pubKey, qualifier, filePath, directoryPath string
 
 var Cmd = &cobra.Command{
 	Use:   "client",
@@ -148,13 +210,24 @@ var writeCmd = &cobra.Command{
 	Use:   "write [data to write]",
 	Short: "Run DB Write",
 	Run: func(cmd *cobra.Command, args []string) {
-		stdin, _ := cmd.Flags().GetBool("stdin")
-
-		if len(writeQualifier) > 20 {
-			log.Fatalf("qualifier: \"%v\" is bigger than 20 bytes", writeQualifier)
+		stdin, err := cmd.Flags().GetBool("stdin")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
 		}
 
-		if stdin == false && filePath == "" && len(args) == 0 {
+		recursive, err := cmd.Flags().GetBool("recursive")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if len(writeQualifier) > 20 {
+			fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", writeQualifier)
+			os.Exit(1)
+		}
+
+		if stdin == false && filePath == "" && directoryPath == "" && len(args) == 0 {
 			fmt.Println("data: you should specify data to write")
 			os.Exit(1)
 		}
@@ -165,35 +238,40 @@ var writeCmd = &cobra.Command{
 		case stdin == true:
 			bres, err := client.WriteStdin()
 			if err != nil {
-				fmt.Printf("err: %+v", err)
+				fmt.Printf("err: %v\n", err)
 				os.Exit(1)
 			}
 			if bres.Code == code.CodeTypeOK {
 				fmt.Println("Write success.")
 			} else {
 				fmt.Println("Write fail.")
+				fmt.Println(bres.Log)
 			}
 		case filePath != "":
 			bres, err := client.WriteFile(filePath)
 			if err != nil {
-				fmt.Printf("err: %+v", err)
+				fmt.Printf("err: %v\n", err)
 				os.Exit(1)
 			}
 			if bres.Code == code.CodeTypeOK {
 				fmt.Println("Write success.")
 			} else {
 				fmt.Println("Write fail.")
+				fmt.Println(bres.Log)
 			}
+		case directoryPath != "":
+			client.WriteFilesInDir(directoryPath, recursive)
 		default:
 			bres, err := client.WriteData(time.Now(), writePubKey, writeQualifier, []byte(strings.Join(args, " ")))
 			if err != nil {
-				fmt.Printf("err: %+v", err)
+				fmt.Printf("err: %v\n", err)
 				os.Exit(1)
 			}
 			if bres.Code == code.CodeTypeOK {
 				fmt.Println("Write success.")
 			} else {
 				fmt.Println("Write fail.")
+				fmt.Println(bres.Log)
 			}
 		}
 	},
@@ -250,7 +328,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 		res, err := client.ReadData(start, end, pubKey, qualifier)
 		if err != nil {
-			fmt.Printf("err: %+v", err)
+			fmt.Printf("err: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -287,7 +365,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 		res, err := client.ReadMetaData(start, end, pubKey, qualifier)
 		if err != nil {
-			fmt.Printf("err: %+v", err)
+			fmt.Printf("err: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -299,7 +377,9 @@ func init() {
 	writeCmd.Flags().StringVarP(&writePubKey, "pubkey", "p", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
 	writeCmd.Flags().StringVarP(&writeQualifier, "qualifier", "q", "test", "RealData qualifier (max 20 bytes)")
 	writeCmd.Flags().StringVarP(&filePath, "file", "f", "", "File path")
+	writeCmd.Flags().StringVarP(&directoryPath, "directory", "d", "", "Directory path")
 	writeCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
+	writeCmd.Flags().BoolP("recursive", "r", false, "Write all files and folders recursively")
 	Cmd.AddCommand(writeCmd)
 	Cmd.AddCommand(writeTestCmd)
 	Cmd.AddCommand(generateCmd)
