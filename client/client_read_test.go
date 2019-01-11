@@ -18,7 +18,7 @@ func (suite *ClientTestSuite) TestClient_ReadData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.DataSlice{types.RealData{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
+	tx, err := json.Marshal(types.RealDataSlice{types.RealData{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)
@@ -45,7 +45,7 @@ func (suite *ClientTestSuite) TestClient_ReadMetaData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.DataSlice{types.RealData{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
+	tx, err := json.Marshal(types.RealDataSlice{types.RealData{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
 	require.Nil(err, "json marshal err: %+v", err)
 	expectedValue, err := json.Marshal(types.MetaResponseSlice{types.MetaResponse{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: TestQualifier}})
 	require.Nil(err, "json marshal err: %+v", err)
