@@ -186,7 +186,7 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 }
 
 //4가지 case 존재
-func (suite *MasterSuite) TestMasterApplication_MetaDataQuery() {
+func (suite *MasterSuite) TestMasterApplication_metaDataQuery() {
 
 	//given
 	suite.TestMasterApplication_DeliverTx()
@@ -261,7 +261,7 @@ func (suite *MasterSuite) TestMasterApplication_MetaDataQuery() {
 }
 
 //4가지 case 존재
-func (suite *MasterSuite) TestMasterApplication_RealDataQuery() {
+func (suite *MasterSuite) TestMasterApplication_realDataQuery() {
 	//given
 	suite.TestMasterApplication_DeliverTx()
 	suite.TestMasterApplication_Commit()

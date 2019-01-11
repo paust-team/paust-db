@@ -118,7 +118,7 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 			fmt.Println("DataQuery struct unmarshal error", err)
 		}
 
-		metaSlice, _ := app.MetaDataQuery(query)
+		metaSlice, _ := app.metaDataQuery(query)
 		resp.Value, _ = json.Marshal(metaSlice)
 
 	case "/realdata":
@@ -127,7 +127,7 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 			fmt.Println("DataQuery struct unmarshal error", err)
 		}
 
-		realDataSlice, _ := app.RealDataQuery(query)
+		realDataSlice, _ := app.realDataQuery(query)
 		resp.Value, _ = json.Marshal(realDataSlice)
 
 	}
@@ -136,7 +136,6 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 }
 
 func (app *MasterApplication) metaDataQuery(query types.DataQuery) (types.MetaResponseSlice, error) {
-	var meta = types.MetaData{}
 	var metaSlice = types.MetaResponseSlice{}
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
@@ -146,48 +145,49 @@ func (app *MasterApplication) metaDataQuery(query types.DataQuery) (types.MetaRe
 
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
-		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			json.Unmarshal(itr.Value(), &meta)
+		metaSlice = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.MetaData) *types.MetaResponse {
 			metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 			if err != nil {
 				fmt.Println(err)
 			}
-			metaSlice = append(metaSlice, metaResp)
-		}
+			return &metaResp
+		})
+
 	case query.Qualifier == "":
-		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			json.Unmarshal(itr.Value(), &meta)
+		metaSlice = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.MetaData) *types.MetaResponse {
 			if string(query.UserKey) == string(meta.UserKey) {
 				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
-				metaSlice = append(metaSlice, metaResp)
+				return &metaResp
 			}
-		}
+			return nil
+		})
+
 	case query.UserKey == nil:
-		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			json.Unmarshal(itr.Value(), &meta)
+		metaSlice = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.MetaData) *types.MetaResponse {
 			if string(query.Qualifier) == string(meta.Qualifier) {
 				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
-				metaSlice = append(metaSlice, metaResp)
+				return &metaResp
 			}
-		}
+			return nil
+		})
+
 	default:
-		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			json.Unmarshal(itr.Value(), &meta)
+		metaSlice = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.MetaData) *types.MetaResponse {
 			if string(query.Qualifier) == string(meta.Qualifier) && string(query.UserKey) == string(meta.UserKey) {
 				metaResp, err := types.MetaDataAndKeyToMetaResponse(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
-				metaSlice = append(metaSlice, metaResp)
+				return &metaResp
 			}
-		}
-
+			return nil
+		})
 	}
 
 	return metaSlice, nil
@@ -195,7 +195,6 @@ func (app *MasterApplication) metaDataQuery(query types.DataQuery) (types.MetaRe
 }
 
 func (app *MasterApplication) realDataQuery(query types.DataQuery) (types.RealDataSlice, error) {
-	var realData = types.RealData{}
 	var realDataSlice = types.RealDataSlice{}
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
@@ -205,34 +204,61 @@ func (app *MasterApplication) realDataQuery(query types.DataQuery) (types.RealDa
 
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
-		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
-			realDataSlice = append(realDataSlice, realData)
-		}
+		realDataSlice = searchInRealColumnFamily(startByte, endByte, itr, func(realData types.RealData) *types.RealData {
+			return &realData
+		})
 	case query.Qualifier == "":
-		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
+		realDataSlice = searchInRealColumnFamily(startByte, endByte, itr, func(realData types.RealData) *types.RealData {
 			if string(query.UserKey) == string(realData.UserKey) {
-				realDataSlice = append(realDataSlice, realData)
+				return &realData
 			}
-		}
+			return nil
+		})
 	case query.UserKey == nil:
-		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
+		realDataSlice = searchInRealColumnFamily(startByte, endByte, itr, func(realData types.RealData) *types.RealData {
 			if string(query.Qualifier) == string(realData.Qualifier) {
-				realDataSlice = append(realDataSlice, realData)
+				return &realData
 			}
-		}
+			return nil
+		})
 	default:
-		for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-			realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
+		realDataSlice = searchInRealColumnFamily(startByte, endByte, itr, func(realData types.RealData) *types.RealData {
 			if string(query.Qualifier) == string(realData.Qualifier) && string(query.UserKey) == string(realData.UserKey) {
-				realDataSlice = append(realDataSlice, realData)
+				return &realData
 			}
-		}
+			return nil
+		})
 	}
 
 	return realDataSlice, nil
+}
+
+func searchInMetaColumnFamily(startByte, endByte []byte, itr db.Iterator, closureFunc func(meta types.MetaData) *types.MetaResponse) types.MetaResponseSlice {
+	var meta = types.MetaData{}
+	var metaSlice = &types.MetaResponseSlice{}
+
+	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+		json.Unmarshal(itr.Value(), &meta)
+		ret := closureFunc(meta)
+		if ret != nil {
+			*metaSlice = append(*metaSlice, *ret)
+		}
+	}
+
+	return *metaSlice
+}
+
+func searchInRealColumnFamily(startByte, endByte []byte, itr db.Iterator, closureFunc func(realData types.RealData) *types.RealData) types.RealDataSlice {
+	var realData = types.RealData{}
+	var realDataSlice = &types.RealDataSlice{}
+	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
+		realData = types.RowKeyAndValueToRealData(itr.Key(), itr.Value())
+		ret := closureFunc(realData)
+		if ret != nil {
+			*realDataSlice = append(*realDataSlice, *ret)
+		}
+	}
+	return *realDataSlice
 }
 
 // Below method ares all For Test
