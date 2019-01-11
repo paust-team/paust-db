@@ -53,13 +53,13 @@ func (client *Client) WriteData(time time.Time, pubKey string, qualifier string,
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.RealDataSlice{types.RealData{Timestamp: time.UnixNano(), UserKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
+	jsonString, _ := json.Marshal(types.RealDataSlice{types.RealData{Timestamp: uint64(time.UnixNano()), UserKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
 	return bres, err
 }
 
-func (client *Client) ReadData(start int64, end int64, pubKey string, qualifier string) (*ctypes.ResultABCIQuery, error) {
+func (client *Client) ReadData(start uint64, end uint64, pubKey string, qualifier string) (*ctypes.ResultABCIQuery, error) {
 	var pubKeyBytes []byte
 	if pubKey != "" {
 		var err error
@@ -173,7 +173,7 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 	return bres, err
 }
 
-func (client *Client) ReadMetaData(start int64, end int64, pubKey string, qualifier string) (*ctypes.ResultABCIQuery, error) {
+func (client *Client) ReadMetaData(start uint64, end uint64, pubKey string, qualifier string) (*ctypes.ResultABCIQuery, error) {
 	var pubKeyBytes []byte
 	if pubKey != "" {
 		var err error
@@ -312,13 +312,13 @@ var realdataCmd = &cobra.Command{
 'start' and 'end' are essential. '-p' and '-q' flags are optional.
 If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		start, err := strconv.ParseInt(args[0], 0, 64)
+		start, err := strconv.ParseUint(args[0], 0, 64)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		end, err := strconv.ParseInt(args[1], 0, 64)
+		end, err := strconv.ParseUint(args[1], 0, 64)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -349,13 +349,13 @@ var metadataCmd = &cobra.Command{
 'start' and 'end' are essential. '-p' and '-q' flags are optional.
 If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		start, err := strconv.ParseInt(args[0], 0, 64)
+		start, err := strconv.ParseUint(args[0], 0, 64)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		end, err := strconv.ParseInt(args[1], 0, 64)
+		end, err := strconv.ParseUint(args[1], 0, 64)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
