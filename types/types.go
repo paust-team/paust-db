@@ -9,7 +9,7 @@ import (
 
 type RealData struct {
 	//Timestamp는 client에서 nano단위로 들어옴.
-	Timestamp int64  `json:"timestamp"`
+	Timestamp uint64 `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
 	Qualifier string `json:"qualifier"`
 	Data      []byte `json:"data"`
@@ -23,14 +23,14 @@ type MetaData struct {
 }
 
 type DataQuery struct {
-	Start     int64  `json:"start"`
-	End       int64  `json:"end"`
+	Start     uint64 `json:"start"`
+	End       uint64 `json:"end"`
 	UserKey   []byte `json:"userKey"`
 	Qualifier string `json:"qualifier"`
 }
 
 type MetaResponse struct {
-	Timestamp int64  `json:"timestamp"`
+	Timestamp uint64 `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
 	Qualifier string `json:"qualifier"`
 }
@@ -47,7 +47,7 @@ const (
 func RealDataToRowKey(data RealData) []byte {
 	timestamp := make([]byte, TimeLen)
 	qualifier := make([]byte, QualifierLen)
-	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
+	binary.BigEndian.PutUint64(timestamp, data.Timestamp)
 	qualifier = QualifierToByteArr(data.Qualifier)
 	rowKey := funk.FlattenDeep([][]byte{timestamp, data.UserKey, qualifier})
 
@@ -76,7 +76,7 @@ func RowKeyAndValueToRealData(key, value []byte) RealData {
 
 	timestamp := binary.BigEndian.Uint64(key[0:TimeLen])
 
-	realData.Timestamp = int64(timestamp)
+	realData.Timestamp = timestamp
 	realData.UserKey = make([]byte, UserKeyLen)
 	copy(realData.UserKey, key[TimeLen:TimeLen+UserKeyLen])
 
@@ -109,7 +109,7 @@ func MetaDataAndKeyToMetaResponse(key []byte, meta MetaData) (MetaResponse, erro
 
 	timestamp := binary.BigEndian.Uint64(key[0:TimeLen])
 
-	metaResponse.Timestamp = int64(timestamp)
+	metaResponse.Timestamp = timestamp
 	metaResponse.UserKey = meta.UserKey
 	metaResponse.Qualifier = meta.Qualifier
 
@@ -122,8 +122,8 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 	startTimestamp := make([]byte, TimeLen)
 	endTimestamp := make([]byte, TimeLen)
 
-	binary.BigEndian.PutUint64(startTimestamp, uint64(query.Start))
-	binary.BigEndian.PutUint64(endTimestamp, uint64(query.End))
+	binary.BigEndian.PutUint64(startTimestamp, query.Start)
+	binary.BigEndian.PutUint64(endTimestamp, query.End)
 
 	userKey := make([]byte, UserKeyLen)
 	qualifier := make([]byte, QualifierLen)
