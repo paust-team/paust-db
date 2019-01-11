@@ -44,7 +44,7 @@ const (
 	RowKeyLen    = TimeLen + UserKeyLen + QualifierLen
 )
 
-func DataToRowKey(data RealData) []byte {
+func RealDataToRowKey(data RealData) []byte {
 	timestamp := make([]byte, TimeLen)
 	qualifier := make([]byte, QualifierLen)
 	binary.BigEndian.PutUint64(timestamp, uint64(data.Timestamp))
@@ -136,31 +136,21 @@ func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
 
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
-		{
-			start := funk.FlattenDeep([][]byte{startTimestamp, userKey, qualifier})
-			startByte = start.([]byte)
-		}
+		startByte = funk.FlattenDeep([][]byte{startTimestamp, userKey, qualifier}).([]byte)
 	case query.Qualifier == "":
-		{
-			start := funk.FlattenDeep([][]byte{startTimestamp, query.UserKey, qualifier})
-			startByte = start.([]byte)
-
-		}
+		startByte = funk.FlattenDeep([][]byte{startTimestamp, query.UserKey, qualifier}).([]byte)
 	case query.UserKey == nil:
 		{
 			qualifierPadding := QualifierToByteArr(query.Qualifier)
-			start := funk.FlattenDeep([][]byte{startTimestamp, userKey, qualifierPadding})
-			startByte = start.([]byte)
+			startByte = funk.FlattenDeep([][]byte{startTimestamp, userKey, qualifierPadding}).([]byte)
 		}
 	default:
 		{
 			qualifierPadding := QualifierToByteArr(query.Qualifier)
-			start := funk.FlattenDeep([][]byte{startTimestamp, query.UserKey, qualifierPadding})
-			startByte = start.([]byte)
+			startByte = funk.FlattenDeep([][]byte{startTimestamp, query.UserKey, qualifierPadding}).([]byte)
 		}
 	}
-	end := funk.FlattenDeep([][]byte{endTimestamp, userKey, qualifier})
-	endByte = end.([]byte)
+	endByte = funk.FlattenDeep([][]byte{endTimestamp, userKey, qualifier}).([]byte)
 
 	return startByte, endByte
 

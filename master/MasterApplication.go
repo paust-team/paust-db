@@ -81,7 +81,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 			fmt.Println("meta marshal error : ", err)
 		}
 
-		rowKey := types.DataToRowKey(realDataSlice[i])
+		rowKey := types.RealDataToRowKey(realDataSlice[i])
 		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(1), rowKey, metaByte)
 		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(2), rowKey, realDataSlice[i].Data)
 	}
