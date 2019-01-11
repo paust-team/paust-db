@@ -49,7 +49,7 @@ func (client *Client) WriteData(time time.Time, pubKey string, qualifier string,
 	}
 
 	if len(pubKeyBytes) != types.UserKeyLen {
-		fmt.Println("public key: ed25519 public key must be 32bytes")
+		fmt.Printf("public key: ed25519 public key must be %d bytes\n", types.UserKeyLen)
 		os.Exit(1)
 	}
 
@@ -70,13 +70,13 @@ func (client *Client) ReadData(start int64, end int64, pubKey string, qualifier 
 		}
 
 		if len(pubKeyBytes) != types.UserKeyLen {
-			fmt.Println("public key: ed25519 public key must be 32bytes")
+			fmt.Printf("public key: ed25519 public key must be %d bytes \n", types.UserKeyLen)
 			os.Exit(1)
 		}
 	}
 
 	if len(qualifier) > types.QualifierLen {
-		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", qualifier)
+		fmt.Printf("qualifier: \"%v\" is bigger than %d bytes\n", qualifier, types.QualifierLen)
 		os.Exit(1)
 	}
 
@@ -184,12 +184,12 @@ func (client *Client) ReadMetaData(start int64, end int64, pubKey string, qualif
 		}
 
 		if len(pubKeyBytes) != types.UserKeyLen {
-			fmt.Println("public key: ed25519 public key must be 32bytes")
+			fmt.Printf("public key: ed25519 public key must be %d bytes \n", types.UserKeyLen)
 			os.Exit(1)
 		}
 	}
 	if len(qualifier) > types.QualifierLen {
-		fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", qualifier)
+		fmt.Printf("qualifier: \"%v\" is bigger than %d bytes\n", qualifier, types.QualifierLen)
 		os.Exit(1)
 	}
 
@@ -223,7 +223,7 @@ var writeCmd = &cobra.Command{
 		}
 
 		if len(writeQualifier) > types.QualifierLen {
-			fmt.Printf("qualifier: \"%v\" is bigger than 20 bytes\n", writeQualifier)
+			fmt.Printf("qualifier: \"%v\" is bigger than %d bytes\n", writeQualifier, types.QualifierLen)
 			os.Exit(1)
 		}
 
@@ -375,7 +375,7 @@ If you want to query for only one timestamp, make 'start' and 'end' equal.`,
 
 func init() {
 	writeCmd.Flags().StringVarP(&writePubKey, "pubkey", "p", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
-	writeCmd.Flags().StringVarP(&writeQualifier, "qualifier", "q", "test", "Data qualifier (max 20 bytes)")
+	writeCmd.Flags().StringVarP(&writeQualifier, "qualifier", "q", "test", "Data qualifier")
 	writeCmd.Flags().StringVarP(&filePath, "file", "f", "", "File path")
 	writeCmd.Flags().StringVarP(&directoryPath, "directory", "d", "", "Directory path")
 	writeCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
@@ -386,8 +386,8 @@ func init() {
 	Cmd.AddCommand(queryCmd)
 	queryCmd.AddCommand(metadataCmd)
 	metadataCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "", "user's public key (base64)")
-	metadataCmd.Flags().StringVarP(&qualifier, "qualifier", "q", "", "data qualifier (max 20 bytes)")
+	metadataCmd.Flags().StringVarP(&qualifier, "qualifier", "q", "", "data qualifier")
 	queryCmd.AddCommand(realdataCmd)
 	realdataCmd.Flags().StringVarP(&pubKey, "pubkey", "p", "", "user's public key (base64)")
-	realdataCmd.Flags().StringVarP(&qualifier, "qualifier", "q", "", "data qualifier (max 20 bytes)")
+	realdataCmd.Flags().StringVarP(&qualifier, "qualifier", "q", "", "data qualifier")
 }
