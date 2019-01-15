@@ -100,7 +100,7 @@ func QualifierWithoutPadding(keySlice []byte) []byte {
 }
 
 //MetaResponse에서 offset을 추가한 timestamp
-func RMetaDataObjAndKeyToMetaRes(key []byte, meta MetaDataObj) (RMetaResObj, error) {
+func MetaDataObjAndKeyToRMetaResObj(key []byte, meta MetaDataObj) (RMetaResObj, error) {
 	metaResponse := RMetaResObj{}
 
 	if len(key) != RowKeyLen {
