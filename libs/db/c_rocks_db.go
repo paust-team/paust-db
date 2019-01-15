@@ -179,7 +179,7 @@ func (db *CRocksDB) Close() {
 
 // Implements DB.
 func (db *CRocksDB) Print() {
-	var meta = types.MetaData{}
+	var metaDataObj = types.MetaDataObj{}
 
 	defaultItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(0))
 	defer defaultItr.Close()
@@ -197,8 +197,8 @@ func (db *CRocksDB) Print() {
 
 	fmt.Println("--------------Metadata Column Family--------------")
 	for metaItr.SeekToFirst(); metaItr.Valid(); metaItr.Next() {
-		json.Unmarshal(metaItr.Value(), &meta)
-		metaResp, err := types.MetaDataAndKeyToMetaResponse(metaItr.Key(), meta)
+		json.Unmarshal(metaItr.Value(), &metaDataObj)
+		metaResp, err := types.RMetaDataObjAndKeyToMetaRes(metaItr.Key(), metaDataObj)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -209,9 +209,9 @@ func (db *CRocksDB) Print() {
 	fmt.Println("--------------Realdata Column Family--------------")
 
 	for realItr.SeekToFirst(); realItr.Valid(); realItr.Next() {
-		data := types.RowKeyAndValueToRealData(realItr.Key(), realItr.Value())
+		realDataObj := types.RowKeyAndValueToWRealDataObj(realItr.Key(), realItr.Value())
 		fmt.Println("key : ", realItr.Key())
-		fmt.Println("value: ", data)
+		fmt.Println("value: ", realDataObj)
 	}
 
 }
