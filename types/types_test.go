@@ -12,10 +12,10 @@ func TestDataToRowKey(t *testing.T) {
 	//given
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	assert.Nil(t, err)
-	givenData := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("doNotUse")}
+	givenData := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("doNotUse")}
 
 	//when
-	actualRowKey := types.RealDataToRowKey(givenData)
+	actualRowKey := types.WRealDataObjToRowKey(givenData)
 
 	//then
 	expectTimeInRowKey := make([]byte, types.TimeLen)
@@ -45,12 +45,12 @@ func TestRowKeyAndValueToData(t *testing.T) {
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	assert.Nil(t, err)
 
-	realData := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte{0x10, 0xff}}
-	givenRowKey := types.RealDataToRowKey(realData)
+	realData := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte{0x10, 0xff}}
+	givenRowKey := types.WRealDataObjToRowKey(realData)
 	givenValue := []byte{0x10, 0xff}
 
 	//when
-	actualData := types.RowKeyAndValueToRealData(givenRowKey, givenValue)
+	actualData := types.RowKeyAndValueToWRealDataObj(givenRowKey, givenValue)
 
 	//then
 	assert.Equal(t, realData, actualData)
@@ -74,15 +74,15 @@ func TestMetaDataAndKeyToMetaResponse(t *testing.T) {
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	assert.Nil(t, err)
 
-	givenMetaData := types.MetaData{UserKey: pubKeyBytes, Qualifier: "test"}
+	givenMetaData := types.MetaDataObj{UserKey: pubKeyBytes, Qualifier: "test"}
 
-	givenData := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "test", Data: []byte{0x10, 0x11}}
-	givenKey := types.RealDataToRowKey(givenData)
+	givenData := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "test", Data: []byte{0x10, 0x11}}
+	givenKey := types.WRealDataObjToRowKey(givenData)
 
-	expectMetaResponse := types.MetaResponse{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "test"}
+	expectMetaResponse := types.RMetaResObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "test"}
 
 	//when
-	actualMetaResponse, err := types.MetaDataAndKeyToMetaResponse(givenKey, givenMetaData)
+	actualMetaResponse, err := types.RMetaDataObjAndKeyToMetaRes(givenKey, givenMetaData)
 	assert.Nil(t, err)
 
 	//then
@@ -98,7 +98,7 @@ func TestCreateStartByteAndEndByte(t *testing.T) {
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	assert.Nil(t, err)
 
-	givenDataQuery := types.DataQuery{Start: 1545982882435375000, End: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "test"}
+	givenDataQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "test"}
 
 	expectStart := []byte{0x15, 0x74, 0x6f, 0x3d, 0x98, 0x65, 0x1f, 0x98, 0xa2, 0x29, 0x9d, 0xf1, 0x97, 0x73, 0x81,
 		0x41, 0xf3, 0x17, 0xd0, 0x8f, 0xa, 0x12, 0x54, 0xf2, 0x6, 0xfc, 0xf5, 0x56, 0x8c, 0x62, 0xf, 0xb5, 0x4a, 0x95,
@@ -119,7 +119,7 @@ func TestCreateStartByteAndEndByte(t *testing.T) {
 		case query.UserKey == nil && query.Qualifier == ""
 	*/
 	//given
-	givenDataQuery = types.DataQuery{Start: 1545982882435375000, End: 1545982882435375001, UserKey: nil, Qualifier: ""}
+	givenDataQuery = types.RDataQueryObj{Start: 1545982882435375000, End: 1545982882435375001, UserKey: nil, Qualifier: ""}
 	expectStart = []byte{0x15, 0x74, 0x6f, 0x3d, 0x98, 0x65, 0x1f, 0x98, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
@@ -138,7 +138,7 @@ func TestCreateStartByteAndEndByte(t *testing.T) {
 		case query.Qualifier == ""
 	*/
 	//given
-	givenDataQuery = types.DataQuery{Start: 1545982882435375000, End: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: ""}
+	givenDataQuery = types.RDataQueryObj{Start: 1545982882435375000, End: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: ""}
 	expectStart = []byte{0x15, 0x74, 0x6f, 0x3d, 0x98, 0x65, 0x1f, 0x98, 0xa2, 0x29, 0x9d, 0xf1, 0x97, 0x73, 0x81,
 		0x41, 0xf3, 0x17, 0xd0, 0x8f, 0xa, 0x12, 0x54, 0xf2, 0x6, 0xfc, 0xf5, 0x56, 0x8c, 0x62, 0xf, 0xb5, 0x4a, 0x95,
 		0xfa, 0x59, 0x3f, 0x27, 0x40, 0x71, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
@@ -159,7 +159,7 @@ func TestCreateStartByteAndEndByte(t *testing.T) {
 		case query.UserKey == nil
 	*/
 	//given
-	givenDataQuery = types.DataQuery{Start: 1545982882435375000, End: 1545982882435375001, UserKey: nil, Qualifier: "test"}
+	givenDataQuery = types.RDataQueryObj{Start: 1545982882435375000, End: 1545982882435375001, UserKey: nil, Qualifier: "test"}
 	expectStart = []byte{0x15, 0x74, 0x6f, 0x3d, 0x98, 0x65, 0x1f, 0x98, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 		0x0, 0x74, 0x65, 0x73, 0x74, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}

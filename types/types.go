@@ -7,7 +7,7 @@ import (
 	"github.com/thoas/go-funk"
 )
 
-type RealData struct {
+type WRealDataObj struct {
 	//Timestamp는 client에서 nano단위로 들어옴.
 	Timestamp uint64 `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
@@ -15,27 +15,27 @@ type RealData struct {
 	Data      []byte `json:"data"`
 }
 
-type RealDataSlice []RealData
+type WRealDataObjs []WRealDataObj
 
-type MetaData struct {
+type MetaDataObj struct {
 	UserKey   []byte `json:"userKey"`
 	Qualifier string `json:"qualifier"`
 }
 
-type DataQuery struct {
+type RDataQueryObj struct {
 	Start     uint64 `json:"start"`
 	End       uint64 `json:"end"`
 	UserKey   []byte `json:"userKey"`
 	Qualifier string `json:"qualifier"`
 }
 
-type MetaResponse struct {
+type RMetaResObj struct {
 	Timestamp uint64 `json:"timestamp"`
 	UserKey   []byte `json:"userKey"`
 	Qualifier string `json:"qualifier"`
 }
 
-type MetaResponseSlice []MetaResponse
+type RMetaResObjs []RMetaResObj
 
 const (
 	TimeLen      = 8
@@ -44,7 +44,7 @@ const (
 	RowKeyLen    = TimeLen + UserKeyLen + QualifierLen
 )
 
-func RealDataToRowKey(data RealData) []byte {
+func WRealDataObjToRowKey(data WRealDataObj) []byte {
 	timestamp := make([]byte, TimeLen)
 	qualifier := make([]byte, QualifierLen)
 	binary.BigEndian.PutUint64(timestamp, data.Timestamp)
@@ -67,12 +67,12 @@ func QualifierToByteArr(qualifier string) []byte {
 	return qualifierArr
 }
 
-func RowKeyAndValueToRealData(key, value []byte) RealData {
+func RowKeyAndValueToWRealDataObj(key, value []byte) WRealDataObj {
 
 	if len(key) != RowKeyLen {
 		fmt.Println("rowkey len error len :", len(key))
 	}
-	realData := RealData{}
+	realData := WRealDataObj{}
 
 	timestamp := binary.BigEndian.Uint64(key[0:TimeLen])
 
@@ -100,8 +100,8 @@ func QualifierWithoutPadding(keySlice []byte) []byte {
 }
 
 //MetaResponse에서 offset을 추가한 timestamp
-func MetaDataAndKeyToMetaResponse(key []byte, meta MetaData) (MetaResponse, error) {
-	metaResponse := MetaResponse{}
+func RMetaDataObjAndKeyToMetaRes(key []byte, meta MetaDataObj) (RMetaResObj, error) {
+	metaResponse := RMetaResObj{}
 
 	if len(key) != RowKeyLen {
 		return metaResponse, errors.New("row key len error")
@@ -118,7 +118,7 @@ func MetaDataAndKeyToMetaResponse(key []byte, meta MetaData) (MetaResponse, erro
 }
 
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
-func CreateStartByteAndEndByte(query DataQuery) ([]byte, []byte) {
+func CreateStartByteAndEndByte(query RDataQueryObj) ([]byte, []byte) {
 	startTimestamp := make([]byte, TimeLen)
 	endTimestamp := make([]byte, TimeLen)
 

@@ -27,10 +27,10 @@ func (suite *MasterSuite) TestMasterApplication_CheckTx() {
 	//given
 
 	pubKeyBytes, _ := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
-	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("aw")}
-	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("goog")}
+	realData1 := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("aw")}
+	realData2 := types.WRealDataObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("goog")}
 
-	realDataSlice := funk.FlattenDeep([]types.RealData{realData1, realData2}).([]types.RealData)
+	realDataSlice := funk.FlattenDeep([]types.WRealDataObj{realData1, realData2}).([]types.WRealDataObj)
 	jsonString, _ := json.Marshal(realDataSlice)
 
 	//when
@@ -91,11 +91,11 @@ func (suite *MasterSuite) TestMasterApplication_DeliverTx() {
 	pubKeyBytes2, err2 := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
 	suite.Nil(err2)
 
-	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
-	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
-	realData3 := types.RealData{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
+	realData1 := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
+	realData2 := types.WRealDataObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
+	realData3 := types.WRealDataObj{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
 
-	realDataSlice := funk.FlattenDeep([]types.RealData{realData1, realData2, realData3})
+	realDataSlice := funk.FlattenDeep([]types.WRealDataObj{realData1, realData2, realData3})
 	tx, err3 := json.Marshal(realDataSlice)
 	suite.Nil(err3)
 
@@ -140,25 +140,25 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	pubKeyBytes2, err := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
 	suite.Nil(err)
-	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
-	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
+	realData1 := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
+	realData2 := types.WRealDataObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
 
-	metaRes1 := types.MetaResponse{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
-	metaRes2 := types.MetaResponse{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
-	metaRes3 := types.MetaResponse{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt"}
+	metaRes1 := types.RMetaResObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
+	metaRes2 := types.RMetaResObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
+	metaRes3 := types.RMetaResObj{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt"}
 
 	/**
-	RealData query
+	WRealDataObj query
 	*/
 
 	//when
-	realQuery := types.DataQuery{Start: 1545982882435375000, End: 1545982882435375002, UserKey: pubKeyBytes, Qualifier: ""}
+	realQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, UserKey: pubKeyBytes, Qualifier: ""}
 	realQueryByteArr, _ := json.Marshal(realQuery)
 	req := abciTypes.RequestQuery{Data: realQueryByteArr, Path: "/realdata"}
 	res := suite.app.Query(req)
 
 	//then
-	realDataSlice := funk.FlattenDeep([]types.RealData{realData1, realData2})
+	realDataSlice := funk.FlattenDeep([]types.WRealDataObj{realData1, realData2})
 	value, err := json.Marshal(realDataSlice)
 	suite.Nil(err)
 
@@ -166,17 +166,17 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 	suite.Equal(expectRes, res)
 
 	/**
-	MetaData query
+	MetaDataObj query
 	*/
 
 	//when
-	metaQuery := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
+	metaQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
 	metaQueryByteArr, _ := json.Marshal(metaQuery)
 	req2 := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
 	res2 := suite.app.Query(req2)
 
 	//then
-	metaResSlice := funk.FlattenDeep([]types.MetaResponse{metaRes1, metaRes2, metaRes3})
+	metaResSlice := funk.FlattenDeep([]types.RMetaResObj{metaRes1, metaRes2, metaRes3})
 	value2, err := json.Marshal(metaResSlice)
 	suite.Nil(err)
 
@@ -198,21 +198,21 @@ func (suite *MasterSuite) TestMasterApplication_metaDataQuery() {
 	pubKeyBytes2, err := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
 	suite.Nil(err)
 
-	metaRes1 := types.MetaResponse{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
-	metaRes2 := types.MetaResponse{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
-	metaRes3 := types.MetaResponse{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt"}
+	metaRes1 := types.RMetaResObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
+	metaRes2 := types.RMetaResObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
+	metaRes3 := types.RMetaResObj{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt"}
 
 	/*
 		case: query.UserKey == nil && query.Qualifier == ""
 	*/
 
 	//when
-	metaQuery := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
+	metaQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
 	res, err := suite.app.MetaDataQuery(metaQuery)
 	suite.Nil(err)
 
 	//then
-	expectRes := types.MetaResponseSlice{}
+	expectRes := types.RMetaResObjs{}
 	expectRes = append(expectRes, metaRes1, metaRes2, metaRes3)
 	suite.Equal(expectRes, res)
 
@@ -221,12 +221,12 @@ func (suite *MasterSuite) TestMasterApplication_metaDataQuery() {
 	*/
 
 	//when
-	metaQuery2 := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: ""}
+	metaQuery2 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: ""}
 	res2, err := suite.app.MetaDataQuery(metaQuery2)
 	suite.Nil(err)
 
 	//then
-	expectRes2 := types.MetaResponseSlice{}
+	expectRes2 := types.RMetaResObjs{}
 	expectRes2 = append(expectRes2, metaRes1, metaRes2)
 	suite.Equal(expectRes2, res2)
 
@@ -235,12 +235,12 @@ func (suite *MasterSuite) TestMasterApplication_metaDataQuery() {
 	*/
 
 	//when
-	metaQuery3 := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: "Stt"}
+	metaQuery3 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: "Stt"}
 	res3, err := suite.app.MetaDataQuery(metaQuery3)
 	suite.Nil(err)
 
 	//then
-	expectRes3 := types.MetaResponseSlice{}
+	expectRes3 := types.RMetaResObjs{}
 	expectRes3 = append(expectRes3, metaRes2, metaRes3)
 	suite.Equal(expectRes3, res3)
 
@@ -249,12 +249,12 @@ func (suite *MasterSuite) TestMasterApplication_metaDataQuery() {
 	*/
 
 	//when
-	metaQuery4 := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: "Memory"}
+	metaQuery4 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: "Memory"}
 	res4, err := suite.app.MetaDataQuery(metaQuery4)
 	suite.Nil(err)
 
 	//then
-	expectRes4 := types.MetaResponseSlice{}
+	expectRes4 := types.RMetaResObjs{}
 	expectRes4 = append(expectRes4, metaRes1)
 	suite.Equal(expectRes4, res4)
 
@@ -272,21 +272,21 @@ func (suite *MasterSuite) TestMasterApplication_realDataQuery() {
 	pubKeyBytes2, err := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
 	suite.Nil(err)
 
-	realData1 := types.RealData{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
-	realData2 := types.RealData{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
-	realData3 := types.RealData{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
+	realData1 := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
+	realData2 := types.WRealDataObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
+	realData3 := types.WRealDataObj{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
 
 	/*
 		case: query.UserKey == nil && query.Qualifier == ""
 	*/
 
 	//when
-	realQuery := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
+	realQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
 	res, err := suite.app.RealDataQuery(realQuery)
 	suite.Nil(err)
 
 	//then
-	expectRes := types.RealDataSlice{}
+	expectRes := types.WRealDataObjs{}
 	expectRes = append(expectRes, realData1, realData2, realData3)
 	suite.Equal(expectRes, res)
 
@@ -295,12 +295,12 @@ func (suite *MasterSuite) TestMasterApplication_realDataQuery() {
 	*/
 
 	//when
-	realQuery2 := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: ""}
+	realQuery2 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: ""}
 	res2, err := suite.app.RealDataQuery(realQuery2)
 	suite.Nil(err)
 
 	//then
-	expectRes2 := types.RealDataSlice{}
+	expectRes2 := types.WRealDataObjs{}
 	expectRes2 = append(expectRes2, realData1, realData2)
 	suite.Equal(expectRes2, res2)
 
@@ -309,12 +309,12 @@ func (suite *MasterSuite) TestMasterApplication_realDataQuery() {
 	*/
 
 	//when
-	realQuery3 := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: "Stt"}
+	realQuery3 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: "Stt"}
 	res3, err := suite.app.RealDataQuery(realQuery3)
 	suite.Nil(err)
 
 	//then
-	expectRes3 := types.RealDataSlice{}
+	expectRes3 := types.WRealDataObjs{}
 	expectRes3 = append(expectRes3, realData2, realData3)
 	suite.Equal(expectRes3, res3)
 
@@ -323,12 +323,12 @@ func (suite *MasterSuite) TestMasterApplication_realDataQuery() {
 	*/
 
 	//when
-	realQuery4 := types.DataQuery{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: "Memory"}
+	realQuery4 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: "Memory"}
 	res4, err := suite.app.RealDataQuery(realQuery4)
 	suite.Nil(err)
 
 	//then
-	expectRes4 := types.RealDataSlice{}
+	expectRes4 := types.WRealDataObjs{}
 	expectRes4 = append(expectRes4, realData1)
 	suite.Equal(expectRes4, res4)
 }
