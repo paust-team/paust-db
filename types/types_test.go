@@ -74,7 +74,7 @@ func TestMetaDataAndKeyToMetaResponse(t *testing.T) {
 	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	assert.Nil(t, err)
 
-	givenMetaData := types.MetaDataObj{UserKey: pubKeyBytes, Qualifier: "test"}
+	givenMetaData := types.WMetaDataObj{UserKey: pubKeyBytes, Qualifier: "test"}
 
 	givenData := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "test", Data: []byte{0x10, 0x11}}
 	givenKey := types.WRealDataObjToRowKey(givenData)
@@ -82,7 +82,7 @@ func TestMetaDataAndKeyToMetaResponse(t *testing.T) {
 	expectMetaResponse := types.RMetaResObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "test"}
 
 	//when
-	actualMetaResponse, err := types.RMetaDataObjAndKeyToMetaRes(givenKey, givenMetaData)
+	actualMetaResponse, err := types.WMetaDataObjAndKeyToRMetaResObj(givenKey, givenMetaData)
 	assert.Nil(t, err)
 
 	//then

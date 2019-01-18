@@ -17,7 +17,7 @@ type WRealDataObj struct {
 
 type WRealDataObjs []WRealDataObj
 
-type MetaDataObj struct {
+type WMetaDataObj struct {
 	UserKey   []byte `json:"userKey"`
 	Qualifier string `json:"qualifier"`
 }
@@ -100,7 +100,7 @@ func QualifierWithoutPadding(keySlice []byte) []byte {
 }
 
 //MetaResponse에서 offset을 추가한 timestamp
-func MetaDataObjAndKeyToRMetaResObj(key []byte, meta MetaDataObj) (RMetaResObj, error) {
+func WMetaDataObjAndKeyToRMetaResObj(key []byte, meta WMetaDataObj) (RMetaResObj, error) {
 	metaResponse := RMetaResObj{}
 
 	if len(key) != RowKeyLen {

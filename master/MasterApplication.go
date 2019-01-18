@@ -73,10 +73,10 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	}
 
 	for i := 0; i < len(wRealDataObjs); i++ {
-		var metaDataObj = &types.MetaDataObj{}
-		metaDataObj.UserKey = wRealDataObjs[i].UserKey
-		metaDataObj.Qualifier = wRealDataObjs[i].Qualifier
-		metaByte, err := json.Marshal(metaDataObj)
+		var wMetaDataObj = &types.WMetaDataObj{}
+		wMetaDataObj.UserKey = wRealDataObjs[i].UserKey
+		wMetaDataObj.Qualifier = wRealDataObjs[i].Qualifier
+		metaByte, err := json.Marshal(wMetaDataObj)
 		if err != nil {
 			fmt.Println("meta marshal error : ", err)
 		}
@@ -145,8 +145,8 @@ func (app *MasterApplication) metaDataQuery(query types.RDataQueryObj) (types.RM
 
 	switch {
 	case query.UserKey == nil && query.Qualifier == "":
-		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.MetaDataObj) *types.RMetaResObj {
-			metaResp, err := types.RMetaDataObjAndKeyToMetaRes(itr.Key(), meta)
+		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.WMetaDataObj) *types.RMetaResObj {
+			metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(itr.Key(), meta)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -154,9 +154,9 @@ func (app *MasterApplication) metaDataQuery(query types.RDataQueryObj) (types.RM
 		})
 
 	case query.Qualifier == "":
-		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.MetaDataObj) *types.RMetaResObj {
+		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.WMetaDataObj) *types.RMetaResObj {
 			if string(query.UserKey) == string(meta.UserKey) {
-				metaResp, err := types.RMetaDataObjAndKeyToMetaRes(itr.Key(), meta)
+				metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -166,9 +166,9 @@ func (app *MasterApplication) metaDataQuery(query types.RDataQueryObj) (types.RM
 		})
 
 	case query.UserKey == nil:
-		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.MetaDataObj) *types.RMetaResObj {
+		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.WMetaDataObj) *types.RMetaResObj {
 			if string(query.Qualifier) == string(meta.Qualifier) {
-				metaResp, err := types.RMetaDataObjAndKeyToMetaRes(itr.Key(), meta)
+				metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -178,9 +178,9 @@ func (app *MasterApplication) metaDataQuery(query types.RDataQueryObj) (types.RM
 		})
 
 	default:
-		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.MetaDataObj) *types.RMetaResObj {
+		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.WMetaDataObj) *types.RMetaResObj {
 			if string(query.Qualifier) == string(meta.Qualifier) && string(query.UserKey) == string(meta.UserKey) {
-				metaResp, err := types.RMetaDataObjAndKeyToMetaRes(itr.Key(), meta)
+				metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(itr.Key(), meta)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -233,19 +233,19 @@ func (app *MasterApplication) realDataQuery(query types.RDataQueryObj) (types.WR
 	return wRealDataObjs, nil
 }
 
-func searchInMetaColumnFamily(startByte, endByte []byte, itr db.Iterator, closureFunc func(meta types.MetaDataObj) *types.RMetaResObj) types.RMetaResObjs {
-	var metaObj = types.MetaDataObj{}
-	var metaObjs = &types.RMetaResObjs{}
+func searchInMetaColumnFamily(startByte, endByte []byte, itr db.Iterator, closureFunc func(meta types.WMetaDataObj) *types.RMetaResObj) types.RMetaResObjs {
+	var wMetaObj = types.WMetaDataObj{}
+	var rMetaObjs = &types.RMetaResObjs{}
 
 	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-		json.Unmarshal(itr.Value(), &metaObj)
-		ret := closureFunc(metaObj)
+		json.Unmarshal(itr.Value(), &wMetaObj)
+		ret := closureFunc(wMetaObj)
 		if ret != nil {
-			*metaObjs = append(*metaObjs, *ret)
+			*rMetaObjs = append(*rMetaObjs, *ret)
 		}
 	}
 
-	return *metaObjs
+	return *rMetaObjs
 }
 
 func searchInRealColumnFamily(startByte, endByte []byte, itr db.Iterator, closureFunc func(realData types.WRealDataObj) *types.WRealDataObj) types.WRealDataObjs {
