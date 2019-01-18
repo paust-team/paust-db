@@ -166,7 +166,7 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 	suite.Equal(expectRes, res)
 
 	/**
-	MetaDataObj query
+	WMetaDataObj query
 	*/
 
 	//when
