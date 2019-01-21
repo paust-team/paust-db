@@ -18,7 +18,7 @@ func (suite *ClientTestSuite) TestClient_ReadData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), UserKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
+	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)
@@ -45,9 +45,9 @@ func (suite *ClientTestSuite) TestClient_ReadMetaData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), UserKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
+	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
 	require.Nil(err, "json marshal err: %+v", err)
-	expectedValue, err := json.Marshal(types.RMetaResObjs{types.RMetaResObj{Timestamp: uint64(time.UnixNano()), UserKey: pubKeyBytes, Qualifier: TestQualifier}})
+	expectedValue, err := json.Marshal(types.RMetaResObjs{types.RMetaDataResObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: TestQualifier}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)

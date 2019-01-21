@@ -29,7 +29,7 @@ func (suite *ClientTestSuite) TestClient_WriteData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), UserKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
+	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	bres, err := suite.dbClient.WriteData(time, TestPubKey, TestQualifier, data)

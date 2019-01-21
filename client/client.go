@@ -48,12 +48,12 @@ func (client *Client) WriteData(time time.Time, pubKey string, qualifier string,
 		os.Exit(1)
 	}
 
-	if len(pubKeyBytes) != types.UserKeyLen {
-		fmt.Printf("public key: ed25519 public key must be %d bytes\n", types.UserKeyLen)
+	if len(pubKeyBytes) != types.OwnerKeyLen {
+		fmt.Printf("public key: ed25519 public key must be %d bytes\n", types.OwnerKeyLen)
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), UserKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
+	jsonString, _ := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: qualifier, Data: data}})
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
 	return bres, err
@@ -69,8 +69,8 @@ func (client *Client) ReadData(start uint64, end uint64, pubKey string, qualifie
 			os.Exit(1)
 		}
 
-		if len(pubKeyBytes) != types.UserKeyLen {
-			fmt.Printf("public key: ed25519 public key must be %d bytes \n", types.UserKeyLen)
+		if len(pubKeyBytes) != types.OwnerKeyLen {
+			fmt.Printf("public key: ed25519 public key must be %d bytes \n", types.OwnerKeyLen)
 			os.Exit(1)
 		}
 	}
@@ -80,7 +80,7 @@ func (client *Client) ReadData(start uint64, end uint64, pubKey string, qualifie
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.RDataQueryObj{Start: start, End: end, UserKey: pubKeyBytes, Qualifier: qualifier})
+	jsonString, _ := json.Marshal(types.RMetaDataQueryObj{Start: start, End: end, UserKey: pubKeyBytes, Qualifier: qualifier})
 
 	res, err := client.client.ABCIQuery("/realdata", jsonString)
 	return res, err
@@ -183,8 +183,8 @@ func (client *Client) ReadMetaData(start uint64, end uint64, pubKey string, qual
 			os.Exit(1)
 		}
 
-		if len(pubKeyBytes) != types.UserKeyLen {
-			fmt.Printf("public key: ed25519 public key must be %d bytes \n", types.UserKeyLen)
+		if len(pubKeyBytes) != types.OwnerKeyLen {
+			fmt.Printf("public key: ed25519 public key must be %d bytes \n", types.OwnerKeyLen)
 			os.Exit(1)
 		}
 	}
@@ -193,7 +193,7 @@ func (client *Client) ReadMetaData(start uint64, end uint64, pubKey string, qual
 		os.Exit(1)
 	}
 
-	jsonString, _ := json.Marshal(types.RDataQueryObj{Start: start, End: end, UserKey: pubKeyBytes, Qualifier: qualifier})
+	jsonString, _ := json.Marshal(types.RMetaDataQueryObj{Start: start, End: end, UserKey: pubKeyBytes, Qualifier: qualifier})
 
 	res, err := client.client.ABCIQuery("/metadata", jsonString)
 	return res, err

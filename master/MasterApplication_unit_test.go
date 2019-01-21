@@ -6,18 +6,18 @@ import (
 	"github.com/paust-team/paust-db/types"
 	"github.com/tendermint/tendermint/abci/example/code"
 	abciTypes "github.com/tendermint/tendermint/abci/types"
-	"github.com/thoas/go-funk"
 )
 
 func (suite *MasterSuite) TestMasterApplication_Info() {
 	//given
-	req := abciTypes.RequestInfo{}
+	givenReq := abciTypes.RequestInfo{}
 
 	//when
-	res := suite.app.Info(req)
+	actualRes := suite.app.Info(givenReq)
 
 	//then
-	suite.Equal(res.Data, "---- Info")
+	expectRes := abciTypes.ResponseInfo{Data: "---- Info"}
+	suite.Equal(actualRes, expectRes)
 }
 
 func (suite *MasterSuite) TestMasterApplication_CheckTx() {
@@ -26,97 +26,96 @@ func (suite *MasterSuite) TestMasterApplication_CheckTx() {
 	*/
 	//given
 
-	pubKeyBytes, _ := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
-	realData1 := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("aw")}
-	realData2 := types.WRealDataObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("goog")}
+	givenOwnerKey, _ := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
+	givenWRealDataObj1 := types.WRealDataObj{Timestamp: 1545982882435375000, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory"), Data: []byte("aw")}
+	givenWRealDataObj2 := types.WRealDataObj{Timestamp: 1545982882435375001, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt"), Data: []byte("goog")}
 
-	realDataSlice := funk.FlattenDeep([]types.WRealDataObj{realData1, realData2}).([]types.WRealDataObj)
-	jsonString, _ := json.Marshal(realDataSlice)
+	givenWRealDataObjs := types.WRealDataObjs{}
+	givenWRealDataObjs = append(givenWRealDataObjs, givenWRealDataObj1, givenWRealDataObj2)
+	givenMarshaledObjs, _ := json.Marshal(givenWRealDataObjs)
 
 	//when
-	res := suite.app.CheckTx(jsonString)
+	actualRes := suite.app.CheckTx(givenMarshaledObjs)
 
 	//then
 	expectRes := abciTypes.ResponseCheckTx{Code: code.CodeTypeOK, Log: ""}
-	suite.Equal(expectRes, res)
+	suite.Equal(expectRes, actualRes)
 
 	/*
 		WrongCase
 	*/
 
 	//given
-	wrongTx := []byte("wrongtx")
+	givenWrongTx := []byte("wrongtx")
 
 	//when
-	res2 := suite.app.CheckTx(wrongTx)
+	actualRes2 := suite.app.CheckTx(givenWrongTx)
 
 	//then
-	suite.Equal(code.CodeTypeEncodingError, res2.Code)
-	suite.NotEqual("", res2.Log)
+	suite.Equal(code.CodeTypeEncodingError, actualRes2.Code)
+	suite.NotEqual("", actualRes2.Log)
 
 }
 
 func (suite *MasterSuite) TestMasterApplication_InitChain() {
 	//given
-	req := abciTypes.RequestInitChain{}
+	givenReq := abciTypes.RequestInitChain{}
 
 	//when
-	res := suite.app.InitChain(req)
+	actualRes := suite.app.InitChain(givenReq)
 
 	//then
 	suite.NotNil(suite.app.WB(), "WriteBatch should not be nil after Initchain")
 	suite.NotNil(suite.app.MWB(), "MetaWriteBatch should not be nil after Initchain")
 	expectRes := abciTypes.ResponseInitChain{}
-	suite.Equal(expectRes, res)
+	suite.Equal(expectRes, actualRes)
 }
 
 func (suite *MasterSuite) TestMasterApplication_BeginBlock() {
 	//given
-	req := abciTypes.RequestBeginBlock{}
+	givenReq := abciTypes.RequestBeginBlock{}
 
 	//when
-	res := suite.app.BeginBlock(req)
+	actualRes := suite.app.BeginBlock(givenReq)
 
 	//then
 	expectRes := abciTypes.ResponseBeginBlock{}
-	suite.Equal(expectRes, res)
+	suite.Equal(expectRes, actualRes)
 }
 
 func (suite *MasterSuite) TestMasterApplication_DeliverTx() {
 	//given
 	suite.TestMasterApplication_InitChain()
 
-	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
+	givenOwnerKey, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	suite.Nil(err)
-	pubKeyBytes2, err2 := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
-	suite.Nil(err2)
 
-	realData1 := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
-	realData2 := types.WRealDataObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
-	realData3 := types.WRealDataObj{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
+	givenWRealDataObj1 := types.WRealDataObj{Timestamp: 1545982882435375000, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory"), Data: []byte("data1")}
+	givenWRealDataObj2 := types.WRealDataObj{Timestamp: 1545982882435375001, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt"), Data: []byte("data2")}
 
-	realDataSlice := funk.FlattenDeep([]types.WRealDataObj{realData1, realData2, realData3})
-	tx, err3 := json.Marshal(realDataSlice)
-	suite.Nil(err3)
+	givenWRealDataObjs := types.WRealDataObjs{}
+	givenWRealDataObjs = append(givenWRealDataObjs, givenWRealDataObj1, givenWRealDataObj2)
+	givenTx, err := json.Marshal(givenWRealDataObjs)
+	suite.Nil(err)
 
 	//when
-	res := suite.app.DeliverTx(tx)
+	actualRes := suite.app.DeliverTx(givenTx)
 
 	//then
-	suite.Equal(code.CodeTypeOK, res.Code)
+	suite.Equal(code.CodeTypeOK, actualRes.Code)
 
 }
 
 func (suite *MasterSuite) TestMasterApplication_EndBlock() {
 	//given
-	req := abciTypes.RequestEndBlock{}
+	givenReq := abciTypes.RequestEndBlock{}
 
 	//when
-	res := suite.app.EndBlock(req)
+	actualRes := suite.app.EndBlock(givenReq)
 
 	//then
 	expectRes := abciTypes.ResponseEndBlock{}
-	suite.Equal(expectRes, res)
+	suite.Equal(expectRes, actualRes)
 }
 
 func (suite *MasterSuite) TestMasterApplication_Commit() {
@@ -124,211 +123,133 @@ func (suite *MasterSuite) TestMasterApplication_Commit() {
 	suite.TestMasterApplication_DeliverTx()
 
 	//when
-	res := suite.app.Commit()
+	actualRes := suite.app.Commit()
 
 	//then
 	expectRes := abciTypes.ResponseCommit{Data: suite.app.Hash()}
-	suite.Equal(expectRes, res)
+	suite.Equal(expectRes, actualRes)
 }
 
 //path test
 func (suite *MasterSuite) TestMasterApplication_Query() {
 	//given
-	suite.TestMasterApplication_DeliverTx()
 	suite.TestMasterApplication_Commit()
 
-	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
-	pubKeyBytes2, err := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
+	givenOwnerKey, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	suite.Nil(err)
-	realData1 := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
-	realData2 := types.WRealDataObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
+	givenWRealDataObj1 := types.WRealDataObj{Timestamp: 1545982882435375000, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory"), Data: []byte("data1")}
+	givenWRealDataObj2 := types.WRealDataObj{Timestamp: 1545982882435375001, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt"), Data: []byte("data2")}
 
-	metaRes1 := types.RMetaResObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
-	metaRes2 := types.RMetaResObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
-	metaRes3 := types.RMetaResObj{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt"}
-
-	/**
-	WRealDataObj query
+	/*
+		Meta Query
 	*/
 
 	//when
-	realQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, UserKey: pubKeyBytes, Qualifier: ""}
-	realQueryByteArr, _ := json.Marshal(realQuery)
-	req := abciTypes.RequestQuery{Data: realQueryByteArr, Path: "/realdata"}
-	res := suite.app.Query(req)
+	metaQueryObj := types.RMetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002}
+	metaQueryByteArr, err := json.Marshal(metaQueryObj)
+	suite.Nil(err)
+	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
+	actualMetaRes := suite.app.Query(metaQuery)
 
 	//then
-	realDataSlice := funk.FlattenDeep([]types.WRealDataObj{realData1, realData2})
-	value, err := json.Marshal(realDataSlice)
+	expectRowKey1 := types.WRealDataObjToRowKey(givenWRealDataObj1)
+	expectRowKey2 := types.WRealDataObjToRowKey(givenWRealDataObj2)
+	expectRMetaResObj1 := types.RMetaDataResObj{RowKey: expectRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
+	expectRMetaResObj2 := types.RMetaDataResObj{RowKey: expectRowKey2, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt")}
+	expectRMetaResObjs := types.RMetaDataResObjs{}
+	expectRMetaResObjs = append(expectRMetaResObjs, expectRMetaResObj1, expectRMetaResObj2)
+
+	marshaledExpectMetaResObjs, err := json.Marshal(expectRMetaResObjs)
 	suite.Nil(err)
 
-	expectRes := abciTypes.ResponseQuery{Value: value}
-	suite.Equal(expectRes, res)
+	expectMetaRes := abciTypes.ResponseQuery{Value: marshaledExpectMetaResObjs}
+	suite.Equal(expectMetaRes, actualMetaRes)
 
-	/**
-	WMetaDataObj query
+	/*
+		Real Query
 	*/
-
-	//when
-	metaQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
-	metaQueryByteArr, _ := json.Marshal(metaQuery)
-	req2 := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
-	res2 := suite.app.Query(req2)
-
-	//then
-	metaResSlice := funk.FlattenDeep([]types.RMetaResObj{metaRes1, metaRes2, metaRes3})
-	value2, err := json.Marshal(metaResSlice)
-	suite.Nil(err)
-
-	expectRes2 := abciTypes.ResponseQuery{Value: value2}
-	suite.Equal(expectRes2, res2)
-
-}
-
-//4가지 case 존재
-func (suite *MasterSuite) TestMasterApplication_metaDataQuery() {
 
 	//given
-	suite.TestMasterApplication_DeliverTx()
-	suite.TestMasterApplication_Commit()
-
-	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
+	givenMetaResObjs := types.RMetaDataResObjs{}
+	err = json.Unmarshal(actualMetaRes.Value, &givenMetaResObjs)
 	suite.Nil(err)
 
-	pubKeyBytes2, err := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
-	suite.Nil(err)
-
-	metaRes1 := types.RMetaResObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory"}
-	metaRes2 := types.RMetaResObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt"}
-	metaRes3 := types.RMetaResObj{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt"}
-
-	/*
-		case: query.UserKey == nil && query.Qualifier == ""
-	*/
+	var givenRowKeys types.RowKeys
+	for i := 0; i < len(givenMetaResObjs); i++ {
+		givenRowKeys = append(givenRowKeys, givenMetaResObjs[i].RowKey)
+	}
 
 	//when
-	metaQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
-	res, err := suite.app.MetaDataQuery(metaQuery)
-	suite.Nil(err)
+	realQueryObj := types.RRealDataQueryObj{Keys: givenRowKeys}
+	realQueryByteArr, err := json.Marshal(realQueryObj)
+	reqQuery := abciTypes.RequestQuery{Data: realQueryByteArr, Path: "/realdata"}
+	actualRealRes := suite.app.Query(reqQuery)
 
 	//then
-	expectRes := types.RMetaResObjs{}
-	expectRes = append(expectRes, metaRes1, metaRes2, metaRes3)
-	suite.Equal(expectRes, res)
+	expectRealResObj1 := types.RRealDataResObj{RowKey: givenRowKeys[0], Data: []byte("data1")}
+	expectRealResObj2 := types.RRealDataResObj{RowKey: givenRowKeys[1], Data: []byte("data2")}
+	expectRealResObjs := types.RRealDataResObjs{}
+	expectRealResObjs = append(expectRealResObjs, expectRealResObj1, expectRealResObj2)
 
-	/*
-		case: query.Qualifier == ""
-	*/
-
-	//when
-	metaQuery2 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: ""}
-	res2, err := suite.app.MetaDataQuery(metaQuery2)
+	expectRealResValue, err := json.Marshal(expectRealResObjs)
 	suite.Nil(err)
 
-	//then
-	expectRes2 := types.RMetaResObjs{}
-	expectRes2 = append(expectRes2, metaRes1, metaRes2)
-	suite.Equal(expectRes2, res2)
-
-	/*
-		case: query.UserKey == nil
-	*/
-
-	//when
-	metaQuery3 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: "Stt"}
-	res3, err := suite.app.MetaDataQuery(metaQuery3)
-	suite.Nil(err)
-
-	//then
-	expectRes3 := types.RMetaResObjs{}
-	expectRes3 = append(expectRes3, metaRes2, metaRes3)
-	suite.Equal(expectRes3, res3)
-
-	/*
-		default
-	*/
-
-	//when
-	metaQuery4 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: "Memory"}
-	res4, err := suite.app.MetaDataQuery(metaQuery4)
-	suite.Nil(err)
-
-	//then
-	expectRes4 := types.RMetaResObjs{}
-	expectRes4 = append(expectRes4, metaRes1)
-	suite.Equal(expectRes4, res4)
+	expectRealRes := abciTypes.ResponseQuery{Value: expectRealResValue}
+	suite.Equal(expectRealRes, actualRealRes)
 
 }
 
-//4가지 case 존재
+func (suite *MasterSuite) TestMasterApplication_metaDataQuery() {
+	//given
+	suite.TestMasterApplication_Commit()
+
+	givenOwnerKey, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
+	suite.Nil(err)
+
+	givenWRealDataObj1 := types.WRealDataObj{Timestamp: 1545982882435375000, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory"), Data: []byte("data1")}
+	givenWRealDataObj2 := types.WRealDataObj{Timestamp: 1545982882435375001, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt"), Data: []byte("data2")}
+
+	givenRowKey1 := types.WRealDataObjToRowKey(givenWRealDataObj1)
+	givenRowKey2 := types.WRealDataObjToRowKey(givenWRealDataObj2)
+
+	//when
+	metaQuery := types.RMetaDataQueryObj{Start: 1545982882435375000, End: 1555982882435375002}
+	actualRes, err := suite.app.MetaDataQuery(metaQuery)
+	suite.Nil(err)
+
+	//then
+	expectMetaRes1 := types.RMetaDataResObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
+	expectMetaRes2 := types.RMetaDataResObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt")}
+	expectRes := types.RMetaDataResObjs{}
+	expectRes = append(expectRes, expectMetaRes1, expectMetaRes2)
+
+	suite.Equal(expectRes, actualRes)
+}
+
 func (suite *MasterSuite) TestMasterApplication_realDataQuery() {
 	//given
-	suite.TestMasterApplication_DeliverTx()
 	suite.TestMasterApplication_Commit()
 
-	pubKeyBytes, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
+	givenOwnerKey, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	suite.Nil(err)
 
-	pubKeyBytes2, err := base64.StdEncoding.DecodeString("azbYS7sLOQG0XphoneMrVEQUvZpVSflsDgbLWH0vZVE=")
-	suite.Nil(err)
+	givenWRealDataObj1 := types.WRealDataObj{Timestamp: 1545982882435375000, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory"), Data: []byte("data1")}
+	givenWRealDataObj2 := types.WRealDataObj{Timestamp: 1545982882435375001, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt"), Data: []byte("data2")}
 
-	realData1 := types.WRealDataObj{Timestamp: 1545982882435375000, UserKey: pubKeyBytes, Qualifier: "Memory", Data: []byte("data1")}
-	realData2 := types.WRealDataObj{Timestamp: 1545982882435375001, UserKey: pubKeyBytes, Qualifier: "Stt", Data: []byte("data2")}
-	realData3 := types.WRealDataObj{Timestamp: 1555982882435375000, UserKey: pubKeyBytes2, Qualifier: "Stt", Data: []byte("data3")}
-
-	/*
-		case: query.UserKey == nil && query.Qualifier == ""
-	*/
+	givenRowKey1 := types.WRealDataObjToRowKey(givenWRealDataObj1)
+	givenRowKey2 := types.WRealDataObjToRowKey(givenWRealDataObj2)
+	givenRowKeys := types.RowKeys{}
+	givenRowKeys = append(givenRowKeys, givenRowKey1, givenRowKey2)
 
 	//when
-	realQuery := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: ""}
-	res, err := suite.app.RealDataQuery(realQuery)
+	realQuery := types.RRealDataQueryObj{Keys: givenRowKeys}
+	actualRRealDataResObjs, err := suite.app.RealDataQuery(realQuery)
 	suite.Nil(err)
 
 	//then
-	expectRes := types.WRealDataObjs{}
-	expectRes = append(expectRes, realData1, realData2, realData3)
-	suite.Equal(expectRes, res)
-
-	/*
-		case: query.Qualifier == ""
-	*/
-
-	//when
-	realQuery2 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: ""}
-	res2, err := suite.app.RealDataQuery(realQuery2)
-	suite.Nil(err)
-
-	//then
-	expectRes2 := types.WRealDataObjs{}
-	expectRes2 = append(expectRes2, realData1, realData2)
-	suite.Equal(expectRes2, res2)
-
-	/*
-		case: query.UserKey == nil
-	*/
-
-	//when
-	realQuery3 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: nil, Qualifier: "Stt"}
-	res3, err := suite.app.RealDataQuery(realQuery3)
-	suite.Nil(err)
-
-	//then
-	expectRes3 := types.WRealDataObjs{}
-	expectRes3 = append(expectRes3, realData2, realData3)
-	suite.Equal(expectRes3, res3)
-
-	/*
-		default
-	*/
-
-	//when
-	realQuery4 := types.RDataQueryObj{Start: 1545982882435375000, End: 1555982882435375001, UserKey: pubKeyBytes, Qualifier: "Memory"}
-	res4, err := suite.app.RealDataQuery(realQuery4)
-	suite.Nil(err)
-
-	//then
-	expectRes4 := types.WRealDataObjs{}
-	expectRes4 = append(expectRes4, realData1)
-	suite.Equal(expectRes4, res4)
+	expectRRealDataResObj1 := types.RRealDataResObj{RowKey: givenRowKey1, Data: givenWRealDataObj1.Data}
+	expectRRealDataResObj2 := types.RRealDataResObj{RowKey: givenRowKey2, Data: givenWRealDataObj2.Data}
+	expectRRealDataResObjs := types.RRealDataResObjs{}
+	expectRRealDataResObjs = append(expectRRealDataResObjs, expectRRealDataResObj1, expectRRealDataResObj2)
+	suite.Equal(expectRRealDataResObjs, actualRRealDataResObjs)
 }
