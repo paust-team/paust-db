@@ -1,5 +1,5 @@
 [
-        {"timestamp":1544772882435375000,"userKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"cpu","data":"YWJj"},
-        {"timestamp":1544772960049177000,"userKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"mem","data":"ZGVm"},
-        {"timestamp":1544772967331458000,"userKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"speed","data":"Z2hp"}
+        {"timestamp":1544772882435375000,"userKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"Y3B1","data":"YWJj"},
+        {"timestamp":1544772960049177000,"userKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"bWVt","data":"ZGVm"},
+        {"timestamp":1544772967331458000,"userKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"c3BlZWQ=","data":"Z2hp"}
 ]
