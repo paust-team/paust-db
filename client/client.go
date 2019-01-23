@@ -308,35 +308,23 @@ var writeCmd = &cobra.Command{
 
 		client := NewClient("http://localhost:26657")
 
+		var bres *ctypes.ResultBroadcastTx
+
 		switch {
 		case stdin == true:
-			bres, err := client.WriteStdin()
-			if err != nil {
-				fmt.Printf("err: %v\n", err)
-				os.Exit(1)
-			}
-			if bres.Code == code.CodeTypeOK {
-				fmt.Println("Write success.")
-			} else {
-				fmt.Println("Write fail.")
-				fmt.Println(bres.Log)
-			}
+			fmt.Println("Read json data from STDIN")
+			bres, err = client.WriteStdin()
 		case filePath != "":
-			bres, err := client.WriteFile(filePath)
-			if err != nil {
-				fmt.Printf("err: %v\n", err)
-				os.Exit(1)
-			}
-			if bres.Code == code.CodeTypeOK {
-				fmt.Println("Write success.")
-			} else {
-				fmt.Println("Write fail.")
-				fmt.Println(bres.Log)
-			}
+			fmt.Printf("Read json data from file: %s\n", filePath)
+			bres, err = client.WriteFile(filePath)
 		case directoryPath != "":
+			fmt.Printf("Read json data from files in directory: %s\n", directoryPath)
 			client.WriteFilesInDir(directoryPath, recursive)
 		default:
-			bres, err := client.WriteData(time.Now(), ownerKey, qualifier, []byte(strings.Join(args, " ")))
+			fmt.Println("Read data from cli arguments")
+			bres, err = client.WriteData(time.Now(), ownerKey, qualifier, []byte(strings.Join(args, " ")))
+		}
+		if directoryPath == "" {
 			if err != nil {
 				fmt.Printf("err: %v\n", err)
 				os.Exit(1)
@@ -397,10 +385,13 @@ ex) {timestamp:1544772882435375000}`,
 
 		switch {
 		case stdin == true:
+			fmt.Println("Read json data from STDIN")
 			res, err = client.ReadDataOfStdin()
 		case queryFilePath != "":
+			fmt.Printf("Read json data from file: %s\n", queryFilePath)
 			res, err = client.ReadDataOfFile(queryFilePath)
 		default:
+			fmt.Println("Read data from cli arguments")
 			res, err = client.ReadData(args)
 		}
 
