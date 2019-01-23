@@ -37,20 +37,37 @@ type RRealDataQueryObj struct {
 	Keys RowKeys `json:"rowKeys"`
 }
 
+type RClientRealDataQueryObj struct {
+	Keys []KeyObj `json:"rowKeys"`
+}
+
 type RMetaDataResObj struct {
 	RowKey    RowKey `json:"rowKey"`
 	OwnerKey  []byte `json:"ownerKey"`
 	Qualifier []byte `json:"qualifier"`
 }
 
+type RClientMetaDataResObj struct {
+	RowKey    KeyObj `json:"rowKey"`
+	OwnerKey  []byte `json:"ownerKey"`
+	Qualifier []byte `json:"qualifier"`
+}
+
 type RMetaDataResObjs []RMetaDataResObj
+type RClientMetaDataResObjs []RClientMetaDataResObj
 
 type RRealDataResObj struct {
 	RowKey RowKey `json:"rowKey"`
 	Data   []byte `json:"data"`
 }
 
+type RClientRealDataResObj struct {
+	RowKey KeyObj `json:"rowKey"`
+	Data   []byte `json:"data"`
+}
+
 type RRealDataResObjs []RRealDataResObj
+type RClientRealDataResObjs []RClientRealDataResObj
 
 const (
 	OwnerKeyLen = 32

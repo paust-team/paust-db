@@ -79,18 +79,30 @@ func (client *Client) ReadDataOfStdin() (*ctypes.ResultABCIQuery, error) {
 		return nil, err
 	}
 
-	res, err := client.client.ABCIQuery("/realdata", bytes)
+	serializedBytes, err := SerializeKeyObj(bytes)
+	if err != nil {
+		errors.Wrap(err, "SerializeKeyObj")
+		return nil, err
+	}
+
+	res, err := client.client.ABCIQuery("/realdata", serializedBytes)
 	return res, err
 }
 
 func (client *Client) ReadDataOfFile(file string) (*ctypes.ResultABCIQuery, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		errors.Wrap(err, "read data of file")
+		return nil, err
 	}
 
-	res, err := client.client.ABCIQuery("/realdata", bytes)
+	serializedBytes, err := SerializeKeyObj(bytes)
+	if err != nil {
+		errors.Wrap(err, "SerializeKeyObj")
+		return nil, err
+	}
+
+	res, err := client.client.ABCIQuery("/realdata", serializedBytes)
 	return res, err
 }
 
@@ -186,6 +198,84 @@ func (client *Client) ReadMetaData(start uint64, end uint64) (*ctypes.ResultABCI
 
 	res, err := client.client.ABCIQuery("/metadata", jsonString)
 	return res, err
+}
+
+func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
+	if isMeta == true {
+		var rMetaDataResObjs = types.RMetaDataResObjs{}
+		err := json.Unmarshal(obj, &rMetaDataResObjs)
+		if err != nil {
+			errors.Wrap(err, "unmarshal failed")
+			return nil, err
+		}
+
+		var rClientMetaDataResObjs = types.RClientMetaDataResObjs{}
+		for _, resObj := range rMetaDataResObjs {
+			var keyObj = types.KeyObj{}
+			err := json.Unmarshal(resObj.RowKey, &keyObj)
+			if err != nil {
+				errors.Wrap(err, "unmarshal failed")
+				return nil, err
+			}
+			rClientMetaDataResObjs = append(rClientMetaDataResObjs, types.RClientMetaDataResObj{RowKey: keyObj, OwnerKey: resObj.OwnerKey, Qualifier: resObj.Qualifier})
+		}
+		deserializedObj, err := json.Marshal(rClientMetaDataResObjs)
+		if err != nil {
+			errors.Wrap(err, "marshal failed")
+			return nil, err
+		}
+		return deserializedObj, nil
+	} else {
+		var rRealDataResObjs = types.RRealDataResObjs{}
+		err := json.Unmarshal(obj, &rRealDataResObjs)
+		if err != nil {
+			errors.Wrap(err, "unmarshal failed")
+			return nil, err
+		}
+
+		var rClientRealDataResObjs = types.RClientRealDataResObjs{}
+		for _, resObj := range rRealDataResObjs {
+			var keyObj = types.KeyObj{}
+			err := json.Unmarshal(resObj.RowKey, &keyObj)
+			if err != nil {
+				errors.Wrap(err, "unmarshal failed")
+				return nil, err
+			}
+			rClientRealDataResObjs = append(rClientRealDataResObjs, types.RClientRealDataResObj{RowKey: keyObj, Data: resObj.Data})
+		}
+
+		deserializedObj, err := json.Marshal(rClientRealDataResObjs)
+		if err != nil {
+			errors.Wrap(err, "marshal failed")
+			return nil, err
+		}
+		return deserializedObj, nil
+	}
+}
+
+func SerializeKeyObj(obj []byte) ([]byte, error) {
+	var rClientRealDataQueryObj = types.RClientRealDataQueryObj{}
+	err := json.Unmarshal(obj, &rClientRealDataQueryObj)
+	if err != nil {
+		errors.Wrap(err, "unmarshal failed")
+		return nil, err
+	}
+
+	var rRealDataQueryObj = types.RRealDataQueryObj{}
+	for _, keyObj := range rClientRealDataQueryObj.Keys {
+		rowKey, err := json.Marshal(keyObj)
+		if err != nil {
+			errors.Wrap(err, "marshal failed")
+			return nil, err
+		}
+		rRealDataQueryObj.Keys = append(rRealDataQueryObj.Keys, rowKey)
+	}
+	serializedObj, err := json.Marshal(rRealDataQueryObj)
+	if err != nil {
+		errors.Wrap(err, "marshal failed")
+		return nil, err
+	}
+	return serializedObj, nil
 }
 
 var ownerKey, qualifier, filePath, queryFilePath, directoryPath string
@@ -319,7 +409,8 @@ ex) {timestamp:1544772882435375000}`,
 			os.Exit(1)
 		}
 
-		fmt.Println(string(res.Response.Value))
+		deserializedBytes, err := DeSerializeKeyObj(res.Response.Value, false)
+		fmt.Println(string(deserializedBytes))
 	},
 }
 
@@ -355,7 +446,8 @@ var metadataCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Println(string(res.Response.Value))
+		deserializedBytes, err := DeSerializeKeyObj(res.Response.Value, true)
+		fmt.Println(string(deserializedBytes))
 	},
 }
 
