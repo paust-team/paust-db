@@ -73,9 +73,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	}
 
 	for i := 0; i < len(wRealDataObjs); i++ {
-		var wMetaDataObj = &types.WMetaDataObj{}
-		wMetaDataObj.UserKey = wRealDataObjs[i].UserKey
-		wMetaDataObj.Qualifier = wRealDataObjs[i].Qualifier
+		var wMetaDataObj = &types.WMetaDataObj{OwnerKey: wRealDataObjs[i].OwnerKey, Qualifier: wRealDataObjs[i].Qualifier}
 		metaByte, err := json.Marshal(wMetaDataObj)
 		if err != nil {
 			fmt.Println("meta marshal error : ", err)
@@ -110,21 +108,22 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 }
 
 func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciTypes.ResponseQuery) {
-	var query = types.RDataQueryObj{}
 	switch reqQuery.Path {
 	case "/metadata":
+		var query = types.RMetaDataQueryObj{}
 		err := json.Unmarshal(reqQuery.Data, &query)
 		if err != nil {
-			fmt.Println("RDataQueryObj struct unmarshal error", err)
+			fmt.Println("RMetaDataQueryObj struct unmarshal error", err)
 		}
 
 		metaSlice, _ := app.metaDataQuery(query)
 		resp.Value, _ = json.Marshal(metaSlice)
 
 	case "/realdata":
+		var query = types.RRealDataQueryObj{}
 		err := json.Unmarshal(reqQuery.Data, &query)
 		if err != nil {
-			fmt.Println("RDataQueryObj struct unmarshal error", err)
+			fmt.Println(err)
 		}
 
 		realDataSlice, _ := app.realDataQuery(query)
@@ -135,130 +134,52 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 	return
 }
 
-func (app *MasterApplication) metaDataQuery(query types.RDataQueryObj) (types.RMetaResObjs, error) {
-	var metaObjs = types.RMetaResObjs{}
+func (app *MasterApplication) metaDataQuery(query types.RMetaDataQueryObj) (types.RMetaDataResObjs, error) {
+	var rMetaDataResObjs = types.RMetaDataResObjs{}
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(1))
 	//TODO unittest close test
 	defer itr.Close()
 
-	switch {
-	case query.UserKey == nil && query.Qualifier == "":
-		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.WMetaDataObj) *types.RMetaResObj {
-			metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(itr.Key(), meta)
-			if err != nil {
-				fmt.Println(err)
-			}
-			return &metaResp
-		})
-
-	case query.Qualifier == "":
-		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.WMetaDataObj) *types.RMetaResObj {
-			if string(query.UserKey) == string(meta.UserKey) {
-				metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(itr.Key(), meta)
-				if err != nil {
-					fmt.Println(err)
-				}
-				return &metaResp
-			}
-			return nil
-		})
-
-	case query.UserKey == nil:
-		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.WMetaDataObj) *types.RMetaResObj {
-			if string(query.Qualifier) == string(meta.Qualifier) {
-				metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(itr.Key(), meta)
-				if err != nil {
-					fmt.Println(err)
-				}
-				return &metaResp
-			}
-			return nil
-		})
-
-	default:
-		metaObjs = searchInMetaColumnFamily(startByte, endByte, itr, func(meta types.WMetaDataObj) *types.RMetaResObj {
-			if string(query.Qualifier) == string(meta.Qualifier) && string(query.UserKey) == string(meta.UserKey) {
-				metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(itr.Key(), meta)
-				if err != nil {
-					fmt.Println(err)
-				}
-				return &metaResp
-			}
-			return nil
-		})
-	}
-
-	return metaObjs, nil
-
-}
-
-func (app *MasterApplication) realDataQuery(query types.RDataQueryObj) (types.WRealDataObjs, error) {
-	var wRealDataObjs = types.WRealDataObjs{}
-
-	startByte, endByte := types.CreateStartByteAndEndByte(query)
-	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(2))
-	//TODO unittest close test
-	defer itr.Close()
-
-	switch {
-	case query.UserKey == nil && query.Qualifier == "":
-		wRealDataObjs = searchInRealColumnFamily(startByte, endByte, itr, func(realData types.WRealDataObj) *types.WRealDataObj {
-			return &realData
-		})
-	case query.Qualifier == "":
-		wRealDataObjs = searchInRealColumnFamily(startByte, endByte, itr, func(realData types.WRealDataObj) *types.WRealDataObj {
-			if string(query.UserKey) == string(realData.UserKey) {
-				return &realData
-			}
-			return nil
-		})
-	case query.UserKey == nil:
-		wRealDataObjs = searchInRealColumnFamily(startByte, endByte, itr, func(realData types.WRealDataObj) *types.WRealDataObj {
-			if string(query.Qualifier) == string(realData.Qualifier) {
-				return &realData
-			}
-			return nil
-		})
-	default:
-		wRealDataObjs = searchInRealColumnFamily(startByte, endByte, itr, func(realData types.WRealDataObj) *types.WRealDataObj {
-			if string(query.Qualifier) == string(realData.Qualifier) && string(query.UserKey) == string(realData.UserKey) {
-				return &realData
-			}
-			return nil
-		})
-	}
-
-	return wRealDataObjs, nil
-}
-
-func searchInMetaColumnFamily(startByte, endByte []byte, itr db.Iterator, closureFunc func(meta types.WMetaDataObj) *types.RMetaResObj) types.RMetaResObjs {
-	var wMetaObj = types.WMetaDataObj{}
-	var rMetaObjs = &types.RMetaResObjs{}
-
-	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-		json.Unmarshal(itr.Value(), &wMetaObj)
-		ret := closureFunc(wMetaObj)
-		if ret != nil {
-			*rMetaObjs = append(*rMetaObjs, *ret)
+	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) == -1; itr.Next() {
+		var metaObj = types.WMetaDataObj{}
+		err := json.Unmarshal(itr.Value(), &metaObj)
+		if err != nil {
+			fmt.Println(err)
 		}
+
+		var rMetaDataResObj types.RMetaDataResObj
+		rMetaDataResObj.RowKey = make([]byte, len(itr.Key()))
+		copy(rMetaDataResObj.RowKey, itr.Key())
+		rMetaDataResObj.OwnerKey = metaObj.OwnerKey
+		rMetaDataResObj.Qualifier = metaObj.Qualifier
+
+		rMetaDataResObjs = append(rMetaDataResObjs, rMetaDataResObj)
+
 	}
 
-	return *rMetaObjs
+	return rMetaDataResObjs, nil
+
 }
 
-func searchInRealColumnFamily(startByte, endByte []byte, itr db.Iterator, closureFunc func(realData types.WRealDataObj) *types.WRealDataObj) types.WRealDataObjs {
-	var wRealDataObjs = types.WRealDataObj{}
-	var realDataSlice = &types.WRealDataObjs{}
-	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) < 1; itr.Next() {
-		wRealDataObjs = types.RowKeyAndValueToWRealDataObj(itr.Key(), itr.Value())
-		ret := closureFunc(wRealDataObjs)
-		if ret != nil {
-			*realDataSlice = append(*realDataSlice, *ret)
+func (app *MasterApplication) realDataQuery(query types.RRealDataQueryObj) (types.RRealDataResObjs, error) {
+	rRealDataResObj := types.RRealDataResObj{}
+	rRealDataResObjs := types.RRealDataResObjs{}
+
+	for _, rowKey := range query.Keys {
+		valueSlice, err := app.db.GetDataFromColumnFamily(2, rowKey)
+		if err != nil {
+			fmt.Print(err)
 		}
+		rRealDataResObj.RowKey = rowKey
+		rRealDataResObj.Data = valueSlice.Data()
+
+		rRealDataResObjs = append(rRealDataResObjs, rRealDataResObj)
+
 	}
-	return *realDataSlice
+
+	return rRealDataResObjs, nil
 }
 
 // Below method ares all For Test
@@ -278,10 +199,10 @@ func (app MasterApplication) MWB() db.Batch {
 	return app.mwb
 }
 
-func (app MasterApplication) RealDataQuery(query types.RDataQueryObj) (types.WRealDataObjs, error) {
+func (app MasterApplication) RealDataQuery(query types.RRealDataQueryObj) (types.RRealDataResObjs, error) {
 	return app.realDataQuery(query)
 }
 
-func (app MasterApplication) MetaDataQuery(query types.RDataQueryObj) (types.RMetaResObjs, error) {
+func (app MasterApplication) MetaDataQuery(query types.RMetaDataQueryObj) (types.RMetaDataResObjs, error) {
 	return app.metaDataQuery(query)
 }

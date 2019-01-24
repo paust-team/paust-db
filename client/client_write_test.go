@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	TestFile      = "../test/write_file.json"
+	TestWriteFile = "../test/write_file.json"
 	TestDirectory = "../test/write_directory"
 )
 
@@ -29,7 +29,7 @@ func (suite *ClientTestSuite) TestClient_WriteData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), UserKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}})
+	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: data}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	bres, err := suite.dbClient.WriteData(time, TestPubKey, TestQualifier, data)
@@ -51,10 +51,10 @@ func (suite *ClientTestSuite) TestClient_WriteFile() {
 	mempool := node.MempoolReactor().Mempool
 	initMempoolSize := mempool.Size()
 
-	bytes, err := ioutil.ReadFile(TestFile)
+	bytes, err := ioutil.ReadFile(TestWriteFile)
 	require.Nil(err, "file read err: %+v", err)
 
-	bres, err := suite.dbClient.WriteFile(TestFile)
+	bres, err := suite.dbClient.WriteFile(TestWriteFile)
 
 	require.Nil(err, "err: %+v", err)
 	require.Equal(bres.Code, abci.CodeTypeOK)

@@ -198,10 +198,7 @@ func (db *CRocksDB) Print() {
 	fmt.Println("--------------Metadata Column Family--------------")
 	for metaItr.SeekToFirst(); metaItr.Valid(); metaItr.Next() {
 		json.Unmarshal(metaItr.Value(), &wMetaDataObj)
-		metaResp, err := types.WMetaDataObjAndKeyToRMetaResObj(metaItr.Key(), wMetaDataObj)
-		if err != nil {
-			fmt.Println(err)
-		}
+		metaResp := types.RMetaDataResObj{RowKey: metaItr.Key(), OwnerKey: wMetaDataObj.OwnerKey, Qualifier: wMetaDataObj.Qualifier}
 		fmt.Println("key : ", metaItr.Key())
 		fmt.Println("value : ", metaResp)
 	}
@@ -209,9 +206,8 @@ func (db *CRocksDB) Print() {
 	fmt.Println("--------------Realdata Column Family--------------")
 
 	for realItr.SeekToFirst(); realItr.Valid(); realItr.Next() {
-		realDataObj := types.RowKeyAndValueToWRealDataObj(realItr.Key(), realItr.Value())
 		fmt.Println("key : ", realItr.Key())
-		fmt.Println("value: ", realDataObj)
+		fmt.Println("value: ", realItr.Value())
 	}
 
 }
