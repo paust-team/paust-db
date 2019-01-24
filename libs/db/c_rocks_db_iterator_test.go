@@ -1,14 +1,18 @@
 package db_test
 
+import (
+	"github.com/paust-team/paust-db/types"
+)
+
 func (suite *DBSuite) TestDBIteratorDefault() {
 	// insert Keys
 	givenKeys := [][]byte{[]byte("default1"), []byte("default2"), []byte("default3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetDataInColumnFamily(0, k, []byte("defaultVal")))
+		suite.Nil(suite.DB.SetDataInColumnFamily(types.DefaultCFNum, k, []byte("defaultVal")))
 	}
 
-	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(0))
+	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(types.DefaultCFNum))
 	defer itr.Close()
 
 	var actualKeys [][]byte
@@ -26,10 +30,10 @@ func (suite *DBSuite) TestDBIteratorMetaColumnFamily() {
 	givenKeys := [][]byte{[]byte("meta1"), []byte("meta2"), []byte("meta3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetDataInColumnFamily(1, k, []byte("metaVal")))
+		suite.Nil(suite.DB.SetDataInColumnFamily(types.MetaCFNum, k, []byte("metaVal")))
 	}
 
-	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(1))
+	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(types.MetaCFNum))
 	defer itr.Close()
 
 	var actualKeys [][]byte
@@ -49,10 +53,10 @@ func (suite *DBSuite) TestDBIteratorRealColumnFamily() {
 	givenKeys := [][]byte{[]byte("real1"), []byte("real2"), []byte("real3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetDataInColumnFamily(2, k, []byte("realVal")))
+		suite.Nil(suite.DB.SetDataInColumnFamily(types.RealCFNum, k, []byte("realVal")))
 	}
 
-	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(2))
+	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(types.RealCFNum))
 	defer itr.Close()
 
 	var actualKeys [][]byte

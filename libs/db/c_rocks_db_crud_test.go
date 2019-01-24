@@ -1,5 +1,9 @@
 package db_test
 
+import (
+	"github.com/paust-team/paust-db/types"
+)
+
 func (suite *DBSuite) TestDBDefaultCreateRetrieve() {
 	var (
 		givenKey = []byte("hello")
@@ -67,11 +71,11 @@ func (suite *DBSuite) TestDBCreateRetrieveInColumnFamily() {
 	)
 
 	//create
-	err := suite.DB.SetDataInColumnFamily(0, givenKey, givenVal)
+	err := suite.DB.SetDataInColumnFamily(types.DefaultCFNum, givenKey, givenVal)
 	suite.Nil(err, "Default columnfamily Set error : %v", err)
 
 	//retrieve
-	value, err := suite.DB.GetDataFromColumnFamily(0, givenKey)
+	value, err := suite.DB.GetDataFromColumnFamily(types.DefaultCFNum, givenKey)
 	defer value.Free()
 	suite.Nil(err, "Default columnfamily Get error : %v", err)
 	suite.Equal(givenVal, value.Data())
@@ -85,12 +89,12 @@ func (suite *DBSuite) TestDBUpdateInColumnFamily() {
 	)
 
 	//create
-	err := suite.DB.SetDataInColumnFamily(0, givenKey, givenVal1)
+	err := suite.DB.SetDataInColumnFamily(types.DefaultCFNum, givenKey, givenVal1)
 	suite.Nil(err, "Default columnfamily Set error : %v", err)
 
 	//update
-	suite.Nil(suite.DB.SetDataInColumnFamily(0, givenKey, givenVal2))
-	value, err := suite.DB.GetDataFromColumnFamily(0, givenKey)
+	suite.Nil(suite.DB.SetDataInColumnFamily(types.DefaultCFNum, givenKey, givenVal2))
+	value, err := suite.DB.GetDataFromColumnFamily(types.DefaultCFNum, givenKey)
 	defer value.Free()
 	suite.Nil(err, "Default columnfamily Update error : %v", err)
 	suite.Equal(givenVal2, value.Data())
@@ -104,19 +108,19 @@ func (suite *DBSuite) TestDBDeleteInColumnFamily() {
 	)
 
 	//create
-	err := suite.DB.SetDataInColumnFamily(0, givenKey, givenVal)
+	err := suite.DB.SetDataInColumnFamily(types.DefaultCFNum, givenKey, givenVal)
 	suite.Nil(err, "Default columnfamily Set error : %v", err)
 
 	//delete
-	err = suite.DB.DeleteInColumnFamily(0, givenKey)
+	err = suite.DB.DeleteInColumnFamily(types.DefaultCFNum, givenKey)
 	suite.Nil(err, "Default columnfamily Delete error : %v", err)
 
-	value, err := suite.DB.GetDataFromColumnFamily(0, givenKey)
+	value, err := suite.DB.GetDataFromColumnFamily(types.DefaultCFNum, givenKey)
 	defer value.Free()
 	suite.Nil(err, "Default columnfamily Get error : %v", err)
 	suite.Nil(value.Data())
 }
 
 func (suite *DBSuite) TestColumnFamilyLength() {
-	suite.Equal(3, len(suite.DB.ColumnFamilyHandles()), "The number of ColumnFamilys should be 3")
+	suite.Equal(types.TotalCFNum, len(suite.DB.ColumnFamilyHandles()), "The number of ColumnFamilies should be 3")
 }

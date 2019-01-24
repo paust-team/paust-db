@@ -69,10 +69,6 @@ type RClientRealDataResObj struct {
 type RRealDataResObjs []RRealDataResObj
 type RClientRealDataResObjs []RClientRealDataResObj
 
-const (
-	OwnerKeyLen = 32
-)
-
 func WRealDataObjToRowKey(data WRealDataObj) []byte {
 	keyObj := KeyObj{Timestamp: data.Timestamp}
 	rowKey, _ := json.Marshal(keyObj)
