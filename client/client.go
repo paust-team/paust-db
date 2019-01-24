@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/paust-team/paust-db/consts"
 	"github.com/paust-team/paust-db/types"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -49,8 +50,8 @@ func (client *Client) WriteData(time time.Time, ownerKey string, qualifier strin
 		os.Exit(1)
 	}
 
-	if len(ownerKeyBytes) != types.OwnerKeyLen {
-		fmt.Printf("public key: ed25519 public key must be %d bytes\n", types.OwnerKeyLen)
+	if len(ownerKeyBytes) != consts.OwnerKeyLen {
+		fmt.Printf("public key: ed25519 public key must be %d bytes\n", consts.OwnerKeyLen)
 		os.Exit(1)
 	}
 

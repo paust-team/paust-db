@@ -2,7 +2,7 @@ package master
 
 import (
 	"fmt"
-	"github.com/paust-team/paust-db/types"
+	"github.com/paust-team/paust-db/consts"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	"github.com/tendermint/tendermint/libs/common"
@@ -16,7 +16,7 @@ func Serve() error {
 	app := NewMasterApplication(true, dir)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 
-	srv, err := server.NewServer(types.ProtoAddr, types.Transport, app)
+	srv, err := server.NewServer(consts.ProtoAddr, consts.Transport, app)
 
 	if err != nil {
 		return err

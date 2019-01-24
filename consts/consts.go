@@ -1,4 +1,4 @@
-package types
+package consts
 
 //Data Length관련 상수
 const (
