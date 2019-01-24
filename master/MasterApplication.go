@@ -66,12 +66,14 @@ func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTy
 }
 
 func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
+	//Unmarshal tx to baseDataObjs
 	var baseDataObjs []types.BaseDataObj
 	err := json.Unmarshal(tx, &baseDataObjs)
 	if err != nil {
 		fmt.Println("wRealDataObjs unmarshal error", err)
 	}
 
+	//meta와 real 나누어 batch에 담는다
 	for i := 0; i < len(baseDataObjs); i++ {
 		var metaValue struct {
 			OwnerKey  []byte `json:"ownerKey"`
@@ -85,17 +87,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 			fmt.Println(err)
 		}
 		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(1), baseDataObjs[i].MetaData.RowKey, metaData)
-
-		var realValue struct {
-			Data   []byte `json:"data"`
-		}
-		realValue.Data = baseDataObjs[i].RealData.Data
-
-		realData, err := json.Marshal(realValue)
-		if err != nil {
-			fmt.Println(err)
-		}
-		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(2), baseDataObjs[i].RealData.RowKey, realData)
+		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(2), baseDataObjs[i].RealData.RowKey, baseDataObjs[i].RealData.Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
@@ -182,16 +174,18 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 }
 
 func (app *MasterApplication) realDataQuery(query types.RealDataQueryObj) ([]types.RealDataObj, error) {
-	var realDataObj types.RealDataObj
 	var realDataObjs []types.RealDataObj
 
 	for _, rowKey := range query.RowKeys {
+		var realDataObj types.RealDataObj
+
+		realDataObj.RowKey = rowKey
 		valueSlice, err := app.db.GetDataFromColumnFamily(2, rowKey)
 		if err != nil {
 			fmt.Print(err)
 		}
-		realDataObj.RowKey = rowKey
-		realDataObj.Data = valueSlice.Data()
+		realDataObj.Data = make([]byte, valueSlice.Size())
+		copy(realDataObj.Data, valueSlice.Data())
 		realDataObjs = append(realDataObjs, realDataObj)
 
 		valueSlice.Free()
