@@ -41,15 +41,8 @@ const (
 	OwnerKeyLen = 32
 )
 
-func WRealDataObjToRowKey(data WRealDataObj) []byte {
-	keyObj := KeyObj{Timestamp: data.Timestamp}
-	rowKey, _ := json.Marshal(keyObj)
-
-	return rowKey
-}
-
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
-func CreateStartByteAndEndByte(query RMetaDataQueryObj) ([]byte, []byte) {
+func CreateStartByteAndEndByte(query MetaDataQueryObj) ([]byte, []byte) {
 	startKeyObj := KeyObj{Timestamp: query.Start}
 	endKeyObj := KeyObj{Timestamp: query.End}
 
