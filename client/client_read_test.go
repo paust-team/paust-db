@@ -38,11 +38,11 @@ func (suite *ClientTestSuite) TestClient_ReadData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: data}})
+	rowKey, err := json.Marshal(types.KeyObj{Timestamp: uint64(time.UnixNano()), Salt: 0})
 	require.Nil(err, "json marshal err: %+v", err)
-	keyObj, err := json.Marshal(types.KeyObj{Timestamp: uint64(time.UnixNano())})
+	tx, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	require.Nil(err, "json marshal err: %+v", err)
-	expectedValue, err := json.Marshal(types.RRealDataResObjs{types.RRealDataResObj{RowKey: keyObj, Data: data}})
+	expectedValue, err := json.Marshal([]types.RealDataObj{{RowKey: rowKey, Data: data}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)
@@ -54,7 +54,7 @@ func (suite *ClientTestSuite) TestClient_ReadData() {
 
 	require.Equal(0, mempool.Size())
 
-	res, err := suite.dbClient.ReadData([]string{string(keyObj)})
+	res, err := suite.dbClient.ReadData([]string{base64.StdEncoding.EncodeToString(rowKey)})
 	qres := res.Response
 	if suite.Nil(err) && suite.True(qres.IsOK()) {
 		suite.EqualValues(expectedValue, qres.Value)
@@ -68,23 +68,24 @@ func (suite *ClientTestSuite) TestClient_ReadDataOfFile() {
 
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.WRealDataObjs{
-		types.WRealDataObj{Timestamp: 1547772882435375000, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: []byte("testData1")},
-		types.WRealDataObj{Timestamp: 1547772960049177000, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: []byte("testData2")},
-		types.WRealDataObj{Timestamp: 1547772967331458000, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: []byte("testData3")},
+	rowKey1, err := json.Marshal(types.KeyObj{Timestamp: 1547772882435375000, Salt: 0})
+	require.Nil(err, "json marshal err: %+v", err)
+	rowKey2, err := json.Marshal(types.KeyObj{Timestamp: 1547772960049177000, Salt: 0})
+	require.Nil(err, "json marshal err: %+v", err)
+	rowKey3, err := json.Marshal(types.KeyObj{Timestamp: 1547772967331458000, Salt: 0})
+	require.Nil(err, "json marshal err: %+v", err)
+	tx, err := json.Marshal([]types.BaseDataObj{
+		{MetaData: types.MetaDataObj{RowKey: rowKey1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey1, Data: []byte("testData1")}},
+		{MetaData: types.MetaDataObj{RowKey: rowKey2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey2, Data: []byte("testData2")}},
+		{MetaData: types.MetaDataObj{RowKey: rowKey3, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey3, Data: []byte("testData3")}},
 	})
 	require.Nil(err, "json marshal err: %+v", err)
-	rowKey1, err := json.Marshal(types.KeyObj{Timestamp: 1547772882435375000})
-	require.Nil(err, "json marshal err: %+v", err)
-	rowKey2, err := json.Marshal(types.KeyObj{Timestamp: 1547772960049177000})
-	require.Nil(err, "json marshal err: %+v", err)
-	rowKey3, err := json.Marshal(types.KeyObj{Timestamp: 1547772967331458000})
-	require.Nil(err, "json marshal err: %+v", err)
-	expectedValue, err := json.Marshal(types.RRealDataResObjs{
-		types.RRealDataResObj{RowKey: rowKey1, Data: []byte("testData1")},
-		types.RRealDataResObj{RowKey: rowKey2, Data: []byte("testData2")},
-		types.RRealDataResObj{RowKey: rowKey3, Data: []byte("testData3")},
+	expectedValue, err := json.Marshal([]types.RealDataObj{
+		{RowKey: rowKey1, Data: []byte("testData1")},
+		{RowKey: rowKey2, Data: []byte("testData2")},
+		{RowKey: rowKey3, Data: []byte("testData3")},
 	})
+	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)
 	bres, err := c.BroadcastTxCommit(tx)
@@ -110,11 +111,11 @@ func (suite *ClientTestSuite) TestClient_ReadMetaData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: data}})
+	rowKey, err := json.Marshal(types.KeyObj{Timestamp: uint64(time.UnixNano()), Salt: 0})
 	require.Nil(err, "json marshal err: %+v", err)
-	keyObj, err := json.Marshal(types.KeyObj{Timestamp: uint64(time.UnixNano())})
+	tx, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	require.Nil(err, "json marshal err: %+v", err)
-	expectedValue, err := json.Marshal(types.RMetaDataResObjs{types.RMetaDataResObj{RowKey: keyObj, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
+	expectedValue, err := json.Marshal([]types.MetaDataObj{{RowKey: rowKey, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)
@@ -126,33 +127,11 @@ func (suite *ClientTestSuite) TestClient_ReadMetaData() {
 
 	require.Equal(0, mempool.Size())
 
-	res, err := suite.dbClient.ReadMetaData(uint64(time.UnixNano()), uint64(time.UnixNano())+1)
+	res, err := suite.dbClient.ReadMetaData(uint64(time.UnixNano()), uint64(time.UnixNano())+1, "", "")
 	qres := res.Response
 	if suite.Nil(err) && suite.True(qres.IsOK()) {
 		suite.EqualValues(expectedValue, qres.Value)
 	}
-}
-
-func (suite *ClientTestSuite) TestSerializeKeyObj() {
-	require := require.New(suite.T())
-
-	var timestamp1 uint64 = 1547772882435375000
-	var timestamp2 uint64 = 1547772960049177000
-	rowKey1, err := json.Marshal(types.KeyObj{Timestamp: timestamp1})
-	require.Nil(err, "json marshal err: %+v", err)
-	rowKey2, err := json.Marshal(types.KeyObj{Timestamp: timestamp2})
-	require.Nil(err, "json marshal err: %+v", err)
-
-	// RealDataQueryObj serialize
-	rClientRealDataQueryObj, err := json.Marshal(types.RClientRealDataQueryObj{Keys: []types.KeyObj{{Timestamp: timestamp1}, {Timestamp: timestamp2}}})
-	require.Nil(err, "json marshal err: %+v", err)
-	rRealDataQueryObj, err := json.Marshal(types.RRealDataQueryObj{Keys: types.RowKeys{rowKey1, rowKey2}})
-	require.Nil(err, "json marshal err: %+v", err)
-
-	serializedBytes, err := client.SerializeKeyObj(rClientRealDataQueryObj)
-	require.Nil(err, "SerializeKeyObj err: %+v", err)
-
-	require.EqualValues(rRealDataQueryObj, serializedBytes)
 }
 
 func (suite *ClientTestSuite) TestDeSerializeKeyObj() {
@@ -160,32 +139,32 @@ func (suite *ClientTestSuite) TestDeSerializeKeyObj() {
 
 	var timestamp1 uint64 = 1547772882435375000
 	var timestamp2 uint64 = 1547772960049177000
-	rowKey1, err := json.Marshal(types.KeyObj{Timestamp: timestamp1})
+	rowKey1, err := json.Marshal(types.KeyObj{Timestamp: timestamp1, Salt: 0})
 	require.Nil(err, "json marshal err: %+v", err)
-	rowKey2, err := json.Marshal(types.KeyObj{Timestamp: timestamp2})
+	rowKey2, err := json.Marshal(types.KeyObj{Timestamp: timestamp2, Salt: 0})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	// MetaDataResObj deserialize
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	rMetaDataResObjs, err := json.Marshal(types.RMetaDataResObjs{types.RMetaDataResObj{RowKey: rowKey1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, types.RMetaDataResObj{RowKey: rowKey2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
+	metaDataObjs, err := json.Marshal([]types.MetaDataObj{{RowKey: rowKey1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {RowKey: rowKey2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
-	rClientMetaDataResObjs, err := json.Marshal(RClientMetaDataResObjs{RClientMetaDataResObj{RowKey: types.KeyObj{Timestamp: timestamp1}, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RClientMetaDataResObj{RowKey: types.KeyObj{Timestamp: timestamp2}, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
+	clientMetaDataObjs, err := json.Marshal([]client.MetaDataObj{{Id: rowKey1, Timestamp: timestamp1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {Id: rowKey2, Timestamp: timestamp2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
 
-	deserializedBytes, err := client.DeSerializeKeyObj(rMetaDataResObjs, true)
+	deserializedBytes, err := client.DeSerializeKeyObj(metaDataObjs, true)
 	require.Nil(err, "SerializeKeyObj err: %+v", err)
 
-	require.EqualValues(rClientMetaDataResObjs, deserializedBytes)
+	require.EqualValues(clientMetaDataObjs, deserializedBytes)
 
 	// RealDataResObj deserialize
-	rRealDataResObjs, err := json.Marshal(types.RRealDataResObjs{types.RRealDataResObj{RowKey: rowKey1, Data: []byte("testData1")}, types.RRealDataResObj{RowKey: rowKey2, Data: []byte("testData2")}})
+	realDataObjs, err := json.Marshal([]types.RealDataObj{{RowKey: rowKey1, Data: []byte("testData1")}, {RowKey: rowKey2, Data: []byte("testData2")}})
 	require.Nil(err, "json marshal err: %+v", err)
-	rClientRealDataResObjs, err := json.Marshal(RClientRealDataResObjs{RClientRealDataResObj{RowKey: types.KeyObj{Timestamp: timestamp1}, Data: []byte("testData1")}, RClientRealDataResObj{RowKey: types.KeyObj{Timestamp: timestamp2}, Data: []byte("testData2")}})
+	clientRealDataObjs, err := json.Marshal([]client.RealDataObj{{Id: rowKey1, Timestamp: timestamp1, Data: []byte("testData1")}, {Id: rowKey2, Timestamp: timestamp2, Data: []byte("testData2")}})
 	require.Nil(err, "json marshal err: %+v", err)
 
-	deserializedBytes, err = client.DeSerializeKeyObj(rRealDataResObjs, false)
+	deserializedBytes, err = client.DeSerializeKeyObj(realDataObjs, false)
 	require.Nil(err, "SerializeKeyObj err: %+v", err)
 
-	require.EqualValues(rClientRealDataResObjs, deserializedBytes)
+	require.EqualValues(clientRealDataObjs, deserializedBytes)
 }
