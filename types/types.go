@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+//TODO offset 추가
 type KeyObj struct {
 	Timestamp uint64 `json:"timestamp"`
 	Salt      uint8  `json:"salt"`
