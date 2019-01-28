@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/paust-team/paust-db/consts"
+	"github.com/paust-team/paust-db/types"
 	"github.com/tecbot/gorocksdb"
 	"path/filepath"
 )
@@ -183,12 +185,12 @@ func (db *CRocksDB) Print() {
 		Qualifier []byte `json:"qualifier"`
 	}
 
-	defaultItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(0))
+	defaultItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(consts.DefaultCFNum))
 	defer defaultItr.Close()
 
-	metaItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(1))
+	metaItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(consts.MetaCFNum))
 	defer metaItr.Close()
-	realItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(2))
+	realItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(consts.RealCFNum))
 	defer realItr.Close()
 
 	fmt.Println("--------------Default Column Family--------------")

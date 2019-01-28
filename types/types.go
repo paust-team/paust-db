@@ -38,10 +38,6 @@ type RealDataQueryObj struct {
 	RowKeys [][]byte `json:"rowKeys"`
 }
 
-const (
-	OwnerKeyLen = 32
-)
-
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
 func CreateStartByteAndEndByte(query MetaDataQueryObj) ([]byte, []byte) {
 	startKeyObj := KeyObj{Timestamp: query.Start}

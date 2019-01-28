@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"github.com/paust-team/paust-db/consts"
 	"github.com/paust-team/paust-db/libs/db"
 	"github.com/paust-team/paust-db/types"
 	"github.com/tendermint/tendermint/abci/example/code"
@@ -24,7 +25,7 @@ type MasterApplication struct {
 
 func NewMasterApplication(serial bool, dir string) *MasterApplication {
 	hash := make([]byte, 8)
-	database, err := db.NewCRocksDB("paustdb", dir)
+	database, err := db.NewCRocksDB(consts.DBName, dir)
 
 	if err != nil {
 		fmt.Println(err)
@@ -86,8 +87,8 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		if err != nil {
 			fmt.Println(err)
 		}
-		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(1), baseDataObjs[i].MetaData.RowKey, metaData)
-		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(2), baseDataObjs[i].RealData.RowKey, baseDataObjs[i].RealData.Data)
+		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(consts.MetaCFNum), baseDataObjs[i].MetaData.RowKey, metaData)
+		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(consts.RealCFNum), baseDataObjs[i].RealData.RowKey, baseDataObjs[i].RealData.Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
@@ -144,7 +145,7 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 	var metaDataObjs []types.MetaDataObj
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
-	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(1))
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(consts.MetaCFNum))
 	//TODO unittest close test
 	defer itr.Close()
 
@@ -180,7 +181,7 @@ func (app *MasterApplication) realDataQuery(query types.RealDataQueryObj) ([]typ
 		var realDataObj types.RealDataObj
 
 		realDataObj.RowKey = rowKey
-		valueSlice, err := app.db.GetDataFromColumnFamily(2, rowKey)
+		valueSlice, err := app.db.GetDataFromColumnFamily(consts.RealCFNum, rowKey)
 		if err != nil {
 			fmt.Print(err)
 		}
