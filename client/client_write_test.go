@@ -19,7 +19,7 @@ const (
 	TestDirectory = "../test/write_directory"
 )
 
-func (suite *ClientTestSuite) TestClient_WriteData() {
+func (suite *ClientTestSuite) TestClient_WriteDataFixedSalt() {
 	require := require.New(suite.T())
 
 	mempool := node.MempoolReactor().Mempool
@@ -29,10 +29,12 @@ func (suite *ClientTestSuite) TestClient_WriteData() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	tx, err := json.Marshal(types.WRealDataObjs{types.WRealDataObj{Timestamp: uint64(time.UnixNano()), OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: data}})
+	rowKey, err := json.Marshal(types.KeyObj{Timestamp: uint64(time.Unix()), Salt: 0})
+	require.Nil(err, "json marshal err: %+v", err)
+	tx, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	require.Nil(err, "json marshal err: %+v", err)
 
-	bres, err := suite.dbClient.WriteData(time, TestPubKey, TestQualifier, data)
+	bres, err := suite.dbClient.WriteDataFixedSalt(time, TestPubKey, TestQualifier, data)
 
 	require.Nil(err, "err: %+v", err)
 	require.Equal(bres.Code, abci.CodeTypeOK)
@@ -45,7 +47,7 @@ func (suite *ClientTestSuite) TestClient_WriteData() {
 	mempool.Flush()
 }
 
-func (suite *ClientTestSuite) TestClient_WriteFile() {
+func (suite *ClientTestSuite) TestClient_WriteFileFixedSalt() {
 	require := require.New(suite.T())
 
 	mempool := node.MempoolReactor().Mempool
@@ -54,7 +56,29 @@ func (suite *ClientTestSuite) TestClient_WriteFile() {
 	bytes, err := ioutil.ReadFile(TestWriteFile)
 	require.Nil(err, "file read err: %+v", err)
 
-	bres, err := suite.dbClient.WriteFile(TestWriteFile)
+	type WriteDataObj struct {
+		Timestamp uint64 `json:"timestamp"`
+		OwnerKey  []byte `json:"ownerKey"`
+		Qualifier []byte `json:"qualifier"`
+		Data      []byte `json:"data"`
+	}
+	var writeDataObjs []WriteDataObj
+
+	err = json.Unmarshal(bytes, &writeDataObjs)
+	require.Nil(err, "json unmarshal err: %+v", err)
+
+	var baseDataObjs []types.BaseDataObj
+
+	for _, writeDataObj := range writeDataObjs {
+		rowKey, err := json.Marshal(types.KeyObj{Timestamp: writeDataObj.Timestamp, Salt: 0})
+		require.Nil(err, "json marshal err: %+v", err)
+		baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: writeDataObj.OwnerKey, Qualifier: writeDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: writeDataObj.Data}})
+	}
+
+	tx, err := json.Marshal(baseDataObjs)
+	require.Nil(err, "json marshal err: %+v", err)
+
+	bres, err := suite.dbClient.WriteFileFixedSalt(TestWriteFile)
 
 	require.Nil(err, "err: %+v", err)
 	require.Equal(bres.Code, abci.CodeTypeOK)
@@ -62,12 +86,12 @@ func (suite *ClientTestSuite) TestClient_WriteFile() {
 	require.Equal(initMempoolSize+1, mempool.Size())
 
 	txs := mempool.ReapMaxTxs(-1)
-	require.EqualValues(tendermint.Tx(bytes), txs[0])
+	require.EqualValues(tendermint.Tx(tx), txs[0])
 
 	mempool.Flush()
 }
 
-func (suite *ClientTestSuite) TestClient_WriteFilesInDir() {
+func (suite *ClientTestSuite) TestClient_WriteFilesInDirFixedSalt() {
 	require := require.New(suite.T())
 
 	var fileBytes [][]byte
@@ -83,7 +107,30 @@ func (suite *ClientTestSuite) TestClient_WriteFilesInDir() {
 		case info.IsDir() == false && ".json" == filepath.Ext(path):
 			bytes, err := ioutil.ReadFile(path)
 			require.Nil(err, "file read err: %+v", err)
-			fileBytes = append(fileBytes, bytes)
+
+			type WriteDataObj struct {
+				Timestamp uint64 `json:"timestamp"`
+				OwnerKey  []byte `json:"ownerKey"`
+				Qualifier []byte `json:"qualifier"`
+				Data      []byte `json:"data"`
+			}
+			var writeDataObjs []WriteDataObj
+
+			err = json.Unmarshal(bytes, &writeDataObjs)
+			require.Nil(err, "json unmarshal err: %+v", err)
+
+			var baseDataObjs []types.BaseDataObj
+
+			for _, writeDataObj := range writeDataObjs {
+				rowKey, err := json.Marshal(types.KeyObj{Timestamp: writeDataObj.Timestamp, Salt: 0})
+				require.Nil(err, "json marshal err: %+v", err)
+				baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: writeDataObj.OwnerKey, Qualifier: writeDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: writeDataObj.Data}})
+			}
+
+			tx, err := json.Marshal(baseDataObjs)
+			require.Nil(err, "json marshal err: %+v", err)
+
+			fileBytes = append(fileBytes, tx)
 			return nil
 		default:
 			return nil
@@ -91,7 +138,7 @@ func (suite *ClientTestSuite) TestClient_WriteFilesInDir() {
 	})
 	require.Nil(err, "directory traverse err: %+v", err)
 
-	suite.dbClient.WriteFilesInDir(TestDirectory, false)
+	suite.dbClient.WriteFilesInDirFixedSalt(TestDirectory, false)
 
 	require.Equal(initMempoolSize+len(fileBytes), mempool.Size())
 
@@ -103,7 +150,7 @@ func (suite *ClientTestSuite) TestClient_WriteFilesInDir() {
 	mempool.Flush()
 }
 
-func (suite *ClientTestSuite) TestClient_WriteFilesInDirRecursive() {
+func (suite *ClientTestSuite) TestClient_WriteFilesInDirFixedSaltRecursive() {
 	require := require.New(suite.T())
 
 	var fileBytes [][]byte
@@ -116,7 +163,30 @@ func (suite *ClientTestSuite) TestClient_WriteFilesInDirRecursive() {
 		if info.IsDir() == false && ".json" == filepath.Ext(path) {
 			bytes, err := ioutil.ReadFile(path)
 			require.Nil(err, "file read err: %+v", err)
-			fileBytes = append(fileBytes, bytes)
+
+			type WriteDataObj struct {
+				Timestamp uint64 `json:"timestamp"`
+				OwnerKey  []byte `json:"ownerKey"`
+				Qualifier []byte `json:"qualifier"`
+				Data      []byte `json:"data"`
+			}
+			var writeDataObjs []WriteDataObj
+
+			err = json.Unmarshal(bytes, &writeDataObjs)
+			require.Nil(err, "json unmarshal err: %+v", err)
+
+			var baseDataObjs []types.BaseDataObj
+
+			for _, writeDataObj := range writeDataObjs {
+				rowKey, err := json.Marshal(types.KeyObj{Timestamp: writeDataObj.Timestamp, Salt: 0})
+				require.Nil(err, "json marshal err: %+v", err)
+				baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: writeDataObj.OwnerKey, Qualifier: writeDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: writeDataObj.Data}})
+			}
+
+			tx, err := json.Marshal(baseDataObjs)
+			require.Nil(err, "json marshal err: %+v", err)
+
+			fileBytes = append(fileBytes, tx)
 			return nil
 		} else {
 			return nil
@@ -124,7 +194,7 @@ func (suite *ClientTestSuite) TestClient_WriteFilesInDirRecursive() {
 	})
 	require.Nil(err, "directory traverse err: %+v", err)
 
-	suite.dbClient.WriteFilesInDir(TestDirectory, true)
+	suite.dbClient.WriteFilesInDirFixedSalt(TestDirectory, true)
 
 	require.Equal(initMempoolSize+len(fileBytes), mempool.Size())
 

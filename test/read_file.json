@@ -1,13 +1,7 @@
 {
-  "rowKeys":[
-    {
-      "timestamp": 1547772882435375000
-    },
-    {
-      "timestamp": 1547772960049177000
-    },
-    {
-      "timestamp": 1547772967331458000
-    }
+  "ids":[
+    "eyJ0aW1lc3RhbXAiOjE1NDc3NzI4ODI0MzUzNzUwMDAsInNhbHQiOjB9",
+    "eyJ0aW1lc3RhbXAiOjE1NDc3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjB9",
+    "eyJ0aW1lc3RhbXAiOjE1NDc3NzI5NjczMzE0NTgwMDAsInNhbHQiOjB9"
   ]
 }

@@ -5,79 +5,41 @@ import (
 	"fmt"
 )
 
-type WRealDataObj struct {
-	//Timestamp는 client에서 nano단위로 들어옴.
-	Timestamp uint64 `json:"timestamp"`
-	OwnerKey  []byte `json:"ownerKey"`
-	Qualifier []byte `json:"qualifier"`
-	Data      []byte `json:"data"`
-}
-
-type WRealDataObjs []WRealDataObj
-
-type WMetaDataObj struct {
-	OwnerKey  []byte `json:"ownerKey"`
-	Qualifier []byte `json:"qualifier"`
-}
-
+//TODO offset 추가
 type KeyObj struct {
 	Timestamp uint64 `json:"timestamp"`
+	Salt      uint8  `json:"salt"`
 }
 
-//RowKey is marshaled KeyObj
-type RowKey []byte
-type RowKeys []RowKey
-
-type RMetaDataQueryObj struct {
-	Start uint64 `json:"start"`
-	End   uint64 `json:"end"`
-}
-
-type RRealDataQueryObj struct {
-	Keys RowKeys `json:"rowKeys"`
-}
-
-type RClientRealDataQueryObj struct {
-	Keys []KeyObj `json:"rowKeys"`
-}
-
-type RMetaDataResObj struct {
-	RowKey    RowKey `json:"rowKey"`
+type MetaDataObj struct {
+	RowKey    []byte `json:"rowKey"`
 	OwnerKey  []byte `json:"ownerKey"`
 	Qualifier []byte `json:"qualifier"`
 }
 
-type RClientMetaDataResObj struct {
-	RowKey    KeyObj `json:"rowKey"`
+type RealDataObj struct {
+	RowKey []byte `json:"rowKey"`
+	Data   []byte `json:"data"`
+}
+
+type BaseDataObj struct {
+	MetaData MetaDataObj `json:"meta"`
+	RealData RealDataObj `json:"real"`
+}
+
+type MetaDataQueryObj struct {
+	Start     uint64 `json:"start"`
+	End       uint64 `json:"end"`
 	OwnerKey  []byte `json:"ownerKey"`
 	Qualifier []byte `json:"qualifier"`
 }
 
-type RMetaDataResObjs []RMetaDataResObj
-type RClientMetaDataResObjs []RClientMetaDataResObj
-
-type RRealDataResObj struct {
-	RowKey RowKey `json:"rowKey"`
-	Data   []byte `json:"data"`
-}
-
-type RClientRealDataResObj struct {
-	RowKey KeyObj `json:"rowKey"`
-	Data   []byte `json:"data"`
-}
-
-type RRealDataResObjs []RRealDataResObj
-type RClientRealDataResObjs []RClientRealDataResObj
-
-func WRealDataObjToRowKey(data WRealDataObj) []byte {
-	keyObj := KeyObj{Timestamp: data.Timestamp}
-	rowKey, _ := json.Marshal(keyObj)
-
-	return rowKey
+type RealDataQueryObj struct {
+	RowKeys [][]byte `json:"rowKeys"`
 }
 
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
-func CreateStartByteAndEndByte(query RMetaDataQueryObj) ([]byte, []byte) {
+func CreateStartByteAndEndByte(query MetaDataQueryObj) ([]byte, []byte) {
 	startKeyObj := KeyObj{Timestamp: query.Start}
 	endKeyObj := KeyObj{Timestamp: query.End}
 

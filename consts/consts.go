@@ -13,9 +13,21 @@ const (
 	TotalCFNum
 )
 
+//Server, Client config 공통 상수
+const (
+	MetaDataQueryPath = "/metadata"
+	RealDataQueryPath = "/realdata"
+)
+
+//Client config 상수
+const (
+	Remote     = "http://localhost:26657"
+	WsEndpoint = "/websocket"
+)
+
 //Server config 상수
 const (
 	ProtoAddr = "0.0.0.0:26658"
 	Transport = "socket"
-	DBName = "paustdb"
+	DBName    = "paustdb"
 )

@@ -46,8 +46,8 @@ func (app *MasterApplication) Info(req abciTypes.RequestInfo) abciTypes.Response
 }
 
 func (app *MasterApplication) CheckTx(tx []byte) abciTypes.ResponseCheckTx {
-	var wRealDataObjs = types.WRealDataObjs{}
-	err := json.Unmarshal(tx, &wRealDataObjs)
+	var baseDataObjs []types.BaseDataObj
+	err := json.Unmarshal(tx, &baseDataObjs)
 	if err != nil {
 		return abciTypes.ResponseCheckTx{Code: code.CodeTypeEncodingError, Log: err.Error()}
 	}
@@ -67,22 +67,28 @@ func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTy
 }
 
 func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
-	var wRealDataObjs = types.WRealDataObjs{}
-	err := json.Unmarshal(tx, &wRealDataObjs)
+	//Unmarshal tx to baseDataObjs
+	var baseDataObjs []types.BaseDataObj
+	err := json.Unmarshal(tx, &baseDataObjs)
 	if err != nil {
 		fmt.Println("wRealDataObjs unmarshal error", err)
 	}
 
-	for i := 0; i < len(wRealDataObjs); i++ {
-		var wMetaDataObj = &types.WMetaDataObj{OwnerKey: wRealDataObjs[i].OwnerKey, Qualifier: wRealDataObjs[i].Qualifier}
-		metaByte, err := json.Marshal(wMetaDataObj)
-		if err != nil {
-			fmt.Println("meta marshal error : ", err)
+	//meta와 real 나누어 batch에 담는다
+	for i := 0; i < len(baseDataObjs); i++ {
+		var metaValue struct {
+			OwnerKey  []byte `json:"ownerKey"`
+			Qualifier []byte `json:"qualifier"`
 		}
+		metaValue.OwnerKey = baseDataObjs[i].MetaData.OwnerKey
+		metaValue.Qualifier = baseDataObjs[i].MetaData.Qualifier
 
-		rowKey := types.WRealDataObjToRowKey(wRealDataObjs[i])
-		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(consts.MetaCFNum), rowKey, metaByte)
-		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(consts.RealCFNum), rowKey, wRealDataObjs[i].Data)
+		metaData, err := json.Marshal(metaValue)
+		if err != nil {
+			fmt.Println(err)
+		}
+		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(consts.MetaCFNum), baseDataObjs[i].MetaData.RowKey, metaData)
+		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(consts.RealCFNum), baseDataObjs[i].RealData.RowKey, baseDataObjs[i].RealData.Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
@@ -110,33 +116,33 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 
 func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciTypes.ResponseQuery) {
 	switch reqQuery.Path {
-	case "/metadata":
-		var query = types.RMetaDataQueryObj{}
+	case consts.MetaDataQueryPath:
+		var query = types.MetaDataQueryObj{}
 		err := json.Unmarshal(reqQuery.Data, &query)
 		if err != nil {
 			fmt.Println("RMetaDataQueryObj struct unmarshal error", err)
 		}
 
-		metaSlice, _ := app.metaDataQuery(query)
-		resp.Value, _ = json.Marshal(metaSlice)
+		metaDataObjs, _ := app.metaDataQuery(query)
+		resp.Value, _ = json.Marshal(metaDataObjs)
 
-	case "/realdata":
-		var query = types.RRealDataQueryObj{}
+	case consts.RealDataQueryPath:
+		var query = types.RealDataQueryObj{}
 		err := json.Unmarshal(reqQuery.Data, &query)
 		if err != nil {
 			fmt.Println(err)
 		}
 
-		realDataSlice, _ := app.realDataQuery(query)
-		resp.Value, _ = json.Marshal(realDataSlice)
+		realDataObjs, _ := app.realDataQuery(query)
+		resp.Value, _ = json.Marshal(realDataObjs)
 
 	}
 
 	return
 }
 
-func (app *MasterApplication) metaDataQuery(query types.RMetaDataQueryObj) (types.RMetaDataResObjs, error) {
-	var rMetaDataResObjs = types.RMetaDataResObjs{}
+func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]types.MetaDataObj, error) {
+	var metaDataObjs []types.MetaDataObj
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(consts.MetaCFNum))
@@ -144,43 +150,50 @@ func (app *MasterApplication) metaDataQuery(query types.RMetaDataQueryObj) (type
 	defer itr.Close()
 
 	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) == -1; itr.Next() {
-		var metaObj = types.WMetaDataObj{}
-		err := json.Unmarshal(itr.Value(), &metaObj)
+		var metaObj = types.MetaDataObj{}
+
+		var metaValue struct {
+			OwnerKey  []byte `json:"ownerKey"`
+			Qualifier []byte `json:"qualifier"`
+		}
+		err := json.Unmarshal(itr.Value(), &metaValue)
 		if err != nil {
 			fmt.Println(err)
 		}
 
-		var rMetaDataResObj types.RMetaDataResObj
-		rMetaDataResObj.RowKey = make([]byte, len(itr.Key()))
-		copy(rMetaDataResObj.RowKey, itr.Key())
-		rMetaDataResObj.OwnerKey = metaObj.OwnerKey
-		rMetaDataResObj.Qualifier = metaObj.Qualifier
+		metaObj.RowKey = make([]byte, len(itr.Key()))
+		copy(metaObj.RowKey, itr.Key())
+		metaObj.OwnerKey = metaValue.OwnerKey
+		metaObj.Qualifier = metaValue.Qualifier
 
-		rMetaDataResObjs = append(rMetaDataResObjs, rMetaDataResObj)
+		metaDataObjs = append(metaDataObjs, metaObj)
 
 	}
 
-	return rMetaDataResObjs, nil
+	return metaDataObjs, nil
 
 }
 
-func (app *MasterApplication) realDataQuery(query types.RRealDataQueryObj) (types.RRealDataResObjs, error) {
-	rRealDataResObj := types.RRealDataResObj{}
-	rRealDataResObjs := types.RRealDataResObjs{}
+func (app *MasterApplication) realDataQuery(query types.RealDataQueryObj) ([]types.RealDataObj, error) {
+	var realDataObjs []types.RealDataObj
 
-	for _, rowKey := range query.Keys {
+	for _, rowKey := range query.RowKeys {
+		var realDataObj types.RealDataObj
+
+		realDataObj.RowKey = rowKey
 		valueSlice, err := app.db.GetDataFromColumnFamily(consts.RealCFNum, rowKey)
 		if err != nil {
 			fmt.Print(err)
 		}
-		rRealDataResObj.RowKey = rowKey
-		rRealDataResObj.Data = valueSlice.Data()
+		realDataObj.Data = make([]byte, valueSlice.Size())
+		copy(realDataObj.Data, valueSlice.Data())
+		realDataObjs = append(realDataObjs, realDataObj)
 
-		rRealDataResObjs = append(rRealDataResObjs, rRealDataResObj)
+		valueSlice.Free()
 
 	}
 
-	return rRealDataResObjs, nil
+	return realDataObjs, nil
 }
 
 // Below method ares all For Test
@@ -198,12 +211,4 @@ func (app MasterApplication) WB() db.Batch {
 
 func (app MasterApplication) MWB() db.Batch {
 	return app.mwb
-}
-
-func (app MasterApplication) RealDataQuery(query types.RRealDataQueryObj) (types.RRealDataResObjs, error) {
-	return app.realDataQuery(query)
-}
-
-func (app MasterApplication) MetaDataQuery(query types.RMetaDataQueryObj) (types.RMetaDataResObjs, error) {
-	return app.metaDataQuery(query)
 }

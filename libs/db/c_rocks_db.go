@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/paust-team/paust-db/consts"
-	"github.com/paust-team/paust-db/types"
 	"github.com/tecbot/gorocksdb"
 	"path/filepath"
 )
@@ -180,7 +179,10 @@ func (db *CRocksDB) Close() {
 
 // Implements DB.
 func (db *CRocksDB) Print() {
-	var wMetaDataObj = types.WMetaDataObj{}
+	var metaValueObj struct {
+		OwnerKey  []byte `json:"ownerKey"`
+		Qualifier []byte `json:"qualifier"`
+	}
 
 	defaultItr := db.IteratorColumnFamily(nil, nil, db.ColumnFamilyHandle(consts.DefaultCFNum))
 	defer defaultItr.Close()
@@ -198,10 +200,9 @@ func (db *CRocksDB) Print() {
 
 	fmt.Println("--------------Metadata Column Family--------------")
 	for metaItr.SeekToFirst(); metaItr.Valid(); metaItr.Next() {
-		json.Unmarshal(metaItr.Value(), &wMetaDataObj)
-		metaResp := types.RMetaDataResObj{RowKey: metaItr.Key(), OwnerKey: wMetaDataObj.OwnerKey, Qualifier: wMetaDataObj.Qualifier}
+		json.Unmarshal(metaItr.Value(), &metaValueObj)
 		fmt.Println("key : ", metaItr.Key())
-		fmt.Println("value : ", metaResp)
+		fmt.Println("value : ", metaValueObj)
 	}
 
 	fmt.Println("--------------Realdata Column Family--------------")
