@@ -27,20 +27,20 @@ func (suite *MasterSuite) TestMasterApplication_CheckTx() {
 	//given
 
 	givenOwnerKey, _ := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
-	givenKeyObj1 := types.KeyObj{Timestamp:1545982882435375000, Salt: 0}
+	givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
 	givenRowKey1, err := json.Marshal(givenKeyObj1)
 	suite.Nil(err)
-	givenKeyObj2 := types.KeyObj{Timestamp:1545982882435375001, Salt: 0}
+	givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
 	givenRowKey2, err := json.Marshal(givenKeyObj2)
 	suite.Nil(err)
-	givenMetaDataObj1 := types.MetaDataObj{RowKey:givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	givenMetaDataObj2 := types.MetaDataObj{RowKey:givenRowKey2, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt")}
+	givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
+	givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt")}
 
-	givenRealDataObj1 := types.RealDataObj{RowKey:givenRowKey1, Data: []byte("aw")}
-	givenRealDataObj2 := types.RealDataObj{RowKey:givenRowKey1, Data: []byte("good")}
+	givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("aw")}
+	givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("good")}
 
-	givenBaseDataObj1 := types.BaseDataObj{MetaData:givenMetaDataObj1, RealData:givenRealDataObj1}
-	givenBaseDataObj2 := types.BaseDataObj{MetaData:givenMetaDataObj2, RealData:givenRealDataObj2}
+	givenBaseDataObj1 := types.BaseDataObj{MetaData: givenMetaDataObj1, RealData: givenRealDataObj1}
+	givenBaseDataObj2 := types.BaseDataObj{MetaData: givenMetaDataObj2, RealData: givenRealDataObj2}
 
 	var givenBaseDataObjs []types.BaseDataObj
 	givenBaseDataObjs = append(givenBaseDataObjs, givenBaseDataObj1, givenBaseDataObj2)
@@ -100,20 +100,20 @@ func (suite *MasterSuite) TestMasterApplication_DeliverTx() {
 	suite.TestMasterApplication_InitChain()
 
 	givenOwnerKey, _ := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
-	givenKeyObj1 := types.KeyObj{Timestamp:1545982882435375000, Salt: 0}
+	givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
 	givenRowKey1, err := json.Marshal(givenKeyObj1)
 	suite.Nil(err)
-	givenKeyObj2 := types.KeyObj{Timestamp:1545982882435375001, Salt: 0}
+	givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
 	givenRowKey2, err := json.Marshal(givenKeyObj2)
 	suite.Nil(err)
-	givenMetaDataObj1 := types.MetaDataObj{RowKey:givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	givenMetaDataObj2 := types.MetaDataObj{RowKey:givenRowKey2, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt")}
+	givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
+	givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt")}
 
-	givenRealDataObj1 := types.RealDataObj{RowKey:givenRowKey1, Data: []byte("data1")}
-	givenRealDataObj2 := types.RealDataObj{RowKey:givenRowKey2, Data: []byte("data2")}
+	givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("data1")}
+	givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey2, Data: []byte("data2")}
 
-	givenBaseDataObj1 := types.BaseDataObj{MetaData:givenMetaDataObj1, RealData:givenRealDataObj1}
-	givenBaseDataObj2 := types.BaseDataObj{MetaData:givenMetaDataObj2, RealData:givenRealDataObj2}
+	givenBaseDataObj1 := types.BaseDataObj{MetaData: givenMetaDataObj1, RealData: givenRealDataObj1}
+	givenBaseDataObj2 := types.BaseDataObj{MetaData: givenMetaDataObj2, RealData: givenRealDataObj2}
 
 	var givenBaseDataObjs []types.BaseDataObj
 	givenBaseDataObjs = append(givenBaseDataObjs, givenBaseDataObj1, givenBaseDataObj2)
@@ -159,17 +159,17 @@ func (suite *MasterSuite) TestMasterApplication_Query() {
 
 	givenOwnerKey, err := base64.StdEncoding.DecodeString("oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE=")
 	suite.Nil(err)
-	givenKeyObj1 := types.KeyObj{Timestamp:1545982882435375000, Salt: 0}
+	givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
 	givenRowKey1, err := json.Marshal(givenKeyObj1)
 	suite.Nil(err)
-	givenKeyObj2 := types.KeyObj{Timestamp:1545982882435375001, Salt: 0}
+	givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
 	givenRowKey2, err := json.Marshal(givenKeyObj2)
 	suite.Nil(err)
-	givenMetaDataObj1 := types.MetaDataObj{RowKey:givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	givenMetaDataObj2 := types.MetaDataObj{RowKey:givenRowKey2, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt")}
+	givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
+	givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey, Qualifier: []byte("Stt")}
 
-	givenRealDataObj1 := types.RealDataObj{RowKey:givenRowKey1, Data: []byte("data1")}
-	givenRealDataObj2 := types.RealDataObj{RowKey:givenRowKey2, Data: []byte("data2")}
+	givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("data1")}
+	givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey2, Data: []byte("data2")}
 
 	/*
 		Meta Query
