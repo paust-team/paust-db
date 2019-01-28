@@ -24,6 +24,26 @@ import (
 	"time"
 )
 
+type InputDataObj struct {
+	Timestamp uint64 `json:"timestamp"`
+	OwnerKey  []byte `json:"ownerKey"`
+	Qualifier []byte `json:"qualifier"`
+	Data      []byte `json:"data"`
+}
+
+type OutputMetaDataObj struct {
+	Id        []byte `json:"id"`
+	Timestamp uint64 `json:"timestamp"`
+	OwnerKey  []byte `json:"ownerKey"`
+	Qualifier []byte `json:"qualifier"`
+}
+
+type OutputRealDataObj struct {
+	Id        []byte `json:"id"`
+	Timestamp uint64 `json:"timestamp"`
+	Data      []byte `json:"data"`
+}
+
 type Client struct {
 	client client.Client
 }
@@ -172,15 +192,9 @@ func (client *Client) writeFile(file string, salt uint8) (*ctypes.ResultBroadcas
 		os.Exit(1)
 	}
 
-	type WriteDataObj struct {
-		Timestamp uint64 `json:"timestamp"`
-		OwnerKey  []byte `json:"ownerKey"`
-		Qualifier []byte `json:"qualifier"`
-		Data      []byte `json:"data"`
-	}
-	var writeDataObjs []WriteDataObj
+	var inputDataObjs []InputDataObj
 
-	err = json.Unmarshal(bytes, &writeDataObjs)
+	err = json.Unmarshal(bytes, &inputDataObjs)
 	if err != nil {
 		errors.Wrap(err, "unmarshal failed")
 		return nil, err
@@ -188,13 +202,13 @@ func (client *Client) writeFile(file string, salt uint8) (*ctypes.ResultBroadcas
 
 	var baseDataObjs []types.BaseDataObj
 
-	for _, writeDataObj := range writeDataObjs {
-		rowKey, err := json.Marshal(types.KeyObj{Timestamp: writeDataObj.Timestamp, Salt: salt})
+	for _, inputDataObj := range inputDataObjs {
+		rowKey, err := json.Marshal(types.KeyObj{Timestamp: inputDataObj.Timestamp, Salt: salt})
 		if err != nil {
 			errors.Wrap(err, "marshal failed")
 			return nil, err
 		}
-		baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: writeDataObj.OwnerKey, Qualifier: writeDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: writeDataObj.Data}})
+		baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: inputDataObj.OwnerKey, Qualifier: inputDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: inputDataObj.Data}})
 	}
 
 	jsonString, err := json.Marshal(baseDataObjs)
@@ -349,15 +363,9 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 		os.Exit(1)
 	}
 
-	type WriteDataObj struct {
-		Timestamp uint64 `json:"timestamp"`
-		OwnerKey  []byte `json:"ownerKey"`
-		Qualifier []byte `json:"qualifier"`
-		Data      []byte `json:"data"`
-	}
-	var writeDataObjs []WriteDataObj
+	var inputDataObjs []InputDataObj
 
-	err = json.Unmarshal(bytes, &writeDataObjs)
+	err = json.Unmarshal(bytes, &inputDataObjs)
 	if err != nil {
 		errors.Wrap(err, "unmarshal failed")
 		return nil, err
@@ -365,13 +373,13 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 
 	var baseDataObjs []types.BaseDataObj
 
-	for _, writeDataObj := range writeDataObjs {
-		rowKey, err := json.Marshal(types.KeyObj{Timestamp: writeDataObj.Timestamp, Salt: uint8(rand.Intn(256))})
+	for _, inputDataObj := range inputDataObjs {
+		rowKey, err := json.Marshal(types.KeyObj{Timestamp: inputDataObj.Timestamp, Salt: uint8(rand.Intn(256))})
 		if err != nil {
 			errors.Wrap(err, "marshal failed")
 			return nil, err
 		}
-		baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: writeDataObj.OwnerKey, Qualifier: writeDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: writeDataObj.Data}})
+		baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: inputDataObj.OwnerKey, Qualifier: inputDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: inputDataObj.Data}})
 	}
 
 	jsonString, err := json.Marshal(baseDataObjs)
@@ -415,13 +423,7 @@ func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 			return nil, err
 		}
 
-		type MetaDataObj struct {
-			Id        []byte `json:"id"`
-			Timestamp uint64 `json:"timestamp"`
-			OwnerKey  []byte `json:"ownerKey"`
-			Qualifier []byte `json:"qualifier"`
-		}
-		var deserializedMeta []MetaDataObj
+		var deserializedMeta []OutputMetaDataObj
 		for _, metaDataObj := range metaDataObjs {
 			var keyObj = types.KeyObj{}
 			err := json.Unmarshal(metaDataObj.RowKey, &keyObj)
@@ -429,7 +431,7 @@ func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 				errors.Wrap(err, "unmarshal failed")
 				return nil, err
 			}
-			deserializedMeta = append(deserializedMeta, MetaDataObj{Id: metaDataObj.RowKey, Timestamp: keyObj.Timestamp, OwnerKey: metaDataObj.OwnerKey, Qualifier: metaDataObj.Qualifier})
+			deserializedMeta = append(deserializedMeta, OutputMetaDataObj{Id: metaDataObj.RowKey, Timestamp: keyObj.Timestamp, OwnerKey: metaDataObj.OwnerKey, Qualifier: metaDataObj.Qualifier})
 		}
 		deserializedObj, err := json.Marshal(deserializedMeta)
 		if err != nil {
@@ -445,12 +447,7 @@ func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 			return nil, err
 		}
 
-		type RealDataObj struct {
-			Id        []byte `json:"id"`
-			Timestamp uint64 `json:"timestamp"`
-			Data      []byte `json:"data"`
-		}
-		var deserializedReal []RealDataObj
+		var deserializedReal []OutputRealDataObj
 		for _, realDataObj := range realDataObjs {
 			var keyObj = types.KeyObj{}
 			err := json.Unmarshal(realDataObj.RowKey, &keyObj)
@@ -458,7 +455,7 @@ func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 				errors.Wrap(err, "unmarshal failed")
 				return nil, err
 			}
-			deserializedReal = append(deserializedReal, RealDataObj{Id: realDataObj.RowKey, Timestamp: keyObj.Timestamp, Data: realDataObj.Data})
+			deserializedReal = append(deserializedReal, OutputRealDataObj{Id: realDataObj.RowKey, Timestamp: keyObj.Timestamp, Data: realDataObj.Data})
 		}
 		deserializedObj, err := json.Marshal(deserializedReal)
 		if err != nil {
