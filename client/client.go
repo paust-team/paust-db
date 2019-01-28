@@ -24,36 +24,12 @@ import (
 	"time"
 )
 
-type WriteDataObj struct {
-	Timestamp uint64 `json:"timestamp"`
-	OwnerKey  []byte `json:"ownerKey"`
-	Qualifier []byte `json:"qualifier"`
-	Data      []byte `json:"data"`
-}
-
-type MetaDataObj struct {
-	Id        []byte `json:"id"`
-	Timestamp uint64 `json:"timestamp"`
-	OwnerKey  []byte `json:"ownerKey"`
-	Qualifier []byte `json:"qualifier"`
-}
-
-type RealDataObj struct {
-	Id        []byte `json:"id"`
-	Timestamp uint64 `json:"timestamp"`
-	Data      []byte `json:"data"`
-}
-
-type RealDataQueryObj struct {
-	Ids [][]byte `json:"ids"`
-}
-
 type Client struct {
 	client client.Client
 }
 
 func NewClient(remote string) *Client {
-	c := client.NewHTTP(remote, "/websocket")
+	c := client.NewHTTP(remote, consts.WsEndpoint)
 
 	return &Client{
 		client: c,
@@ -121,7 +97,7 @@ func (client *Client) ReadData(ids []string) (*ctypes.ResultABCIQuery, error) {
 		return nil, err
 	}
 
-	res, err := client.client.ABCIQuery("/realdata", jsonString)
+	res, err := client.client.ABCIQuery(consts.RealDataQueryPath, jsonString)
 	return res, err
 }
 
@@ -133,6 +109,9 @@ func (client *Client) ReadDataOfStdin() (*ctypes.ResultABCIQuery, error) {
 		return nil, err
 	}
 
+	type RealDataQueryObj struct {
+		Ids [][]byte `json:"ids"`
+	}
 	var queryObj RealDataQueryObj
 	err = json.Unmarshal(bytes, &queryObj)
 	if err != nil {
@@ -150,7 +129,7 @@ func (client *Client) ReadDataOfStdin() (*ctypes.ResultABCIQuery, error) {
 		errors.Wrap(err, "marshal failed")
 	}
 
-	res, err := client.client.ABCIQuery("/realdata", jsonString)
+	res, err := client.client.ABCIQuery(consts.RealDataQueryPath, jsonString)
 	return res, err
 }
 
@@ -161,6 +140,9 @@ func (client *Client) ReadDataOfFile(file string) (*ctypes.ResultABCIQuery, erro
 		return nil, err
 	}
 
+	type RealDataQueryObj struct {
+		Ids [][]byte `json:"ids"`
+	}
 	var queryObj RealDataQueryObj
 	err = json.Unmarshal(bytes, &queryObj)
 	if err != nil {
@@ -178,7 +160,7 @@ func (client *Client) ReadDataOfFile(file string) (*ctypes.ResultABCIQuery, erro
 		errors.Wrap(err, "marshal failed")
 	}
 
-	res, err := client.client.ABCIQuery("/realdata", jsonString)
+	res, err := client.client.ABCIQuery(consts.RealDataQueryPath, jsonString)
 	return res, err
 }
 
@@ -188,6 +170,13 @@ func (client *Client) writeFile(file string, salt uint8) (*ctypes.ResultBroadcas
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+
+	type WriteDataObj struct {
+		Timestamp uint64 `json:"timestamp"`
+		OwnerKey  []byte `json:"ownerKey"`
+		Qualifier []byte `json:"qualifier"`
+		Data      []byte `json:"data"`
 	}
 	var writeDataObjs []WriteDataObj
 
@@ -360,6 +349,12 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 		os.Exit(1)
 	}
 
+	type WriteDataObj struct {
+		Timestamp uint64 `json:"timestamp"`
+		OwnerKey  []byte `json:"ownerKey"`
+		Qualifier []byte `json:"qualifier"`
+		Data      []byte `json:"data"`
+	}
 	var writeDataObjs []WriteDataObj
 
 	err = json.Unmarshal(bytes, &writeDataObjs)
@@ -396,8 +391,8 @@ func (client *Client) ReadMetaData(start uint64, end uint64, ownerKey string, qu
 		os.Exit(1)
 	}
 
-	if len(ownerKeyBytes) != 0 && len(ownerKeyBytes) != types.OwnerKeyLen {
-		fmt.Printf("public key: ed25519 public key must be %d bytes\n", types.OwnerKeyLen)
+	if len(ownerKeyBytes) != 0 && len(ownerKeyBytes) != consts.OwnerKeyLen {
+		fmt.Printf("public key: ed25519 public key must be %d bytes\n", consts.OwnerKeyLen)
 		os.Exit(1)
 	}
 
@@ -407,7 +402,7 @@ func (client *Client) ReadMetaData(start uint64, end uint64, ownerKey string, qu
 		return nil, err
 	}
 
-	res, err := client.client.ABCIQuery("/metadata", jsonString)
+	res, err := client.client.ABCIQuery(consts.MetaDataQueryPath, jsonString)
 	return res, err
 }
 
@@ -420,6 +415,12 @@ func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 			return nil, err
 		}
 
+		type MetaDataObj struct {
+			Id        []byte `json:"id"`
+			Timestamp uint64 `json:"timestamp"`
+			OwnerKey  []byte `json:"ownerKey"`
+			Qualifier []byte `json:"qualifier"`
+		}
 		var deserializedMeta []MetaDataObj
 		for _, metaDataObj := range metaDataObjs {
 			var keyObj = types.KeyObj{}
@@ -444,6 +445,11 @@ func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 			return nil, err
 		}
 
+		type RealDataObj struct {
+			Id        []byte `json:"id"`
+			Timestamp uint64 `json:"timestamp"`
+			Data      []byte `json:"data"`
+		}
 		var deserializedReal []RealDataObj
 		for _, realDataObj := range realDataObjs {
 			var keyObj = types.KeyObj{}
@@ -491,7 +497,7 @@ var writeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		client := NewClient("http://localhost:26657")
+		client := NewClient(consts.Remote)
 
 		var bres *ctypes.ResultBroadcastTx
 
@@ -528,7 +534,7 @@ var writeTestCmd = &cobra.Command{
 	Use:   "writeTest",
 	Short: "Run DB Write Test",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := NewClient("http://localhost:26657")
+		client := NewClient(consts.Remote)
 
 		for i := 0; i < 3; i++ {
 			client.WriteData(time.Now(), "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", qualifier, []byte(fmt.Sprintf("test-%d", i)))
@@ -563,7 +569,7 @@ var realdataCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		client := NewClient("http://localhost:26657")
+		client := NewClient(consts.Remote)
 
 		var res *ctypes.ResultABCIQuery
 
@@ -629,7 +635,7 @@ var metadataCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		client := NewClient("http://localhost:26657")
+		client := NewClient(consts.Remote)
 
 		res, err := client.ReadMetaData(start, end, ownerKey, qualifier)
 		if err != nil {

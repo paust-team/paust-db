@@ -116,7 +116,7 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 
 func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciTypes.ResponseQuery) {
 	switch reqQuery.Path {
-	case "/metadata":
+	case consts.MetaDataQueryPath:
 		var query = types.MetaDataQueryObj{}
 		err := json.Unmarshal(reqQuery.Data, &query)
 		if err != nil {
@@ -126,7 +126,7 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 		metaDataObjs, _ := app.metaDataQuery(query)
 		resp.Value, _ = json.Marshal(metaDataObjs)
 
-	case "/realdata":
+	case consts.RealDataQueryPath:
 		var query = types.RealDataQueryObj{}
 		err := json.Unmarshal(reqQuery.Data, &query)
 		if err != nil {

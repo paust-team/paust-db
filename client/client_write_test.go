@@ -3,7 +3,6 @@ package client_test
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/paust-team/paust-db/client"
 	"github.com/paust-team/paust-db/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -57,7 +56,13 @@ func (suite *ClientTestSuite) TestClient_WriteFileFixedSalt() {
 	bytes, err := ioutil.ReadFile(TestWriteFile)
 	require.Nil(err, "file read err: %+v", err)
 
-	var writeDataObjs []client.WriteDataObj
+	type WriteDataObj struct {
+		Timestamp uint64 `json:"timestamp"`
+		OwnerKey  []byte `json:"ownerKey"`
+		Qualifier []byte `json:"qualifier"`
+		Data      []byte `json:"data"`
+	}
+	var writeDataObjs []WriteDataObj
 
 	err = json.Unmarshal(bytes, &writeDataObjs)
 	require.Nil(err, "json unmarshal err: %+v", err)
@@ -103,7 +108,13 @@ func (suite *ClientTestSuite) TestClient_WriteFilesInDirFixedSalt() {
 			bytes, err := ioutil.ReadFile(path)
 			require.Nil(err, "file read err: %+v", err)
 
-			var writeDataObjs []client.WriteDataObj
+			type WriteDataObj struct {
+				Timestamp uint64 `json:"timestamp"`
+				OwnerKey  []byte `json:"ownerKey"`
+				Qualifier []byte `json:"qualifier"`
+				Data      []byte `json:"data"`
+			}
+			var writeDataObjs []WriteDataObj
 
 			err = json.Unmarshal(bytes, &writeDataObjs)
 			require.Nil(err, "json unmarshal err: %+v", err)
@@ -153,7 +164,13 @@ func (suite *ClientTestSuite) TestClient_WriteFilesInDirFixedSaltRecursive() {
 			bytes, err := ioutil.ReadFile(path)
 			require.Nil(err, "file read err: %+v", err)
 
-			var writeDataObjs []client.WriteDataObj
+			type WriteDataObj struct {
+				Timestamp uint64 `json:"timestamp"`
+				OwnerKey  []byte `json:"ownerKey"`
+				Qualifier []byte `json:"qualifier"`
+				Data      []byte `json:"data"`
+			}
+			var writeDataObjs []WriteDataObj
 
 			err = json.Unmarshal(bytes, &writeDataObjs)
 			require.Nil(err, "json unmarshal err: %+v", err)

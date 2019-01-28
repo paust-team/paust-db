@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/paust-team/paust-db/consts"
-	"github.com/paust-team/paust-db/types"
 	"github.com/tecbot/gorocksdb"
 	"path/filepath"
 )

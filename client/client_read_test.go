@@ -15,21 +15,6 @@ const (
 	TestReadFile = "../test/read_file.json"
 )
 
-type RClientMetaDataResObj struct {
-	RowKey    types.KeyObj `json:"rowKey"`
-	OwnerKey  []byte       `json:"ownerKey"`
-	Qualifier []byte       `json:"qualifier"`
-}
-
-type RClientMetaDataResObjs []RClientMetaDataResObj
-
-type RClientRealDataResObj struct {
-	RowKey types.KeyObj `json:"rowKey"`
-	Data   []byte       `json:"data"`
-}
-
-type RClientRealDataResObjs []RClientRealDataResObj
-
 func (suite *ClientTestSuite) TestClient_ReadData() {
 	require := require.New(suite.T())
 
@@ -149,7 +134,13 @@ func (suite *ClientTestSuite) TestDeSerializeKeyObj() {
 	require.Nil(err, "base64 decode err: %+v", err)
 	metaDataObjs, err := json.Marshal([]types.MetaDataObj{{RowKey: rowKey1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {RowKey: rowKey2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
-	clientMetaDataObjs, err := json.Marshal([]client.MetaDataObj{{Id: rowKey1, Timestamp: timestamp1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {Id: rowKey2, Timestamp: timestamp2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
+	type MetaDataObj struct {
+		Id        []byte `json:"id"`
+		Timestamp uint64 `json:"timestamp"`
+		OwnerKey  []byte `json:"ownerKey"`
+		Qualifier []byte `json:"qualifier"`
+	}
+	clientMetaDataObjs, err := json.Marshal([]MetaDataObj{{Id: rowKey1, Timestamp: timestamp1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {Id: rowKey2, Timestamp: timestamp2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	deserializedBytes, err := client.DeSerializeKeyObj(metaDataObjs, true)
@@ -160,7 +151,12 @@ func (suite *ClientTestSuite) TestDeSerializeKeyObj() {
 	// RealDataResObj deserialize
 	realDataObjs, err := json.Marshal([]types.RealDataObj{{RowKey: rowKey1, Data: []byte("testData1")}, {RowKey: rowKey2, Data: []byte("testData2")}})
 	require.Nil(err, "json marshal err: %+v", err)
-	clientRealDataObjs, err := json.Marshal([]client.RealDataObj{{Id: rowKey1, Timestamp: timestamp1, Data: []byte("testData1")}, {Id: rowKey2, Timestamp: timestamp2, Data: []byte("testData2")}})
+	type RealDataObj struct {
+		Id        []byte `json:"id"`
+		Timestamp uint64 `json:"timestamp"`
+		Data      []byte `json:"data"`
+	}
+	clientRealDataObjs, err := json.Marshal([]RealDataObj{{Id: rowKey1, Timestamp: timestamp1, Data: []byte("testData1")}, {Id: rowKey2, Timestamp: timestamp2, Data: []byte("testData2")}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	deserializedBytes, err = client.DeSerializeKeyObj(realDataObjs, false)
