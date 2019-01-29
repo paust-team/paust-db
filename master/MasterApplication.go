@@ -142,6 +142,7 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciT
 }
 
 func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]types.MetaDataObj, error) {
+	var rawMetaDataObjs []types.MetaDataObj
 	var metaDataObjs []types.MetaDataObj
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
@@ -149,6 +150,7 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 	//TODO unittest close test
 	defer itr.Close()
 
+	// time range에 해당하는 모든 데이터를 가져온다
 	for itr.Seek(startByte); itr.Valid() && bytes.Compare(itr.Key(), endByte) == -1; itr.Next() {
 		var metaObj = types.MetaDataObj{}
 
@@ -166,10 +168,33 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 		metaObj.OwnerKey = metaValue.OwnerKey
 		metaObj.Qualifier = metaValue.Qualifier
 
-		metaDataObjs = append(metaDataObjs, metaObj)
+		rawMetaDataObjs = append(rawMetaDataObjs, metaObj)
 
 	}
 
+	// 가져온 데이터를 제한사항에 맞게 거른다
+	switch {
+	case query.OwnerKey == nil && query.Qualifier == nil:
+		metaDataObjs = rawMetaDataObjs
+	case query.OwnerKey == nil:
+		for i, metaObj := range rawMetaDataObjs {
+			if string(metaObj.Qualifier) == string(query.Qualifier) {
+				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
+			}
+		}
+	case query.Qualifier == nil:
+		for i, metaObj := range rawMetaDataObjs {
+			if string(metaObj.OwnerKey) == string(query.OwnerKey) {
+				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
+			}
+		}
+	default:
+		for i, metaObj := range rawMetaDataObjs {
+			if string(metaObj.OwnerKey) == string(query.OwnerKey) && string(metaObj.Qualifier) == string(query.Qualifier) {
+				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
+			}
+		}
+	}
 	return metaDataObjs, nil
 
 }
