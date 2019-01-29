@@ -50,6 +50,7 @@ type Client struct {
 
 func NewClient(remote string) *Client {
 	c := client.NewHTTP(remote, consts.WsEndpoint)
+	rand.Seed(time.Now().UnixNano())
 
 	return &Client{
 		client: c,
@@ -64,7 +65,7 @@ func NewLocalClient(node *nm.Node) *Client {
 	}
 }
 
-func (client *Client) writeData(time time.Time, ownerKey string, qualifier string, data []byte, salt uint8) (*ctypes.ResultBroadcastTx, error) {
+func (client *Client) WriteData(time time.Time, ownerKey string, qualifier string, data []byte) (*ctypes.ResultBroadcastTx, error) {
 	ownerKeyBytes, err := base64.StdEncoding.DecodeString(ownerKey)
 	if err != nil {
 		fmt.Println(err)
@@ -76,7 +77,7 @@ func (client *Client) writeData(time time.Time, ownerKey string, qualifier strin
 		os.Exit(1)
 	}
 
-	rowKey, err := json.Marshal(types.KeyObj{Timestamp: uint64(time.Unix()), Salt: salt})
+	rowKey, err := json.Marshal(types.KeyObj{Timestamp: uint64(time.Unix()), Salt: uint8(rand.Intn(256))})
 	if err != nil {
 		errors.Wrap(err, "marshal failed")
 		return nil, err
@@ -90,14 +91,6 @@ func (client *Client) writeData(time time.Time, ownerKey string, qualifier strin
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
 	return bres, err
-}
-
-func (client *Client) WriteData(time time.Time, ownerKey string, qualifier string, data []byte) (*ctypes.ResultBroadcastTx, error) {
-	return client.writeData(time, ownerKey, qualifier, data, uint8(rand.Intn(256)))
-}
-
-func (client *Client) WriteDataFixedSalt(time time.Time, ownerKey string, qualifier string, data []byte) (*ctypes.ResultBroadcastTx, error) {
-	return client.writeData(time, ownerKey, qualifier, data, 0)
 }
 
 func (client *Client) ReadData(ids []string) (*ctypes.ResultABCIQuery, error) {
@@ -185,7 +178,7 @@ func (client *Client) ReadDataOfFile(file string) (*ctypes.ResultABCIQuery, erro
 }
 
 // TODO: implement split large size data to many transactions.
-func (client *Client) writeFile(file string, salt uint8) (*ctypes.ResultBroadcastTx, error) {
+func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		fmt.Println(err)
@@ -203,7 +196,7 @@ func (client *Client) writeFile(file string, salt uint8) (*ctypes.ResultBroadcas
 	var baseDataObjs []types.BaseDataObj
 
 	for _, inputDataObj := range inputDataObjs {
-		rowKey, err := json.Marshal(types.KeyObj{Timestamp: inputDataObj.Timestamp, Salt: salt})
+		rowKey, err := json.Marshal(types.KeyObj{Timestamp: inputDataObj.Timestamp, Salt: uint8(rand.Intn(256))})
 		if err != nil {
 			errors.Wrap(err, "marshal failed")
 			return nil, err
@@ -219,14 +212,6 @@ func (client *Client) writeFile(file string, salt uint8) (*ctypes.ResultBroadcas
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
 	return bres, err
-}
-
-func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) {
-	return client.writeFile(file, uint8(rand.Intn(256)))
-}
-
-func (client *Client) WriteFileFixedSalt(file string) (*ctypes.ResultBroadcastTx, error) {
-	return client.writeFile(file, 0)
 }
 
 func (client *Client) WriteFilesInDir(dir string, recursive bool) {
@@ -270,69 +255,6 @@ func (client *Client) WriteFilesInDir(dir string, recursive bool) {
 				return filepath.SkipDir
 			case info.IsDir() == false && ".json" == filepath.Ext(path):
 				bres, err := client.WriteFile(path)
-				if err != nil {
-					fmt.Printf("WriteFile: %v\n", err)
-					os.Exit(1)
-				}
-				if bres.Code == code.CodeTypeOK {
-					fmt.Printf("%s: write success.\n", path)
-				} else {
-					fmt.Printf("%s: write fail.\n", path)
-					fmt.Println(bres.Log)
-				}
-				return nil
-			default:
-				return nil
-			}
-		})
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-	}
-}
-
-func (client *Client) WriteFilesInDirFixedSalt(dir string, recursive bool) {
-	if recursive == true {
-		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				fmt.Printf("directory traverse err: %v\n", err)
-				os.Exit(1)
-			}
-
-			if info.IsDir() == false && ".json" == filepath.Ext(path) {
-				bres, err := client.WriteFileFixedSalt(path)
-				if err != nil {
-					fmt.Printf("WriteFile: %v\n", err)
-					os.Exit(1)
-				}
-				if bres.Code == code.CodeTypeOK {
-					fmt.Printf("%s: write success.\n", path)
-				} else {
-					fmt.Printf("%s: write fail.\n", path)
-					fmt.Println(bres.Log)
-				}
-				return nil
-			} else {
-				return nil
-			}
-		})
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-	} else {
-		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				fmt.Printf("directory traverse err: %v\n", err)
-				os.Exit(1)
-			}
-
-			switch {
-			case info.IsDir() == true && path != dir:
-				return filepath.SkipDir
-			case info.IsDir() == false && ".json" == filepath.Ext(path):
-				bres, err := client.WriteFileFixedSalt(path)
 				if err != nil {
 					fmt.Printf("WriteFile: %v\n", err)
 					os.Exit(1)
