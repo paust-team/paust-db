@@ -449,18 +449,6 @@ var writeCmd = &cobra.Command{
 	},
 }
 
-var writeTestCmd = &cobra.Command{
-	Use:   "writeTest",
-	Short: "Run DB Write Test",
-	Run: func(cmd *cobra.Command, args []string) {
-		client := NewClient(consts.Remote)
-
-		for i := 0; i < 3; i++ {
-			client.WriteData(time.Now(), "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", qualifier, []byte(fmt.Sprintf("test-%d", i)))
-		}
-	},
-}
-
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate ED25519 Key Pair",
@@ -598,7 +586,6 @@ func init() {
 	metadataCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
 	metadataCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
 	Cmd.AddCommand(writeCmd)
-	Cmd.AddCommand(writeTestCmd)
 	Cmd.AddCommand(generateCmd)
 	Cmd.AddCommand(queryCmd)
 	queryCmd.AddCommand(metadataCmd)
