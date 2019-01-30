@@ -71,20 +71,17 @@ func NewLocalClient(node *nm.Node) *Client {
 
 func (client *Client) WriteData(timestamp uint64, ownerKey []byte, qualifier []byte, data []byte) (*ctypes.ResultBroadcastTx, error) {
 	if len(ownerKey) != consts.OwnerKeyLen {
-		fmt.Printf("public key: ed25519 public key must be %d bytes\n", consts.OwnerKeyLen)
-		os.Exit(1)
+		return nil, fmt.Errorf("wrong ownerKey length. Expected %v, got %v", consts.OwnerKeyLen, len(ownerKey))
 	}
 
 	rowKey, err := json.Marshal(types.KeyObj{Timestamp: timestamp, Salt: uint8(rand.Intn(256))})
 	if err != nil {
-		errors.Wrap(err, "marshal failed")
-		return nil, err
+		return nil, errors.Wrap(err, "marshal failed")
 	}
 
 	jsonString, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: ownerKey, Qualifier: qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	if err != nil {
-		errors.Wrap(err, "marshal failed")
-		return nil, err
+		return nil, errors.Wrap(err, "marshal failed")
 	}
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
@@ -96,8 +93,7 @@ func (client *Client) ReadData(ids [][]byte) (*ctypes.ResultABCIQuery, error) {
 
 	jsonString, err := json.Marshal(realDataQueryObj)
 	if err != nil {
-		errors.Wrap(err, "marshal failed")
-		return nil, err
+		return nil, errors.Wrap(err, "marshal failed")
 	}
 
 	res, err := client.client.ABCIQuery(consts.RealDataQueryPath, jsonString)
@@ -108,15 +104,12 @@ func (client *Client) ReadDataOfStdin() (*ctypes.ResultABCIQuery, error) {
 	in := bufio.NewReader(os.Stdin)
 	bytes, err := in.ReadBytes(0x00)
 	if err != io.EOF {
-		errors.Wrap(err, "read data of stdin")
-		return nil, err
+		return nil, errors.Wrap(err, "read data of stdin failed")
 	}
 
 	var queryObj InputQueryObj
-	err = json.Unmarshal(bytes, &queryObj)
-	if err != nil {
-		errors.Wrap(err, "unmarshal failed")
-		return nil, err
+	if err := json.Unmarshal(bytes, &queryObj); err != nil {
+		return nil, errors.Wrap(err, "unmarshal failed")
 	}
 
 	var realDataQueryObj types.RealDataQueryObj
@@ -126,7 +119,7 @@ func (client *Client) ReadDataOfStdin() (*ctypes.ResultABCIQuery, error) {
 
 	jsonString, err := json.Marshal(realDataQueryObj)
 	if err != nil {
-		errors.Wrap(err, "marshal failed")
+		return nil, errors.Wrap(err, "marshal failed")
 	}
 
 	res, err := client.client.ABCIQuery(consts.RealDataQueryPath, jsonString)
@@ -136,15 +129,12 @@ func (client *Client) ReadDataOfStdin() (*ctypes.ResultABCIQuery, error) {
 func (client *Client) ReadDataOfFile(file string) (*ctypes.ResultABCIQuery, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
-		errors.Wrap(err, "read data of file")
-		return nil, err
+		return nil, errors.Wrap(err, "readFile failed")
 	}
 
 	var queryObj InputQueryObj
-	err = json.Unmarshal(bytes, &queryObj)
-	if err != nil {
-		errors.Wrap(err, "unmarshal failed")
-		return nil, err
+	if err := json.Unmarshal(bytes, &queryObj); err != nil {
+		return nil, errors.Wrap(err, "unmarshal failed")
 	}
 
 	var realDataQueryObj types.RealDataQueryObj
@@ -154,7 +144,7 @@ func (client *Client) ReadDataOfFile(file string) (*ctypes.ResultABCIQuery, erro
 
 	jsonString, err := json.Marshal(realDataQueryObj)
 	if err != nil {
-		errors.Wrap(err, "marshal failed")
+		return nil, errors.Wrap(err, "marshal failed")
 	}
 
 	res, err := client.client.ABCIQuery(consts.RealDataQueryPath, jsonString)
@@ -165,16 +155,13 @@ func (client *Client) ReadDataOfFile(file string) (*ctypes.ResultABCIQuery, erro
 func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return nil, errors.Wrap(err, "readFile failed")
 	}
 
 	var inputDataObjs []InputDataObj
 
-	err = json.Unmarshal(bytes, &inputDataObjs)
-	if err != nil {
-		errors.Wrap(err, "unmarshal failed")
-		return nil, err
+	if err := json.Unmarshal(bytes, &inputDataObjs); err != nil {
+		return nil, errors.Wrap(err, "unmarshal failed")
 	}
 
 	var baseDataObjs []types.BaseDataObj
@@ -182,16 +169,14 @@ func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) 
 	for _, inputDataObj := range inputDataObjs {
 		rowKey, err := json.Marshal(types.KeyObj{Timestamp: inputDataObj.Timestamp, Salt: uint8(rand.Intn(256))})
 		if err != nil {
-			errors.Wrap(err, "marshal failed")
-			return nil, err
+			return nil, errors.Wrap(err, "marshal failed")
 		}
 		baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: inputDataObj.OwnerKey, Qualifier: inputDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: inputDataObj.Data}})
 	}
 
 	jsonString, err := json.Marshal(baseDataObjs)
 	if err != nil {
-		errors.Wrap(err, "marshal failed")
-		return nil, err
+		return nil, errors.Wrap(err, "marshal failed")
 	}
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
@@ -202,15 +187,14 @@ func (client *Client) WriteFilesInDir(dir string, recursive bool) {
 	if recursive == true {
 		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				fmt.Printf("directory traverse err: %v\n", err)
-				os.Exit(1)
+				return errors.Wrap(err, "filepath walk err")
 			}
 
 			if info.IsDir() == false && ".json" == filepath.Ext(path) {
 				bres, err := client.WriteFile(path)
 				if err != nil {
-					fmt.Printf("WriteFile: %v\n", err)
-					os.Exit(1)
+					fmt.Printf("WriteFile(%s): %v\n", path, err)
+					return nil
 				}
 				if bres.Code == code.CodeTypeOK {
 					fmt.Printf("%s: write success.\n", path)
@@ -218,20 +202,16 @@ func (client *Client) WriteFilesInDir(dir string, recursive bool) {
 					fmt.Printf("%s: write fail.\n", path)
 					fmt.Println(bres.Log)
 				}
-				return nil
-			} else {
-				return nil
 			}
+			return nil
 		})
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
 		}
 	} else {
 		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
-				fmt.Printf("directory traverse err: %v\n", err)
-				os.Exit(1)
+				return errors.Wrap(err, "filepath walk err")
 			}
 
 			switch {
@@ -240,8 +220,8 @@ func (client *Client) WriteFilesInDir(dir string, recursive bool) {
 			case info.IsDir() == false && ".json" == filepath.Ext(path):
 				bres, err := client.WriteFile(path)
 				if err != nil {
-					fmt.Printf("WriteFile: %v\n", err)
-					os.Exit(1)
+					fmt.Printf("WriteFile(%s): %v\n", path, err)
+					return nil
 				}
 				if bres.Code == code.CodeTypeOK {
 					fmt.Printf("%s: write success.\n", path)
@@ -256,7 +236,6 @@ func (client *Client) WriteFilesInDir(dir string, recursive bool) {
 		})
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
 		}
 	}
 }
@@ -265,16 +244,13 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 	in := bufio.NewReader(os.Stdin)
 	bytes, err := in.ReadBytes(0x00)
 	if err != io.EOF {
-		fmt.Println(err)
-		os.Exit(1)
+		return nil, errors.Wrap(err, "read data of stdin failed")
 	}
 
 	var inputDataObjs []InputDataObj
 
-	err = json.Unmarshal(bytes, &inputDataObjs)
-	if err != nil {
-		errors.Wrap(err, "unmarshal failed")
-		return nil, err
+	if err := json.Unmarshal(bytes, &inputDataObjs); err != nil {
+		return nil, errors.Wrap(err, "unmarshal failed")
 	}
 
 	var baseDataObjs []types.BaseDataObj
@@ -282,16 +258,14 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 	for _, inputDataObj := range inputDataObjs {
 		rowKey, err := json.Marshal(types.KeyObj{Timestamp: inputDataObj.Timestamp, Salt: uint8(rand.Intn(256))})
 		if err != nil {
-			errors.Wrap(err, "marshal failed")
-			return nil, err
+			return nil, errors.Wrap(err, "marshal failed")
 		}
 		baseDataObjs = append(baseDataObjs, types.BaseDataObj{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: inputDataObj.OwnerKey, Qualifier: inputDataObj.Qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: inputDataObj.Data}})
 	}
 
 	jsonString, err := json.Marshal(baseDataObjs)
 	if err != nil {
-		errors.Wrap(err, "marshal failed")
-		return nil, err
+		return nil, errors.Wrap(err, "marshal failed")
 	}
 
 	bres, err := client.client.BroadcastTxSync(jsonString)
@@ -300,14 +274,12 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 
 func (client *Client) ReadMetaData(start uint64, end uint64, ownerKey []byte, qualifier []byte) (*ctypes.ResultABCIQuery, error) {
 	if len(ownerKey) != 0 && len(ownerKey) != consts.OwnerKeyLen {
-		fmt.Printf("public key: ed25519 public key must be %d bytes\n", consts.OwnerKeyLen)
-		os.Exit(1)
+		return nil, fmt.Errorf("wrong ownerKey length. Expected %v, got %v", consts.OwnerKeyLen, len(ownerKey))
 	}
 
 	jsonString, err := json.Marshal(types.MetaDataQueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
 	if err != nil {
-		errors.Wrap(err, "marshal failed")
-		return nil, err
+		return nil, errors.Wrap(err, "marshal failed")
 	}
 
 	res, err := client.client.ABCIQuery(consts.MetaDataQueryPath, jsonString)
@@ -317,50 +289,40 @@ func (client *Client) ReadMetaData(start uint64, end uint64, ownerKey []byte, qu
 func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 	if isMeta == true {
 		var metaDataObjs []types.MetaDataObj
-		err := json.Unmarshal(obj, &metaDataObjs)
-		if err != nil {
-			errors.Wrap(err, "unmarshal failed")
-			return nil, err
+		if err := json.Unmarshal(obj, &metaDataObjs); err != nil {
+			return nil, errors.Wrap(err, "unmarshal failed")
 		}
 
 		var deserializedMeta []OutputMetaDataObj
 		for _, metaDataObj := range metaDataObjs {
 			var keyObj = types.KeyObj{}
-			err := json.Unmarshal(metaDataObj.RowKey, &keyObj)
-			if err != nil {
-				errors.Wrap(err, "unmarshal failed")
-				return nil, err
+			if err := json.Unmarshal(metaDataObj.RowKey, &keyObj); err != nil {
+				return nil, errors.Wrap(err, "unmarshal failed")
 			}
 			deserializedMeta = append(deserializedMeta, OutputMetaDataObj{Id: metaDataObj.RowKey, Timestamp: keyObj.Timestamp, OwnerKey: metaDataObj.OwnerKey, Qualifier: metaDataObj.Qualifier})
 		}
 		deserializedObj, err := json.Marshal(deserializedMeta)
 		if err != nil {
-			errors.Wrap(err, "marshal failed")
-			return nil, err
+			return nil, errors.Wrap(err, "marshal failed")
 		}
 		return deserializedObj, nil
 	} else {
 		var realDataObjs []types.RealDataObj
-		err := json.Unmarshal(obj, &realDataObjs)
-		if err != nil {
-			errors.Wrap(err, "unmarshal failed")
-			return nil, err
+		if err := json.Unmarshal(obj, &realDataObjs); err != nil {
+			return nil, errors.Wrap(err, "unmarshal failed")
 		}
 
 		var deserializedReal []OutputRealDataObj
 		for _, realDataObj := range realDataObjs {
 			var keyObj = types.KeyObj{}
-			err := json.Unmarshal(realDataObj.RowKey, &keyObj)
-			if err != nil {
-				errors.Wrap(err, "unmarshal failed")
-				return nil, err
+			if err := json.Unmarshal(realDataObj.RowKey, &keyObj); err != nil {
+				return nil, errors.Wrap(err, "unmarshal failed")
 			}
 			deserializedReal = append(deserializedReal, OutputRealDataObj{Id: realDataObj.RowKey, Timestamp: keyObj.Timestamp, Data: realDataObj.Data})
 		}
 		deserializedObj, err := json.Marshal(deserializedReal)
 		if err != nil {
-			errors.Wrap(err, "marshal failed")
-			return nil, err
+			return nil, errors.Wrap(err, "marshal failed")
 		}
 		return deserializedObj, nil
 	}
@@ -436,7 +398,7 @@ var writeCmd = &cobra.Command{
 		}
 		if directoryPath == "" {
 			if err != nil {
-				fmt.Printf("err: %v\n", err)
+				fmt.Printf("write err: %v\n", err)
 				os.Exit(1)
 			}
 			if bres.Code == code.CodeTypeOK {
@@ -508,13 +470,13 @@ var realdataCmd = &cobra.Command{
 		}
 
 		if err != nil {
-			fmt.Printf("err: %v\n", err)
+			fmt.Printf("realdata err: %v\n", err)
 			os.Exit(1)
 		}
 
 		deserializedBytes, err := DeSerializeKeyObj(res.Response.Value, false)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("deserialize key object err: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Println(string(deserializedBytes))
@@ -561,13 +523,13 @@ var metadataCmd = &cobra.Command{
 
 		res, err := client.ReadMetaData(start, end, ownerKey, qualifier)
 		if err != nil {
-			fmt.Printf("err: %v\n", err)
+			fmt.Printf("metadata err: %v\n", err)
 			os.Exit(1)
 		}
 
 		deserializedBytes, err := DeSerializeKeyObj(res.Response.Value, true)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("deserialize key object err: %v\n", err)
 			os.Exit(1)
 		}
 		fmt.Println(string(deserializedBytes))
