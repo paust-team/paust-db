@@ -15,9 +15,8 @@ const (
 
 //db test 관련 상수
 const (
-	TestPubKey = "oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE="
-	TestPubKey2    = "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE="
-
+	TestPubKey  = "oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE="
+	TestPubKey2 = "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE="
 )
 
 type MasterSuite struct {

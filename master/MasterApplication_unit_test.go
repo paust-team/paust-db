@@ -58,7 +58,6 @@ func (suite *MasterSuite) TestMasterApplication_CheckTx() {
 	givenTx, err := json.Marshal(givenBaseDataObjs)
 	require.Nil(err)
 
-
 	//when
 	actualRes := suite.app.CheckTx(givenTx)
 
@@ -181,8 +180,8 @@ func (suite *MasterSuite) TestMasterApplication_Commit() {
 // Query는 OwnerKey와 Qualifier에 따라 4가지 경우가 존재한다.
 
 /*
-		case query.OwnerKey == nil && query.Qualifier == nil:
- */
+	case query.OwnerKey == nil && query.Qualifier == nil:
+*/
 func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 	require := suite.Require()
 	//given
@@ -263,7 +262,7 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 
 /*
 	case query.OwnerKey == nil:
- */
+*/
 func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 	require := suite.Require()
 	//given
@@ -295,7 +294,7 @@ func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 	*/
 
 	//when
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, Qualifier:[]byte("Memory")}
+	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
@@ -377,7 +376,7 @@ func (suite *MasterSuite) TestMasterApplication_ownerKey_Query() {
 	*/
 
 	//when
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey:givenOwnerKey2}
+	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: givenOwnerKey2}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
@@ -458,7 +457,7 @@ func (suite *MasterSuite) TestMasterApplication_both_Query() {
 	*/
 
 	//when
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey:givenOwnerKey, Qualifier:[]byte("Memory")}
+	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}

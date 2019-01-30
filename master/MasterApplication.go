@@ -178,19 +178,19 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 		metaDataObjs = rawMetaDataObjs
 	case query.OwnerKey == nil:
 		for i, metaObj := range rawMetaDataObjs {
-			if string(metaObj.Qualifier) == string(query.Qualifier) {
+			if bytes.Compare(metaObj.Qualifier, query.Qualifier) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
 			}
 		}
 	case query.Qualifier == nil:
 		for i, metaObj := range rawMetaDataObjs {
-			if string(metaObj.OwnerKey) == string(query.OwnerKey) {
+			if bytes.Compare(metaObj.OwnerKey, query.OwnerKey) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
 			}
 		}
 	default:
 		for i, metaObj := range rawMetaDataObjs {
-			if string(metaObj.OwnerKey) == string(query.OwnerKey) && string(metaObj.Qualifier) == string(query.Qualifier) {
+			if bytes.Compare(metaObj.Qualifier, query.Qualifier) == 0 && bytes.Compare(metaObj.OwnerKey, query.OwnerKey) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
 			}
 		}
