@@ -112,7 +112,7 @@ func (suite *ClientTestSuite) TestClient_ReadMetaData() {
 
 	require.Equal(0, mempool.Size())
 
-	res, err := suite.dbClient.ReadMetaData(uint64(time.UnixNano()), uint64(time.UnixNano())+1, nil, nil)
+	res, err := suite.dbClient.ReadMetaData(uint64(time.UnixNano()), uint64(time.UnixNano())+1, pubKeyBytes, []byte(TestQualifier))
 	qres := res.Response
 	if suite.Nil(err) && suite.True(qres.IsOK()) {
 		suite.EqualValues(expectedValue, qres.Value)
