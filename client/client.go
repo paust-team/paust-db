@@ -65,25 +65,19 @@ func NewLocalClient(node *nm.Node) *Client {
 	}
 }
 
-func (client *Client) WriteData(time time.Time, ownerKey string, qualifier string, data []byte) (*ctypes.ResultBroadcastTx, error) {
-	ownerKeyBytes, err := base64.StdEncoding.DecodeString(ownerKey)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	if len(ownerKeyBytes) != consts.OwnerKeyLen {
+func (client *Client) WriteData(timestamp uint64, ownerKey []byte, qualifier []byte, data []byte) (*ctypes.ResultBroadcastTx, error) {
+	if len(ownerKey) != consts.OwnerKeyLen {
 		fmt.Printf("public key: ed25519 public key must be %d bytes\n", consts.OwnerKeyLen)
 		os.Exit(1)
 	}
 
-	rowKey, err := json.Marshal(types.KeyObj{Timestamp: uint64(time.Unix()), Salt: uint8(rand.Intn(256))})
+	rowKey, err := json.Marshal(types.KeyObj{Timestamp: timestamp, Salt: uint8(rand.Intn(256))})
 	if err != nil {
 		errors.Wrap(err, "marshal failed")
 		return nil, err
 	}
 
-	jsonString, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: ownerKeyBytes, Qualifier: []byte(qualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
+	jsonString, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: ownerKey, Qualifier: qualifier}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	if err != nil {
 		errors.Wrap(err, "marshal failed")
 		return nil, err
@@ -93,16 +87,8 @@ func (client *Client) WriteData(time time.Time, ownerKey string, qualifier strin
 	return bres, err
 }
 
-func (client *Client) ReadData(ids []string) (*ctypes.ResultABCIQuery, error) {
-	var realDataQueryObj = types.RealDataQueryObj{}
-	for _, id := range ids {
-		rowKey, err := base64.StdEncoding.DecodeString(id)
-		if err != nil {
-			errors.Wrap(err, "base64 decode failed")
-			return nil, err
-		}
-		realDataQueryObj.RowKeys = append(realDataQueryObj.RowKeys, rowKey)
-	}
+func (client *Client) ReadData(ids [][]byte) (*ctypes.ResultABCIQuery, error) {
+	var realDataQueryObj = types.RealDataQueryObj{RowKeys: ids}
 
 	jsonString, err := json.Marshal(realDataQueryObj)
 	if err != nil {
@@ -314,19 +300,13 @@ func (client *Client) WriteStdin() (*ctypes.ResultBroadcastTx, error) {
 	return bres, err
 }
 
-func (client *Client) ReadMetaData(start uint64, end uint64, ownerKey string, qualifier string) (*ctypes.ResultABCIQuery, error) {
-	ownerKeyBytes, err := base64.StdEncoding.DecodeString(ownerKey)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	if len(ownerKeyBytes) != 0 && len(ownerKeyBytes) != consts.OwnerKeyLen {
+func (client *Client) ReadMetaData(start uint64, end uint64, ownerKey []byte, qualifier []byte) (*ctypes.ResultABCIQuery, error) {
+	if len(ownerKey) != 0 && len(ownerKey) != consts.OwnerKeyLen {
 		fmt.Printf("public key: ed25519 public key must be %d bytes\n", consts.OwnerKeyLen)
 		os.Exit(1)
 	}
 
-	jsonString, err := json.Marshal(types.MetaDataQueryObj{Start: start, End: end, OwnerKey: ownerKeyBytes, Qualifier: []byte(qualifier)})
+	jsonString, err := json.Marshal(types.MetaDataQueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
 	if err != nil {
 		errors.Wrap(err, "marshal failed")
 		return nil, err
@@ -388,8 +368,6 @@ func DeSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 	}
 }
 
-var ownerKey, qualifier, filePath, queryFilePath, directoryPath string
-
 var Cmd = &cobra.Command{
 	Use:   "client",
 	Short: "Paust DB Client Application",
@@ -406,6 +384,30 @@ var writeCmd = &cobra.Command{
 		}
 
 		recursive, err := cmd.Flags().GetBool("recursive")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		filePath, err := cmd.Flags().GetString("file")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		directoryPath, err := cmd.Flags().GetString("directory")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		ownerKey, err := cmd.Flags().GetBytesBase64("ownerKey")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		qualifier, err := cmd.Flags().GetBytesBase64("qualifier")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -432,7 +434,7 @@ var writeCmd = &cobra.Command{
 			client.WriteFilesInDir(directoryPath, recursive)
 		default:
 			fmt.Println("Read data from cli arguments")
-			bres, err = client.WriteData(time.Now(), ownerKey, qualifier, []byte(strings.Join(args, " ")))
+			bres, err = client.WriteData(uint64(time.Now().UnixNano()), ownerKey, qualifier, []byte(strings.Join(args, " ")))
 		}
 		if directoryPath == "" {
 			if err != nil {
@@ -488,6 +490,12 @@ var realdataCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		filePath, err := cmd.Flags().GetString("file")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
 		client := NewClient(consts.Remote)
 
 		var res *ctypes.ResultABCIQuery
@@ -496,12 +504,21 @@ var realdataCmd = &cobra.Command{
 		case stdin == true:
 			fmt.Println("Read json data from STDIN")
 			res, err = client.ReadDataOfStdin()
-		case queryFilePath != "":
-			fmt.Printf("Read json data from file: %s\n", queryFilePath)
-			res, err = client.ReadDataOfFile(queryFilePath)
+		case filePath != "":
+			fmt.Printf("Read json data from file: %s\n", filePath)
+			res, err = client.ReadDataOfFile(filePath)
 		default:
 			fmt.Println("Read data from cli arguments")
-			res, err = client.ReadData(args)
+			var ids [][]byte
+			for _, arg := range args {
+				id, err := base64.StdEncoding.DecodeString(arg)
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+				ids = append(ids, id)
+			}
+			res, err = client.ReadData(ids)
 		}
 
 		if err != nil {
@@ -542,13 +559,13 @@ var metadataCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		ownerKey, err := cmd.Flags().GetString("ownerKey")
+		ownerKey, err := cmd.Flags().GetBytesBase64("ownerKey")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		qualifier, err := cmd.Flags().GetString("qualifier")
+		qualifier, err := cmd.Flags().GetBytesBase64("qualifier")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -572,16 +589,16 @@ var metadataCmd = &cobra.Command{
 }
 
 func init() {
-	writeCmd.Flags().StringVarP(&ownerKey, "ownerKey", "o", "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE=", "Base64 encoded ED25519 public key")
-	writeCmd.Flags().StringVarP(&qualifier, "qualifier", "q", "test", "Data qualifier")
-	writeCmd.Flags().StringVarP(&filePath, "file", "f", "", "File path")
-	writeCmd.Flags().StringVarP(&directoryPath, "directory", "d", "", "Directory path")
+	writeCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
+	writeCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
+	writeCmd.Flags().StringP("file", "f", "", "File path")
+	writeCmd.Flags().StringP("directory", "d", "", "Directory path")
 	writeCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
 	writeCmd.Flags().BoolP("recursive", "r", false, "Write all files and folders recursively")
 	realdataCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
-	realdataCmd.Flags().StringVarP(&queryFilePath, "file", "f", "", "File path")
-	metadataCmd.Flags().StringP("ownerKey", "o", "", "Base64 encoded ED25519 public key")
-	metadataCmd.Flags().StringP("qualifier", "q", "", "Data qualifier")
+	realdataCmd.Flags().StringP("file", "f", "", "File path")
+	metadataCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
+	metadataCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
 	Cmd.AddCommand(writeCmd)
 	Cmd.AddCommand(writeTestCmd)
 	Cmd.AddCommand(generateCmd)
