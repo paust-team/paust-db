@@ -5,11 +5,12 @@ import (
 )
 
 func (suite *DBSuite) TestDBIteratorDefault() {
+	require := suite.Require()
 	// insert Keys
 	givenKeys := [][]byte{[]byte("default1"), []byte("default2"), []byte("default3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetDataInColumnFamily(consts.DefaultCFNum, k, []byte("defaultVal")))
+		require.Nil(suite.DB.SetDataInColumnFamily(consts.DefaultCFNum, k, []byte("defaultVal")))
 	}
 
 	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandles()[consts.DefaultCFNum])
@@ -26,11 +27,13 @@ func (suite *DBSuite) TestDBIteratorDefault() {
 }
 
 func (suite *DBSuite) TestDBIteratorMetaColumnFamily() {
+	require := suite.Require()
+
 	// insert Keys
 	givenKeys := [][]byte{[]byte("meta1"), []byte("meta2"), []byte("meta3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetDataInColumnFamily(consts.MetaCFNum, k, []byte("metaVal")))
+		require.Nil(suite.DB.SetDataInColumnFamily(consts.MetaCFNum, k, []byte("metaVal")))
 	}
 
 	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandles()[consts.MetaCFNum])
@@ -49,11 +52,13 @@ func (suite *DBSuite) TestDBIteratorMetaColumnFamily() {
 }
 
 func (suite *DBSuite) TestDBIteratorRealColumnFamily() {
+	require := suite.Require()
+
 	// insert Keys
 	givenKeys := [][]byte{[]byte("real1"), []byte("real2"), []byte("real3")}
 
 	for _, k := range givenKeys {
-		suite.Nil(suite.DB.SetDataInColumnFamily(consts.RealCFNum, k, []byte("realVal")))
+		require.Nil(suite.DB.SetDataInColumnFamily(consts.RealCFNum, k, []byte("realVal")))
 	}
 
 	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandles()[consts.RealCFNum])

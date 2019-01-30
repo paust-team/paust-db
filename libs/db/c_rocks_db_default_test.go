@@ -5,6 +5,7 @@ import (
 )
 
 func (suite *DBSuite) TestDBCreateRetrieveInColumnFamily() {
+	require := suite.Require()
 
 	var (
 		givenKey = []byte("hello")
@@ -13,12 +14,12 @@ func (suite *DBSuite) TestDBCreateRetrieveInColumnFamily() {
 
 	//create
 	err := suite.DB.SetDataInColumnFamily(consts.DefaultCFNum, givenKey, givenVal)
-	suite.Nil(err, "Default columnfamily Set error : %v", err)
+	require.Nil(err, "Default columnfamily Set error : %v", err)
 
 	//retrieve
 	value, err := suite.DB.GetDataFromColumnFamily(consts.DefaultCFNum, givenKey)
 	defer value.Free()
-	suite.Nil(err, "Default columnfamily Get error : %v", err)
+	require.Nil(err, "Default columnfamily Get error : %v", err)
 	suite.Equal(givenVal, value.Data())
 }
 
