@@ -31,6 +31,10 @@ type InputDataObj struct {
 	Data      []byte `json:"data"`
 }
 
+type InputQueryObj struct {
+	Ids [][]byte `json:"ids"`
+}
+
 type OutputMetaDataObj struct {
 	Id        []byte `json:"id"`
 	Timestamp uint64 `json:"timestamp"`
@@ -108,10 +112,7 @@ func (client *Client) ReadDataOfStdin() (*ctypes.ResultABCIQuery, error) {
 		return nil, err
 	}
 
-	type RealDataQueryObj struct {
-		Ids [][]byte `json:"ids"`
-	}
-	var queryObj RealDataQueryObj
+	var queryObj InputQueryObj
 	err = json.Unmarshal(bytes, &queryObj)
 	if err != nil {
 		errors.Wrap(err, "unmarshal failed")
@@ -139,10 +140,7 @@ func (client *Client) ReadDataOfFile(file string) (*ctypes.ResultABCIQuery, erro
 		return nil, err
 	}
 
-	type RealDataQueryObj struct {
-		Ids [][]byte `json:"ids"`
-	}
-	var queryObj RealDataQueryObj
+	var queryObj InputQueryObj
 	err = json.Unmarshal(bytes, &queryObj)
 	if err != nil {
 		errors.Wrap(err, "unmarshal failed")
