@@ -39,7 +39,7 @@ func (suite *ClientTestSuite) TestClient_ReadData() {
 
 	require.Equal(0, mempool.Size())
 
-	res, err := suite.dbClient.ReadData([]string{base64.StdEncoding.EncodeToString(rowKey)})
+	res, err := suite.dbClient.ReadData([][]byte{rowKey})
 	qres := res.Response
 	if suite.Nil(err) && suite.True(qres.IsOK()) {
 		suite.EqualValues(expectedValue, qres.Value)
@@ -112,7 +112,7 @@ func (suite *ClientTestSuite) TestClient_ReadMetaData() {
 
 	require.Equal(0, mempool.Size())
 
-	res, err := suite.dbClient.ReadMetaData(uint64(time.UnixNano()), uint64(time.UnixNano())+1, "", "")
+	res, err := suite.dbClient.ReadMetaData(uint64(time.UnixNano()), uint64(time.UnixNano())+1, nil, nil)
 	qres := res.Response
 	if suite.Nil(err) && suite.True(qres.IsOK()) {
 		suite.EqualValues(expectedValue, qres.Value)
