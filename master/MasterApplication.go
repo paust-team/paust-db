@@ -87,8 +87,8 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		if err != nil {
 			fmt.Println(err)
 		}
-		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandle(consts.MetaCFNum), baseDataObjs[i].MetaData.RowKey, metaData)
-		app.wb.SetColumnFamily(app.db.ColumnFamilyHandle(consts.RealCFNum), baseDataObjs[i].RealData.RowKey, baseDataObjs[i].RealData.Data)
+		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandles()[consts.MetaCFNum], baseDataObjs[i].MetaData.RowKey, metaData)
+		app.wb.SetColumnFamily(app.db.ColumnFamilyHandles()[consts.RealCFNum], baseDataObjs[i].RealData.RowKey, baseDataObjs[i].RealData.Data)
 	}
 
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
@@ -99,7 +99,7 @@ func (app *MasterApplication) EndBlock(req abciTypes.RequestEndBlock) abciTypes.
 }
 
 func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
-	resp.Data = app.hash
+	//resp.Data = app.hash
 	if err := app.mwb.Write(); err != nil {
 		fmt.Println(err)
 	}
@@ -146,7 +146,7 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 	var metaDataObjs []types.MetaDataObj
 
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
-	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandle(consts.MetaCFNum))
+	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandles()[consts.MetaCFNum])
 	//TODO unittest close test
 	defer itr.Close()
 
@@ -221,19 +221,6 @@ func (app *MasterApplication) realDataQuery(query types.RealDataQueryObj) ([]typ
 	return realDataObjs, nil
 }
 
-// Below method ares all For Test
-func (app MasterApplication) Hash() []byte {
-	return app.hash
-}
-
-func (app MasterApplication) DB() *db.CRocksDB {
-	return app.db
-}
-
-func (app MasterApplication) WB() db.Batch {
-	return app.wb
-}
-
-func (app MasterApplication) MWB() db.Batch {
-	return app.mwb
+func (app *MasterApplication) Destroy() {
+	app.db.Close()
 }
