@@ -1,8 +1,9 @@
-package master
+package commands
 
 import (
 	"fmt"
 	"github.com/paust-team/paust-db/consts"
+	"github.com/paust-team/paust-db/master"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	"github.com/tendermint/tendermint/libs/common"
@@ -13,7 +14,7 @@ import (
 var dir string
 
 func Serve() error {
-	app := NewMasterApplication(true, dir)
+	app := master.NewMasterApplication(true, dir)
 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
 
 	srv, err := server.NewServer(consts.ProtoAddr, consts.Transport, app)
@@ -34,7 +35,7 @@ func Serve() error {
 	return nil
 }
 
-var Cmd = &cobra.Command{
+var MasterCmd = &cobra.Command{
 	Use:   "master",
 	Short: "Paust DB Master Application",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -47,5 +48,5 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.Flags().StringVarP(&dir, "dir", "d", "/tmp", "directory for rocksdb")
+	MasterCmd.Flags().StringVarP(&dir, "dir", "d", "/tmp", "directory for rocksdb")
 }

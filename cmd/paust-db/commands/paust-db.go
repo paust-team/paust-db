@@ -1,9 +1,7 @@
-package cmd
+package commands
 
 import (
 	"fmt"
-	"github.com/paust-team/paust-db/client"
-	"github.com/paust-team/paust-db/master"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -14,7 +12,7 @@ var PaustDBCmd = &cobra.Command{
 }
 
 func Execute() {
-	PaustDBCmd.AddCommand(master.Cmd, client.Cmd)
+	PaustDBCmd.AddCommand(MasterCmd, ClientCmd)
 
 	if err := PaustDBCmd.Execute(); err != nil {
 		fmt.Println(err)
