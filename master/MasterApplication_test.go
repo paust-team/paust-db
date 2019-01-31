@@ -32,7 +32,7 @@ func (suite *MasterSuite) SetupTest() {
 }
 
 func (suite *MasterSuite) TearDownTest() {
-	suite.app.DB().Close()
+	suite.app.Destroy()
 }
 
 func TestSuite(t *testing.T) {

@@ -12,12 +12,12 @@ func (suite *DBSuite) TestDBIteratorDefault() {
 		suite.Nil(suite.DB.SetDataInColumnFamily(consts.DefaultCFNum, k, []byte("defaultVal")))
 	}
 
-	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(consts.DefaultCFNum))
+	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandles()[consts.DefaultCFNum])
 	defer itr.Close()
 
 	var actualKeys [][]byte
 
-	for itr.SeekToFirst(); itr.Valid(); itr.Next() {
+	for itr.Seek(givenKeys[0]); itr.Valid(); itr.Next() {
 		key := make([]byte, 8)
 		copy(key, itr.Key())
 		actualKeys = append(actualKeys, key)
@@ -33,12 +33,12 @@ func (suite *DBSuite) TestDBIteratorMetaColumnFamily() {
 		suite.Nil(suite.DB.SetDataInColumnFamily(consts.MetaCFNum, k, []byte("metaVal")))
 	}
 
-	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(consts.MetaCFNum))
+	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandles()[consts.MetaCFNum])
 	defer itr.Close()
 
 	var actualKeys [][]byte
 
-	for itr.SeekToFirst(); itr.Valid(); itr.Next() {
+	for itr.Seek(givenKeys[0]); itr.Valid(); itr.Next() {
 		key := make([]byte, 5)
 		copy(key, itr.Key())
 		actualKeys = append(actualKeys, key)
@@ -56,12 +56,12 @@ func (suite *DBSuite) TestDBIteratorRealColumnFamily() {
 		suite.Nil(suite.DB.SetDataInColumnFamily(consts.RealCFNum, k, []byte("realVal")))
 	}
 
-	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandle(consts.RealCFNum))
+	itr := suite.DB.IteratorColumnFamily(nil, nil, suite.DB.ColumnFamilyHandles()[consts.RealCFNum])
 	defer itr.Close()
 
 	var actualKeys [][]byte
 
-	for itr.SeekToFirst(); itr.Valid(); itr.Next() {
+	for itr.Seek(givenKeys[0]); itr.Valid(); itr.Next() {
 		key := make([]byte, 5)
 		copy(key, itr.Key())
 		actualKeys = append(actualKeys, key)
