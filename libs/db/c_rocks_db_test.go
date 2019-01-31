@@ -20,24 +20,18 @@ type DBSuite struct {
 
 func (suite *DBSuite) SetupTest() {
 	var err error
-	SetDir()
+	os.RemoveAll(dir)
+	os.Mkdir(dir, perm)
 	suite.DB, err = db.NewCRocksDB(dbName, dir)
 
 	suite.Require().NotNil(suite.DB, "db open error %v", err)
 	suite.Require().Nil(err, "db open error %v", err)
-
 }
 
 func (suite *DBSuite) TearDownTest() {
 	suite.DB.Close()
-	os.RemoveAll(dir)
 }
 
 func TestSuite(t *testing.T) {
 	suite.Run(t, new(DBSuite))
-}
-
-func SetDir() {
-	os.RemoveAll(dir)
-	os.Mkdir(dir, perm)
 }

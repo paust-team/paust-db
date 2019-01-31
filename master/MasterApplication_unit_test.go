@@ -1,7 +1,6 @@
 package master_test
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"github.com/paust-team/paust-db/types"
 	"github.com/stretchr/testify/require"
@@ -27,34 +26,6 @@ func (suite *MasterSuite) TestMasterApplication_CheckTx() {
 	/*
 		RightCase
 	*/
-	//given
-	givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
-	givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
-
-	givenRowKey1, err := json.Marshal(givenKeyObj1)
-	require.Nil(err)
-
-	givenRowKey2, err := json.Marshal(givenKeyObj2)
-	require.Nil(err)
-
-	givenOwnerKey, err := base64.StdEncoding.DecodeString(TestPubKey)
-	require.Nil(err)
-
-	givenOwnerKey2, err := base64.StdEncoding.DecodeString(TestPubKey2)
-	require.Nil(err)
-
-	givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey2, Qualifier: []byte("Stt")}
-
-	givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("aw")}
-	givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey2, Data: []byte("good")}
-
-	givenBaseDataObj1 := types.BaseDataObj{MetaData: givenMetaDataObj1, RealData: givenRealDataObj1}
-	givenBaseDataObj2 := types.BaseDataObj{MetaData: givenMetaDataObj2, RealData: givenRealDataObj2}
-
-	var givenBaseDataObjs []types.BaseDataObj
-	givenBaseDataObjs = append(givenBaseDataObjs, givenBaseDataObj1, givenBaseDataObj2)
-
 	givenTx, err := json.Marshal(givenBaseDataObjs)
 	require.Nil(err)
 
@@ -112,34 +83,6 @@ func (suite *MasterSuite) TestMasterApplication_DeliverTx() {
 
 	//given
 	suite.TestMasterApplication_InitChain()
-
-	givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
-	givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
-
-	givenRowKey1, err := json.Marshal(givenKeyObj1)
-	require.Nil(err)
-
-	givenRowKey2, err := json.Marshal(givenKeyObj2)
-	require.Nil(err)
-
-	givenOwnerKey, err := base64.StdEncoding.DecodeString(TestPubKey)
-	require.Nil(err)
-
-	givenOwnerKey2, err := base64.StdEncoding.DecodeString(TestPubKey2)
-	require.Nil(err)
-
-	givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey2, Qualifier: []byte("Stt")}
-
-	givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("data1")}
-	givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey2, Data: []byte("data2")}
-
-	givenBaseDataObj1 := types.BaseDataObj{MetaData: givenMetaDataObj1, RealData: givenRealDataObj1}
-	givenBaseDataObj2 := types.BaseDataObj{MetaData: givenMetaDataObj2, RealData: givenRealDataObj2}
-
-	var givenBaseDataObjs []types.BaseDataObj
-	givenBaseDataObjs = append(givenBaseDataObjs, givenBaseDataObj1, givenBaseDataObj2)
-
 	givenTx, err := json.Marshal(givenBaseDataObjs)
 	require.Nil(err)
 
@@ -185,27 +128,6 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 	require := suite.Require()
 	//given
 	suite.TestMasterApplication_Commit()
-
-	givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
-	givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
-
-	givenRowKey1, err := json.Marshal(givenKeyObj1)
-	require.Nil(err)
-
-	givenRowKey2, err := json.Marshal(givenKeyObj2)
-	require.Nil(err)
-
-	givenOwnerKey, err := base64.StdEncoding.DecodeString(TestPubKey)
-	require.Nil(err)
-
-	givenOwnerKey2, err := base64.StdEncoding.DecodeString(TestPubKey2)
-	require.Nil(err)
-
-	givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey2, Qualifier: []byte("Stt")}
-
-	givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("data1")}
-	givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey2, Data: []byte("data2")}
 
 	/*
 		Meta Query
@@ -266,28 +188,6 @@ func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 	require := suite.Require()
 	//given
 	suite.TestMasterApplication_Commit()
-
-	givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
-	//givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
-
-	givenRowKey1, err := json.Marshal(givenKeyObj1)
-	require.Nil(err)
-
-	//givenRowKey2, err := json.Marshal(givenKeyObj2)
-	require.Nil(err)
-
-	givenOwnerKey, err := base64.StdEncoding.DecodeString(TestPubKey)
-	require.Nil(err)
-
-	//givenOwnerKey2, err := base64.StdEncoding.DecodeString(TestPubKey2)
-	require.Nil(err)
-
-	givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	//givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey2, Qualifier: []byte("Stt")}
-
-	givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("data1")}
-	//givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey2, Data: []byte("data2")}
-
 	/*
 		Meta Query
 	*/
@@ -349,27 +249,6 @@ func (suite *MasterSuite) TestMasterApplication_ownerKey_Query() {
 	//given
 	suite.TestMasterApplication_Commit()
 
-	//givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
-	givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
-
-	//givenRowKey1, err := json.Marshal(givenKeyObj1)
-	//require.Nil(err)
-
-	givenRowKey2, err := json.Marshal(givenKeyObj2)
-	require.Nil(err)
-
-	//givenOwnerKey, err := base64.StdEncoding.DecodeString(TestPubKey)
-	require.Nil(err)
-
-	givenOwnerKey2, err := base64.StdEncoding.DecodeString(TestPubKey2)
-	require.Nil(err)
-
-	//givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey2, Qualifier: []byte("Stt")}
-
-	//givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("data1")}
-	givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey2, Data: []byte("data2")}
-
 	/*
 		Meta Query
 	*/
@@ -429,27 +308,6 @@ func (suite *MasterSuite) TestMasterApplication_both_Query() {
 	require := suite.Require()
 	//given
 	suite.TestMasterApplication_Commit()
-
-	givenKeyObj1 := types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
-	//givenKeyObj2 := types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
-
-	givenRowKey1, err := json.Marshal(givenKeyObj1)
-	require.Nil(err)
-
-	//givenRowKey2, err := json.Marshal(givenKeyObj2)
-	//require.Nil(err)
-
-	givenOwnerKey, err := base64.StdEncoding.DecodeString(TestPubKey)
-	require.Nil(err)
-
-	//givenOwnerKey2, err := base64.StdEncoding.DecodeString(TestPubKey2)
-	//require.Nil(err)
-
-	givenMetaDataObj1 := types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	//givenMetaDataObj2 := types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey2, Qualifier: []byte("Stt")}
-
-	givenRealDataObj1 := types.RealDataObj{RowKey: givenRowKey1, Data: []byte("data1")}
-	//givenRealDataObj2 := types.RealDataObj{RowKey: givenRowKey2, Data: []byte("data2")}
 
 	/*
 		Meta Query
