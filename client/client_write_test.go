@@ -140,7 +140,8 @@ func (suite *ClientTestSuite) TestClient_WriteFilesInDir() {
 	})
 	require.Nil(err, "directory traverse err: %+v", err)
 
-	suite.dbClient.WriteFilesInDir(TestDirectory, false)
+	err = suite.dbClient.WriteFilesInDir(TestDirectory, false)
+	require.Nil(err, "err: %+v", err)
 
 	require.Equal(initMempoolSize+len(fileBytes), mempool.Size())
 

@@ -183,7 +183,7 @@ func (client *Client) WriteFile(file string) (*ctypes.ResultBroadcastTx, error) 
 	return bres, err
 }
 
-func (client *Client) WriteFilesInDir(dir string, recursive bool) {
+func (client *Client) WriteFilesInDir(dir string, recursive bool) error {
 	if recursive == true {
 		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -205,9 +205,7 @@ func (client *Client) WriteFilesInDir(dir string, recursive bool) {
 			}
 			return nil
 		})
-		if err != nil {
-			fmt.Println(err)
-		}
+		return err
 	} else {
 		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -234,9 +232,7 @@ func (client *Client) WriteFilesInDir(dir string, recursive bool) {
 				return nil
 			}
 		})
-		if err != nil {
-			fmt.Println(err)
-		}
+		return err
 	}
 }
 
@@ -391,16 +387,16 @@ var writeCmd = &cobra.Command{
 			bres, err = client.WriteFile(filePath)
 		case directoryPath != "":
 			fmt.Printf("Read json data from files in directory: %s\n", directoryPath)
-			client.WriteFilesInDir(directoryPath, recursive)
+			err = client.WriteFilesInDir(directoryPath, recursive)
 		default:
 			fmt.Println("Read data from cli arguments")
 			bres, err = client.WriteData(uint64(time.Now().UnixNano()), ownerKey, qualifier, []byte(strings.Join(args, " ")))
 		}
+		if err != nil {
+			fmt.Printf("write err: %v\n", err)
+			os.Exit(1)
+		}
 		if directoryPath == "" {
-			if err != nil {
-				fmt.Printf("write err: %v\n", err)
-				os.Exit(1)
-			}
 			if bres.Code == code.CodeTypeOK {
 				fmt.Println("Write success.")
 			} else {
