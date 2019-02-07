@@ -48,6 +48,14 @@ func (client *HTTPClient) WriteData(dataObjs []InputDataObj) (*ctypes.ResultBroa
 }
 
 func (client *HTTPClient) Query(start uint64, end uint64, ownerKey []byte, qualifier []byte) (*ctypes.ResultABCIQuery, error) {
+	if ownerKey == nil {
+		return nil, errors.Errorf("ownerKey must not be nil.")
+	}
+
+	if qualifier == nil {
+		return nil, errors.Errorf("qualifier must not be nil.")
+	}
+
 	if len(ownerKey) != 0 && len(ownerKey) != consts.OwnerKeyLen {
 		return nil, errors.Errorf("wrong ownerKey length. Expected %v, got %v", consts.OwnerKeyLen, len(ownerKey))
 	}
