@@ -134,7 +134,7 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 	*/
 
 	//when
-	var emptySlice []byte
+	emptySlice := make([]byte,0)
 	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: emptySlice, Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)

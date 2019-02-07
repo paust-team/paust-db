@@ -8,6 +8,7 @@ import (
 	"github.com/paust-team/paust-db/consts"
 	"github.com/paust-team/paust-db/libs/db"
 	"github.com/paust-team/paust-db/types"
+	"github.com/pkg/errors"
 	"github.com/tendermint/tendermint/abci/example/code"
 	abciTypes "github.com/tendermint/tendermint/abci/types"
 	"math/rand"
@@ -145,6 +146,11 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 	var rawMetaDataObjs []types.MetaDataObj
 	var metaDataObjs []types.MetaDataObj
 
+	// query field nil error 처리
+	if query.Qualifier == nil || query.OwnerKey == nil {
+		return nil, errors.Errorf("ownerKey and Qualifier must not be nil")
+	}
+
 	startByte, endByte := types.CreateStartByteAndEndByte(query)
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandles()[consts.MetaCFNum])
 	//TODO unittest close test
@@ -171,19 +177,18 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 		rawMetaDataObjs = append(rawMetaDataObjs, metaObj)
 
 	}
-	emptySlice := make([]byte, 0)
 
 	// 가져온 데이터를 제한사항에 맞게 거른다
 	switch {
-	case bytes.Compare(query.OwnerKey, emptySlice) == 0 && bytes.Compare(query.Qualifier, emptySlice) == 0:
+	case len(query.OwnerKey) == 0 && len(query.Qualifier) == 0:
 		metaDataObjs = rawMetaDataObjs
-	case bytes.Compare(query.OwnerKey, emptySlice) == 0:
+	case len(query.OwnerKey) == 0:
 		for i, metaObj := range rawMetaDataObjs {
 			if bytes.Compare(metaObj.Qualifier, query.Qualifier) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
 			}
 		}
-	case bytes.Compare(query.Qualifier, emptySlice) == 0:
+	case len(query.Qualifier) == 0:
 		for i, metaObj := range rawMetaDataObjs {
 			if bytes.Compare(metaObj.OwnerKey, query.OwnerKey) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
