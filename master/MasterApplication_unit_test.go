@@ -134,7 +134,8 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 	*/
 
 	//when
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002}
+	var emptySlice []byte
+	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: emptySlice, Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
@@ -193,7 +194,8 @@ func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 	*/
 
 	//when
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, Qualifier: []byte("Memory")}
+	emptySlice := make([]byte, 0)
+	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: emptySlice, Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
@@ -254,7 +256,8 @@ func (suite *MasterSuite) TestMasterApplication_ownerKey_Query() {
 	*/
 
 	//when
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: givenOwnerKey2}
+	emptySlice := make([]byte, 0)
+	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: givenOwnerKey2, Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}

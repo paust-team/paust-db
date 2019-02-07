@@ -171,18 +171,19 @@ func (app *MasterApplication) metaDataQuery(query types.MetaDataQueryObj) ([]typ
 		rawMetaDataObjs = append(rawMetaDataObjs, metaObj)
 
 	}
+	emptySlice := make([]byte, 0)
 
 	// 가져온 데이터를 제한사항에 맞게 거른다
 	switch {
-	case query.OwnerKey == nil && query.Qualifier == nil:
+	case bytes.Compare(query.OwnerKey, emptySlice) == 0 && bytes.Compare(query.Qualifier, emptySlice) == 0:
 		metaDataObjs = rawMetaDataObjs
-	case query.OwnerKey == nil:
+	case bytes.Compare(query.OwnerKey, emptySlice) == 0:
 		for i, metaObj := range rawMetaDataObjs {
 			if bytes.Compare(metaObj.Qualifier, query.Qualifier) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
 			}
 		}
-	case query.Qualifier == nil:
+	case bytes.Compare(query.Qualifier, emptySlice) == 0:
 		for i, metaObj := range rawMetaDataObjs {
 			if bytes.Compare(metaObj.OwnerKey, query.OwnerKey) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
