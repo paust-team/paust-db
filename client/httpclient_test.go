@@ -23,7 +23,7 @@ const (
 type ClientTestSuite struct {
 	suite.Suite
 
-	dbClient *client.Client
+	dbClient client.Client
 	salt     []uint8
 }
 
@@ -44,7 +44,7 @@ func (suite *ClientTestSuite) TearDownSuite() {
 }
 
 func (suite *ClientTestSuite) SetupTest() {
-	suite.dbClient = client.NewLocalClient(node)
+	suite.dbClient = client.NewHTTPClient(rpctest.GetConfig().RPC.ListenAddress)
 	rand.Seed(0)
 }
 
