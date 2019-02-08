@@ -30,7 +30,7 @@ RUN go get ./...
 RUN go install ./...
 
 # install tendermint v0.27.4
-WORKDIR /go/src/github.com/tendermint/tendermint && \
+WORKDIR /go/src/github.com/tendermint/tendermint
 RUN git checkout v0.27.4
 RUN make get_tools
 RUN make get_vendor_deps
