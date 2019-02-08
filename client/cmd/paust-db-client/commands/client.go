@@ -15,8 +15,15 @@ import (
 	"time"
 )
 
+func Execute() {
+	if err := ClientCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+}
+
 var ClientCmd = &cobra.Command{
-	Use:   "client",
+	Use:   "paust-db-client",
 	Short: "Paust DB Client Application",
 }
 
@@ -213,6 +220,10 @@ var realdataCmd = &cobra.Command{
 			}
 			os.Exit(1)
 		default:
+			if len(args) == 0 {
+				fmt.Println("id: you must enter at least one id")
+				os.Exit(1)
+			}
 			fmt.Println("Read data from cli arguments")
 			inputQueryObj = new(client.InputQueryObj)
 			for _, arg := range args {

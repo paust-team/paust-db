@@ -12,7 +12,7 @@ var PaustDBCmd = &cobra.Command{
 }
 
 func Execute() {
-	PaustDBCmd.AddCommand(MasterCmd, ClientCmd)
+	PaustDBCmd.AddCommand(MasterCmd)
 
 	if err := PaustDBCmd.Execute(); err != nil {
 		fmt.Println(err)
