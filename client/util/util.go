@@ -1,3 +1,4 @@
+// Package util은 paust-db/client package를 사용함에 있어서 편리한 tool을 제공함.
 package util
 
 import (
@@ -11,6 +12,8 @@ import (
 	"path/filepath"
 )
 
+// GetInputDataFromStdin는 STDIN에서 client.InputDataObj의 형식으로 구성된 JSON 데이터를 read하여 client.InputDataObj의 slice로 변환해 return.
+// STDIN은 EOF가 입력될 때까지 읽음.
 func GetInputDataFromStdin() ([]client.InputDataObj, error) {
 	in := bufio.NewReader(os.Stdin)
 	bytes, err := in.ReadBytes(0x00)
@@ -26,6 +29,7 @@ func GetInputDataFromStdin() ([]client.InputDataObj, error) {
 	return inputDataObjs, nil
 }
 
+// GetInputDataFromFile는 given file의 client.InputDataObj의 형식으로 구성된 JSON 데이터를 read하여 client.InputDataObj의 slice로 변환해 return.
 func GetInputDataFromFile(file string) ([]client.InputDataObj, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -40,6 +44,8 @@ func GetInputDataFromFile(file string) ([]client.InputDataObj, error) {
 	return inputDataObjs, nil
 }
 
+// GetInputDataFromDir는 given dir내의 client.InputDataObj의 형식으로 구성된 모든 *.json 파일에 대해 file path를 key로, read하여 변환한 client.InputDataObj slice를 value로 갖는 map을 return.
+// recursive가 true일 경우 given dir의 모든 sub directory를 traverse하면서 *.json 파일을 read함.
 func GetInputDataFromDir(dir string, recursive bool) (map[string][]client.InputDataObj, error) {
 	inputDataObjMap := make(map[string][]client.InputDataObj)
 	if recursive == true {
@@ -101,6 +107,8 @@ func GetInputDataFromDir(dir string, recursive bool) (map[string][]client.InputD
 	}
 }
 
+// GetInputQueryFromStdin는 STDIN에서 client.InputQueryObj의 형식으로 JSON 데디터를 read하여 client.InputQueryObj로 변환해 return.
+// STDIN은 EOF가 입력될 때 까지 읽음.
 func GetInputQueryFromStdin() (*client.InputQueryObj, error) {
 	in := bufio.NewReader(os.Stdin)
 	bytes, err := in.ReadBytes(0x00)
@@ -116,6 +124,7 @@ func GetInputQueryFromStdin() (*client.InputQueryObj, error) {
 	return &inputQueryObj, nil
 }
 
+// GetInputQueryFromFile는 given file의 client.InputQueryObj의 형식으로 구성된 JSON 데이터를 read하여 client.InputQueryObj로 변환해 return.
 func GetInputQueryFromFile(file string) (*client.InputQueryObj, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {

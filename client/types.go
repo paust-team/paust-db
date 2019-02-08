@@ -1,5 +1,8 @@
 package client
 
+// InputDataObj는 WriteData function의 write model.
+// Timestamp는 unix timestamp이며 단위는 nano second임.
+// OwnerKey는 ed25519 public key이며 32byte.
 type InputDataObj struct {
 	Timestamp uint64 `json:"timestamp"`
 	OwnerKey  []byte `json:"ownerKey"`
@@ -7,10 +10,16 @@ type InputDataObj struct {
 	Data      []byte `json:"data"`
 }
 
+// InputQueryObj는 Fetch function의 read model.
+// Id는 data의 고유한 id.
 type InputQueryObj struct {
 	Ids [][]byte `json:"ids"`
 }
 
+// OutputMetaDataObj는 Query function의 result data type.
+// Id는 data의 고유한 id.
+// Timestamp는 unix timestamp이며 단위는 nano second임.
+// OwnerKey는 ed25519 public key이며 32byte.
 type OutputMetaDataObj struct {
 	Id        []byte `json:"id"`
 	Timestamp uint64 `json:"timestamp"`
@@ -18,6 +27,9 @@ type OutputMetaDataObj struct {
 	Qualifier []byte `json:"qualifier"`
 }
 
+// OutputRealDataObj는 Fetch function의 result data type.
+// Id는 data의 고유한 id.
+// Timestamp는 unix timestamp이며 단위는 nano second임.
 type OutputRealDataObj struct {
 	Id        []byte `json:"id"`
 	Timestamp uint64 `json:"timestamp"`

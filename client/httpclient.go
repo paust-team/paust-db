@@ -12,10 +12,12 @@ import (
 	"time"
 )
 
+// HTTPClient is a HTTP jsonrpc implementation of Client.
 type HTTPClient struct {
 	rpcClient rpcClient.Client
 }
 
+// NewHTTPClient creates HTTPClient with the given remote address.
 func NewHTTPClient(remote string) *HTTPClient {
 	c := rpcClient.NewHTTP(remote, consts.WsEndpoint)
 	rand.Seed(time.Now().UnixNano())
