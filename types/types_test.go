@@ -9,7 +9,7 @@ import (
 
 func TestCreateStartByteAndEndByte(t *testing.T) {
 	//given
-	givenQuery := types.MetaDataQueryObj{Start: 0, End: 1545982882435375000}
+	givenQuery := types.QueryObj{Start: 0, End: 1545982882435375000}
 
 	//when
 	actualStartByte, actualEndByte := types.CreateStartByteAndEndByte(givenQuery)
