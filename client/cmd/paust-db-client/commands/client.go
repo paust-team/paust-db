@@ -81,22 +81,22 @@ var putCmd = &cobra.Command{
 			inputDataObjs, err = util.GetInputDataFromStdin()
 			if err != nil {
 				fmt.Printf("GetInputDataFromStdin err: %v\n", err)
+				os.Exit(1)
 			}
-			os.Exit(1)
 		case filePath != "":
 			fmt.Printf("Read json data from file: %s\n", filePath)
 			inputDataObjs, err = util.GetInputDataFromFile(filePath)
 			if err != nil {
 				fmt.Printf("GetInputDataFromFile err: %v\n", err)
+				os.Exit(1)
 			}
-			os.Exit(1)
 		case directoryPath != "":
 			fmt.Printf("Read json data from files in directory: %s\n", directoryPath)
 			inputDataObjMap, err = util.GetInputDataFromDir(directoryPath, recursive)
 			if err != nil {
 				fmt.Printf("GetInputDataFromDir err: %v\n", err)
+				os.Exit(1)
 			}
-			os.Exit(1)
 		default:
 			fmt.Println("Read data from cli arguments")
 			if len(ownerKey) != consts.OwnerKeyLen {
@@ -205,15 +205,15 @@ var fetchCmd = &cobra.Command{
 			inputFetchObj, err = util.GetInputFetchFromStdin()
 			if err != nil {
 				fmt.Printf("GetInputFetchFromStdin err: %v\n", err)
+				os.Exit(1)
 			}
-			os.Exit(1)
 		case filePath != "":
 			fmt.Printf("Read json data from file: %s\n", filePath)
 			inputFetchObj, err = util.GetInputFetchFromFile(filePath)
 			if err != nil {
 				fmt.Printf("GetInputFetchFromFile err: %v\n", err)
+				os.Exit(1)
 			}
-			os.Exit(1)
 		default:
 			if len(args) == 0 {
 				fmt.Println("id: you must enter at least one id")
