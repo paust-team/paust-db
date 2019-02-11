@@ -15,8 +15,8 @@ const (
 
 //Server, Client config 공통 상수
 const (
-	MetaDataQueryPath = "/metadata"
-	RealDataQueryPath = "/realdata"
+	QueryPath = "/query"
+	FetchPath = "/fetch"
 )
 
 //Client config 상수

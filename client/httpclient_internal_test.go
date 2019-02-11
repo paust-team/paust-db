@@ -27,33 +27,22 @@ func TestHTTPClient_deSerializeKeyObj(t *testing.T) {
 	require.Nil(err, "base64 decode err: %+v", err)
 	metaDataObjs, err := json.Marshal([]types.MetaDataObj{{RowKey: rowKey1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {RowKey: rowKey2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
-	type MetaDataObj struct {
-		Id        []byte `json:"id"`
-		Timestamp uint64 `json:"timestamp"`
-		OwnerKey  []byte `json:"ownerKey"`
-		Qualifier []byte `json:"qualifier"`
-	}
-	clientMetaDataObjs, err := json.Marshal([]MetaDataObj{{Id: rowKey1, Timestamp: timestamp1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {Id: rowKey2, Timestamp: timestamp2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
+	outputQueryObjs, err := json.Marshal([]OutputQueryObj{{Id: rowKey1, Timestamp: timestamp1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {Id: rowKey2, Timestamp: timestamp2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	deserializedBytes, err := deSerializeKeyObj(metaDataObjs, true)
 	require.Nil(err, "SerializeKeyObj err: %+v", err)
 
-	require.EqualValues(clientMetaDataObjs, deserializedBytes)
+	require.EqualValues(outputQueryObjs, deserializedBytes)
 
 	// RealDataResObj deserialize
 	realDataObjs, err := json.Marshal([]types.RealDataObj{{RowKey: rowKey1, Data: []byte("testData1")}, {RowKey: rowKey2, Data: []byte("testData2")}})
 	require.Nil(err, "json marshal err: %+v", err)
-	type RealDataObj struct {
-		Id        []byte `json:"id"`
-		Timestamp uint64 `json:"timestamp"`
-		Data      []byte `json:"data"`
-	}
-	clientRealDataObjs, err := json.Marshal([]RealDataObj{{Id: rowKey1, Timestamp: timestamp1, Data: []byte("testData1")}, {Id: rowKey2, Timestamp: timestamp2, Data: []byte("testData2")}})
+	outputFetchObjs, err := json.Marshal([]OutputFetchObj{{Id: rowKey1, Timestamp: timestamp1, Data: []byte("testData1")}, {Id: rowKey2, Timestamp: timestamp2, Data: []byte("testData2")}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	deserializedBytes, err = deSerializeKeyObj(realDataObjs, false)
 	require.Nil(err, "SerializeKeyObj err: %+v", err)
 
-	require.EqualValues(clientRealDataObjs, deserializedBytes)
+	require.EqualValues(outputFetchObjs, deserializedBytes)
 }

@@ -120,18 +120,18 @@ func TestGetInputDataFromDir(t *testing.T) {
 	require.EqualValues(dataObjMap, inputDataObjMap)
 }
 
-func TestGetInputQueryFromStdin(t *testing.T) {
+func TestGetInputFetchFromStdin(t *testing.T) {
 	require := require.New(t)
 
-	inputQuery := `{
+	inputFetch := `{
   "ids":[
     "eyJ0aW1lc3RhbXAiOjE1NDc3NzI4ODI0MzUzNzUwMDAsInNhbHQiOjB9",
     "eyJ0aW1lc3RhbXAiOjE1NDc3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjB9",
     "eyJ0aW1lc3RhbXAiOjE1NDc3NzI5NjczMzE0NTgwMDAsInNhbHQiOjB9"
   ]
 }`
-	var queryObj client.InputQueryObj
-	err := json.Unmarshal([]byte(inputQuery), &queryObj)
+	var fetchObj client.InputFetchObj
+	err := json.Unmarshal([]byte(inputFetch), &fetchObj)
 
 	stdin := os.Stdin
 	defer func() {
@@ -141,30 +141,30 @@ func TestGetInputQueryFromStdin(t *testing.T) {
 	r, w, _ := os.Pipe()
 	os.Stdin = r
 
-	_, err = w.Write([]byte(inputQuery))
+	_, err = w.Write([]byte(inputFetch))
 	require.Nil(err, "pipe write err: %+v", err)
 	err = w.Close()
 	require.Nil(err, "pipe close err: %+v", err)
 
-	inputQueryObj, err := util.GetInputQueryFromStdin()
+	inputFetchObj, err := util.GetInputFetchFromStdin()
 	require.Nil(err, "err: %+v", err)
 
-	require.EqualValues(queryObj, *inputQueryObj)
+	require.EqualValues(fetchObj, *inputFetchObj)
 }
 
-func TestGetInputQueryFromFile(t *testing.T) {
+func TestGetInputFetchFromFile(t *testing.T) {
 	require := require.New(t)
 
 	bytes, err := ioutil.ReadFile(TestReadFile)
 	require.Nil(err, "file read err: %+v", err)
 
-	var queryObj client.InputQueryObj
+	var fetchObj client.InputFetchObj
 
-	err = json.Unmarshal(bytes, &queryObj)
+	err = json.Unmarshal(bytes, &fetchObj)
 	require.Nil(err, "json unmarshal err: %+v", err)
 
-	inputQueryObj, err := util.GetInputQueryFromFile(TestReadFile)
+	inputFetchObj, err := util.GetInputFetchFromFile(TestReadFile)
 	require.Nil(err, "err: %+v", err)
 
-	require.EqualValues(queryObj, *inputQueryObj)
+	require.EqualValues(fetchObj, *inputFetchObj)
 }

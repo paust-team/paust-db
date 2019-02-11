@@ -27,9 +27,9 @@ var ClientCmd = &cobra.Command{
 	Short: "Paust DB Client Application",
 }
 
-var writeCmd = &cobra.Command{
-	Use:   "write [data to write]",
-	Short: "Run DB Write",
+var putCmd = &cobra.Command{
+	Use:   "put [data to put]",
+	Short: "Put data to DB",
 	Run: func(cmd *cobra.Command, args []string) {
 		stdin, err := cmd.Flags().GetBool("stdin")
 		if err != nil {
@@ -68,7 +68,7 @@ var writeCmd = &cobra.Command{
 		}
 
 		if stdin == false && filePath == "" && directoryPath == "" && len(args) == 0 {
-			fmt.Println("data: you should specify data to write")
+			fmt.Println("you should specify data to put")
 			os.Exit(1)
 		}
 
@@ -109,28 +109,28 @@ var writeCmd = &cobra.Command{
 		HTTPClient := client.NewHTTPClient(consts.Remote)
 		if inputDataObjMap != nil {
 			for path, inputDataObj := range inputDataObjMap {
-				res, err := HTTPClient.WriteData(inputDataObj)
+				res, err := HTTPClient.Put(inputDataObj)
 				if err != nil {
-					fmt.Printf("%s: WriteData err: %v\n", path, err)
+					fmt.Printf("%s: Put err: %v\n", path, err)
 					continue
 				}
 				if res.Code == code.CodeTypeOK {
-					fmt.Printf("%s: write success.\n", path)
+					fmt.Printf("%s: put success.\n", path)
 				} else {
-					fmt.Printf("%s: write fail.\n", path)
+					fmt.Printf("%s: put fail.\n", path)
 					fmt.Println(res.Log)
 				}
 			}
 		} else {
-			res, err := HTTPClient.WriteData(inputDataObjs)
+			res, err := HTTPClient.Put(inputDataObjs)
 			if err != nil {
-				fmt.Printf("WriteData err: %v\n", err)
+				fmt.Printf("Put err: %v\n", err)
 				os.Exit(1)
 			}
 			if res.Code == code.CodeTypeOK {
-				fmt.Println("Write success.")
+				fmt.Println("put success.")
 			} else {
-				fmt.Println("Write fail.")
+				fmt.Println("put fail.")
 				fmt.Println(res.Log)
 			}
 		}
@@ -138,12 +138,7 @@ var writeCmd = &cobra.Command{
 }
 
 var queryCmd = &cobra.Command{
-	Use:   "query",
-	Short: "Query something to DB",
-}
-
-var metadataCmd = &cobra.Command{
-	Use:   "metadata start end",
+	Use:   "query start end",
 	Args:  cobra.ExactArgs(2),
 	Short: "Query DB for metadata",
 	Long: `Query DB for metadata.
@@ -184,10 +179,10 @@ var metadataCmd = &cobra.Command{
 	},
 }
 
-var realdataCmd = &cobra.Command{
-	Use:   "realdata [id...]",
-	Short: "Query DB for real data",
-	Long: `Query DB for real data.
+var fetchCmd = &cobra.Command{
+	Use:   "fetch [id...]",
+	Short: "Fetch DB for real data",
+	Long: `Fetch DB for real data.
 'id' is a base64 encoded byte array.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		stdin, err := cmd.Flags().GetBool("stdin")
@@ -202,21 +197,21 @@ var realdataCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		var inputQueryObj *client.InputQueryObj
+		var inputFetchObj *client.InputFetchObj
 
 		switch {
 		case stdin == true:
 			fmt.Println("Read json data from STDIN")
-			inputQueryObj, err = util.GetInputQueryFromStdin()
+			inputFetchObj, err = util.GetInputFetchFromStdin()
 			if err != nil {
-				fmt.Printf("GetInputQueryFromStdin err: %v\n", err)
+				fmt.Printf("GetInputFetchFromStdin err: %v\n", err)
 			}
 			os.Exit(1)
 		case filePath != "":
 			fmt.Printf("Read json data from file: %s\n", filePath)
-			inputQueryObj, err = util.GetInputQueryFromFile(filePath)
+			inputFetchObj, err = util.GetInputFetchFromFile(filePath)
 			if err != nil {
-				fmt.Printf("GetInputQueryFromFile err: %v\n", err)
+				fmt.Printf("GetInputFetchFromFile err: %v\n", err)
 			}
 			os.Exit(1)
 		default:
@@ -225,19 +220,19 @@ var realdataCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			fmt.Println("Read data from cli arguments")
-			inputQueryObj = new(client.InputQueryObj)
+			inputFetchObj = new(client.InputFetchObj)
 			for _, arg := range args {
 				id, err := base64.StdEncoding.DecodeString(arg)
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
 				}
-				inputQueryObj.Ids = append(inputQueryObj.Ids, id)
+				inputFetchObj.Ids = append(inputFetchObj.Ids, id)
 			}
 		}
 
 		HTTPClient := client.NewHTTPClient(consts.Remote)
-		res, err := HTTPClient.Fetch(*inputQueryObj)
+		res, err := HTTPClient.Fetch(*inputFetchObj)
 		if err != nil {
 			fmt.Printf("Fetch err: %v\n", err)
 			os.Exit(1)
@@ -263,19 +258,18 @@ var generateCmd = &cobra.Command{
 }
 
 func init() {
-	writeCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
-	writeCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
-	writeCmd.Flags().StringP("file", "f", "", "File path")
-	writeCmd.Flags().StringP("directory", "d", "", "Directory path")
-	writeCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
-	writeCmd.Flags().BoolP("recursive", "r", false, "Write all files and folders recursively")
-	realdataCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
-	realdataCmd.Flags().StringP("file", "f", "", "File path")
-	metadataCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
-	metadataCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
-	ClientCmd.AddCommand(writeCmd)
+	putCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
+	putCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
+	putCmd.Flags().StringP("file", "f", "", "File path")
+	putCmd.Flags().StringP("directory", "d", "", "Directory path")
+	putCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
+	putCmd.Flags().BoolP("recursive", "r", false, "Write all files and folders recursively")
+	fetchCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
+	fetchCmd.Flags().StringP("file", "f", "", "File path")
+	queryCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
+	queryCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
+	ClientCmd.AddCommand(putCmd)
 	ClientCmd.AddCommand(generateCmd)
 	ClientCmd.AddCommand(queryCmd)
-	queryCmd.AddCommand(metadataCmd)
-	queryCmd.AddCommand(realdataCmd)
+	ClientCmd.AddCommand(fetchCmd)
 }

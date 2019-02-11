@@ -27,7 +27,7 @@ func NewHTTPClient(remote string) *HTTPClient {
 	}
 }
 
-func (client *HTTPClient) WriteData(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTx, error) {
+func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTx, error) {
 	var baseDataObjs []types.BaseDataObj
 	for _, dataObj := range dataObjs {
 		if len(dataObj.OwnerKey) != consts.OwnerKeyLen {
@@ -62,12 +62,12 @@ func (client *HTTPClient) Query(start uint64, end uint64, ownerKey []byte, quali
 		return nil, errors.Errorf("wrong ownerKey length. Expected %v, got %v", consts.OwnerKeyLen, len(ownerKey))
 	}
 
-	jsonBytes, err := json.Marshal(types.MetaDataQueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
+	jsonBytes, err := json.Marshal(types.QueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
 	if err != nil {
 		return nil, errors.Wrap(err, "marshal failed")
 	}
 
-	res, err := client.rpcClient.ABCIQuery(consts.MetaDataQueryPath, jsonBytes)
+	res, err := client.rpcClient.ABCIQuery(consts.QueryPath, jsonBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -81,18 +81,18 @@ func (client *HTTPClient) Query(start uint64, end uint64, ownerKey []byte, quali
 	return res, nil
 }
 
-func (client *HTTPClient) Fetch(queryObj InputQueryObj) (*ctypes.ResultABCIQuery, error) {
-	var realDataQueryObj types.RealDataQueryObj
-	for _, id := range queryObj.Ids {
-		realDataQueryObj.RowKeys = append(realDataQueryObj.RowKeys, id)
+func (client *HTTPClient) Fetch(fetchObj InputFetchObj) (*ctypes.ResultABCIQuery, error) {
+	var convertedFetchObj types.FetchObj
+	for _, id := range fetchObj.Ids {
+		convertedFetchObj.RowKeys = append(convertedFetchObj.RowKeys, id)
 	}
 
-	jsonBytes, err := json.Marshal(realDataQueryObj)
+	jsonBytes, err := json.Marshal(convertedFetchObj)
 	if err != nil {
 		return nil, errors.Wrap(err, "marshal failed")
 	}
 
-	res, err := client.rpcClient.ABCIQuery(consts.RealDataQueryPath, jsonBytes)
+	res, err := client.rpcClient.ABCIQuery(consts.FetchPath, jsonBytes)
 	if err != nil {
 		return nil, err
 	}
@@ -113,13 +113,13 @@ func deSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 			return nil, errors.Wrap(err, "unmarshal failed")
 		}
 
-		var deserializedMeta []OutputMetaDataObj
+		var deserializedMeta []OutputQueryObj
 		for _, metaDataObj := range metaDataObjs {
 			var keyObj = types.KeyObj{}
 			if err := json.Unmarshal(metaDataObj.RowKey, &keyObj); err != nil {
 				return nil, errors.Wrap(err, "unmarshal failed")
 			}
-			deserializedMeta = append(deserializedMeta, OutputMetaDataObj{Id: metaDataObj.RowKey, Timestamp: keyObj.Timestamp, OwnerKey: metaDataObj.OwnerKey, Qualifier: metaDataObj.Qualifier})
+			deserializedMeta = append(deserializedMeta, OutputQueryObj{Id: metaDataObj.RowKey, Timestamp: keyObj.Timestamp, OwnerKey: metaDataObj.OwnerKey, Qualifier: metaDataObj.Qualifier})
 		}
 		deserializedObj, err := json.Marshal(deserializedMeta)
 		if err != nil {
@@ -132,13 +132,13 @@ func deSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 			return nil, errors.Wrap(err, "unmarshal failed")
 		}
 
-		var deserializedReal []OutputRealDataObj
+		var deserializedReal []OutputFetchObj
 		for _, realDataObj := range realDataObjs {
 			var keyObj = types.KeyObj{}
 			if err := json.Unmarshal(realDataObj.RowKey, &keyObj); err != nil {
 				return nil, errors.Wrap(err, "unmarshal failed")
 			}
-			deserializedReal = append(deserializedReal, OutputRealDataObj{Id: realDataObj.RowKey, Timestamp: keyObj.Timestamp, Data: realDataObj.Data})
+			deserializedReal = append(deserializedReal, OutputFetchObj{Id: realDataObj.RowKey, Timestamp: keyObj.Timestamp, Data: realDataObj.Data})
 		}
 		deserializedObj, err := json.Marshal(deserializedReal)
 		if err != nil {

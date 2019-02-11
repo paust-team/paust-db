@@ -27,19 +27,19 @@ type BaseDataObj struct {
 	RealData RealDataObj `json:"real"`
 }
 
-type MetaDataQueryObj struct {
+type QueryObj struct {
 	Start     uint64 `json:"start"`
 	End       uint64 `json:"end"`
 	OwnerKey  []byte `json:"ownerKey"`
 	Qualifier []byte `json:"qualifier"`
 }
 
-type RealDataQueryObj struct {
+type FetchObj struct {
 	RowKeys [][]byte `json:"rowKeys"`
 }
 
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
-func CreateStartByteAndEndByte(query MetaDataQueryObj) ([]byte, []byte) {
+func CreateStartByteAndEndByte(query QueryObj) ([]byte, []byte) {
 	startKeyObj := KeyObj{Timestamp: query.Start}
 	endKeyObj := KeyObj{Timestamp: query.End}
 

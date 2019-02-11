@@ -107,34 +107,34 @@ func GetInputDataFromDir(dir string, recursive bool) (map[string][]client.InputD
 	}
 }
 
-// GetInputQueryFromStdin는 STDIN에서 client.InputQueryObj의 형식으로 JSON 데디터를 read하여 client.InputQueryObj로 변환해 return.
+// GetInputFetchFromStdin는 STDIN에서 client.InputFetchObj의 형식으로 JSON 데디터를 read하여 client.InputFetchObj로 변환해 return.
 // STDIN은 EOF가 입력될 때 까지 읽음.
-func GetInputQueryFromStdin() (*client.InputQueryObj, error) {
+func GetInputFetchFromStdin() (*client.InputFetchObj, error) {
 	in := bufio.NewReader(os.Stdin)
 	bytes, err := in.ReadBytes(0x00)
 	if err != io.EOF {
 		return nil, errors.Wrap(err, "read data of stdin failed")
 	}
 
-	var inputQueryObj client.InputQueryObj
-	if err := json.Unmarshal(bytes, &inputQueryObj); err != nil {
+	var inputFetchObj client.InputFetchObj
+	if err := json.Unmarshal(bytes, &inputFetchObj); err != nil {
 		return nil, errors.Wrap(err, "unmarshal failed")
 	}
 
-	return &inputQueryObj, nil
+	return &inputFetchObj, nil
 }
 
-// GetInputQueryFromFile는 given file의 client.InputQueryObj의 형식으로 구성된 JSON 데이터를 read하여 client.InputQueryObj로 변환해 return.
-func GetInputQueryFromFile(file string) (*client.InputQueryObj, error) {
+// GetInputFetchFromFile는 given file의 client.InputFetchObj의 형식으로 구성된 JSON 데이터를 read하여 client.InputFetchObj로 변환해 return.
+func GetInputFetchFromFile(file string) (*client.InputFetchObj, error) {
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "readFile failed")
 	}
 
-	var inputQueryObj client.InputQueryObj
-	if err := json.Unmarshal(bytes, &inputQueryObj); err != nil {
+	var inputFetchObj client.InputFetchObj
+	if err := json.Unmarshal(bytes, &inputFetchObj); err != nil {
 		return nil, errors.Wrap(err, "unmarshal failed")
 	}
 
-	return &inputQueryObj, nil
+	return &inputFetchObj, nil
 }

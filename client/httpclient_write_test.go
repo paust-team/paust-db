@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func (suite *ClientTestSuite) TestClient_WriteData() {
+func (suite *ClientTestSuite) TestClient_Put() {
 	require := require.New(suite.T())
 
 	mempool := node.MempoolReactor().Mempool
@@ -28,7 +28,7 @@ func (suite *ClientTestSuite) TestClient_WriteData() {
 	require.Nil(err, "json marshal err: %+v", err)
 
 	dataObjs := []client.InputDataObj{{Timestamp: timestamp, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: data}}
-	bres, err := suite.dbClient.WriteData(dataObjs)
+	bres, err := suite.dbClient.Put(dataObjs)
 
 	require.Nil(err, "err: %+v", err)
 	require.Equal(abci.CodeTypeOK, bres.Code)

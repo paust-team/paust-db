@@ -2,6 +2,7 @@ package master_test
 
 import (
 	"encoding/json"
+	"github.com/paust-team/paust-db/consts"
 	"github.com/paust-team/paust-db/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/abci/example/code"
@@ -134,11 +135,11 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 	*/
 
 	//when
-	emptySlice := make([]byte,0)
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: emptySlice, Qualifier: emptySlice}
+	emptySlice := make([]byte, 0)
+	metaQueryObj := types.QueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: emptySlice, Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
-	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
+	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: consts.QueryPath}
 	actualMetaRes := suite.app.Query(metaQuery)
 
 	//then
@@ -165,9 +166,9 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 	}
 
 	//when
-	realDataQueryObj := types.RealDataQueryObj{RowKeys: givenRowKeys}
-	realDataQueryObjByte, err := json.Marshal(realDataQueryObj)
-	realQuery := abciTypes.RequestQuery{Data: realDataQueryObjByte, Path: "/realdata"}
+	realDataFetchObj := types.FetchObj{RowKeys: givenRowKeys}
+	realDataFetchObjByte, err := json.Marshal(realDataFetchObj)
+	realQuery := abciTypes.RequestQuery{Data: realDataFetchObjByte, Path: consts.FetchPath}
 	actualRealRes := suite.app.Query(realQuery)
 
 	//then
@@ -195,10 +196,10 @@ func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 
 	//when
 	emptySlice := make([]byte, 0)
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: emptySlice, Qualifier: []byte("Memory")}
+	metaQueryObj := types.QueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: emptySlice, Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
-	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
+	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: consts.QueryPath}
 	actualMetaRes := suite.app.Query(metaQuery)
 
 	//then
@@ -225,10 +226,10 @@ func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 	}
 
 	//when
-	realDataQueryObj := types.RealDataQueryObj{RowKeys: givenRowKeys}
-	realDataQueryObjByte, err := json.Marshal(realDataQueryObj)
+	realDataFetchObj := types.FetchObj{RowKeys: givenRowKeys}
+	realDataFetchObjByte, err := json.Marshal(realDataFetchObj)
 	require.Nil(err)
-	realQuery := abciTypes.RequestQuery{Data: realDataQueryObjByte, Path: "/realdata"}
+	realQuery := abciTypes.RequestQuery{Data: realDataFetchObjByte, Path: consts.FetchPath}
 	actualRealRes := suite.app.Query(realQuery)
 
 	//then
@@ -257,10 +258,10 @@ func (suite *MasterSuite) TestMasterApplication_ownerKey_Query() {
 
 	//when
 	emptySlice := make([]byte, 0)
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: givenOwnerKey2, Qualifier: emptySlice}
+	metaQueryObj := types.QueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: givenOwnerKey2, Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
-	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
+	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: consts.QueryPath}
 	actualMetaRes := suite.app.Query(metaQuery)
 
 	//then
@@ -287,9 +288,9 @@ func (suite *MasterSuite) TestMasterApplication_ownerKey_Query() {
 	}
 
 	//when
-	realDataQueryObj := types.RealDataQueryObj{RowKeys: givenRowKeys}
-	realDataQueryObjByte, err := json.Marshal(realDataQueryObj)
-	realQuery := abciTypes.RequestQuery{Data: realDataQueryObjByte, Path: "/realdata"}
+	realDataFetchObj := types.FetchObj{RowKeys: givenRowKeys}
+	realDataFetchObjByte, err := json.Marshal(realDataFetchObj)
+	realQuery := abciTypes.RequestQuery{Data: realDataFetchObjByte, Path: consts.FetchPath}
 	actualRealRes := suite.app.Query(realQuery)
 
 	//then
@@ -317,10 +318,10 @@ func (suite *MasterSuite) TestMasterApplication_both_Query() {
 	*/
 
 	//when
-	metaQueryObj := types.MetaDataQueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
+	metaQueryObj := types.QueryObj{Start: 1545982882435375000, End: 1545982882435375002, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
-	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: "/metadata"}
+	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: consts.QueryPath}
 	actualMetaRes := suite.app.Query(metaQuery)
 
 	//then
@@ -347,9 +348,9 @@ func (suite *MasterSuite) TestMasterApplication_both_Query() {
 	}
 
 	//when
-	realDataQueryObj := types.RealDataQueryObj{RowKeys: givenRowKeys}
-	realDataQueryObjByte, err := json.Marshal(realDataQueryObj)
-	realQuery := abciTypes.RequestQuery{Data: realDataQueryObjByte, Path: "/realdata"}
+	realDataFetchObj := types.FetchObj{RowKeys: givenRowKeys}
+	realDataFetchObjByte, err := json.Marshal(realDataFetchObj)
+	realQuery := abciTypes.RequestQuery{Data: realDataFetchObjByte, Path: consts.FetchPath}
 	actualRealRes := suite.app.Query(realQuery)
 
 	//then
