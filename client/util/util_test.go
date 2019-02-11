@@ -42,7 +42,7 @@ func TestGetInputDataFromStdin(t *testing.T) {
 	err = w.Close()
 	require.Nil(err, "pipe close err: %+v", err)
 
-	inputDataObjs, err := util.GetInputDataFromStdin()
+	inputDataObjs, err := util.GetInputDataObjFromStdin()
 	require.Nil(err, "err: %+v", err)
 
 	require.EqualValues(dataObjs, inputDataObjs)
@@ -59,7 +59,7 @@ func TestGetInputDataFromFile(t *testing.T) {
 	err = json.Unmarshal(bytes, &dataObjs)
 	require.Nil(err, "json unmarshal err: %+v", err)
 
-	inputDataObjs, err := util.GetInputDataFromFile(TestWriteFile)
+	inputDataObjs, err := util.GetInputDataObjFromFile(TestWriteFile)
 	require.Nil(err, "err: %+v", err)
 
 	require.EqualValues(dataObjs, inputDataObjs)
@@ -91,7 +91,7 @@ func TestGetInputDataFromDir(t *testing.T) {
 	})
 	require.Nil(err, "directory traverse err: %+v", err)
 
-	inputDataObjMap, err := util.GetInputDataFromDir(TestDirectory, false)
+	inputDataObjMap, err := util.GetInputDataObjFromDir(TestDirectory, false)
 	require.Nil(err, "err: %+v", err)
 
 	require.EqualValues(dataObjMap, inputDataObjMap)
@@ -114,7 +114,7 @@ func TestGetInputDataFromDir(t *testing.T) {
 	})
 	require.Nil(err, "directory traverse err: %+v", err)
 
-	inputDataObjMap, err = util.GetInputDataFromDir(TestDirectory, true)
+	inputDataObjMap, err = util.GetInputDataObjFromDir(TestDirectory, true)
 	require.Nil(err, "err: %+v", err)
 
 	require.EqualValues(dataObjMap, inputDataObjMap)
@@ -146,7 +146,7 @@ func TestGetInputFetchFromStdin(t *testing.T) {
 	err = w.Close()
 	require.Nil(err, "pipe close err: %+v", err)
 
-	inputFetchObj, err := util.GetInputFetchFromStdin()
+	inputFetchObj, err := util.GetInputFetchObjFromStdin()
 	require.Nil(err, "err: %+v", err)
 
 	require.EqualValues(fetchObj, *inputFetchObj)
@@ -163,7 +163,7 @@ func TestGetInputFetchFromFile(t *testing.T) {
 	err = json.Unmarshal(bytes, &fetchObj)
 	require.Nil(err, "json unmarshal err: %+v", err)
 
-	inputFetchObj, err := util.GetInputFetchFromFile(TestReadFile)
+	inputFetchObj, err := util.GetInputFetchObjFromFile(TestReadFile)
 	require.Nil(err, "err: %+v", err)
 
 	require.EqualValues(fetchObj, *inputFetchObj)

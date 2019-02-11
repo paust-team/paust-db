@@ -78,23 +78,23 @@ var putCmd = &cobra.Command{
 		switch {
 		case stdin == true:
 			fmt.Println("Read json data from STDIN")
-			inputDataObjs, err = util.GetInputDataFromStdin()
+			inputDataObjs, err = util.GetInputDataObjFromStdin()
 			if err != nil {
-				fmt.Printf("GetInputDataFromStdin err: %v\n", err)
+				fmt.Printf("GetInputDataObjFromStdin err: %v\n", err)
 				os.Exit(1)
 			}
 		case filePath != "":
 			fmt.Printf("Read json data from file: %s\n", filePath)
-			inputDataObjs, err = util.GetInputDataFromFile(filePath)
+			inputDataObjs, err = util.GetInputDataObjFromFile(filePath)
 			if err != nil {
-				fmt.Printf("GetInputDataFromFile err: %v\n", err)
+				fmt.Printf("GetInputDataObjFromFile err: %v\n", err)
 				os.Exit(1)
 			}
 		case directoryPath != "":
 			fmt.Printf("Read json data from files in directory: %s\n", directoryPath)
-			inputDataObjMap, err = util.GetInputDataFromDir(directoryPath, recursive)
+			inputDataObjMap, err = util.GetInputDataObjFromDir(directoryPath, recursive)
 			if err != nil {
-				fmt.Printf("GetInputDataFromDir err: %v\n", err)
+				fmt.Printf("GetInputDataObjFromDir err: %v\n", err)
 				os.Exit(1)
 			}
 		default:
@@ -202,16 +202,16 @@ var fetchCmd = &cobra.Command{
 		switch {
 		case stdin == true:
 			fmt.Println("Read json data from STDIN")
-			inputFetchObj, err = util.GetInputFetchFromStdin()
+			inputFetchObj, err = util.GetInputFetchObjFromStdin()
 			if err != nil {
-				fmt.Printf("GetInputFetchFromStdin err: %v\n", err)
+				fmt.Printf("GetInputFetchObjFromStdin err: %v\n", err)
 				os.Exit(1)
 			}
 		case filePath != "":
 			fmt.Printf("Read json data from file: %s\n", filePath)
-			inputFetchObj, err = util.GetInputFetchFromFile(filePath)
+			inputFetchObj, err = util.GetInputFetchObjFromFile(filePath)
 			if err != nil {
-				fmt.Printf("GetInputFetchFromFile err: %v\n", err)
+				fmt.Printf("GetInputFetchObjFromFile err: %v\n", err)
 				os.Exit(1)
 			}
 		default:
