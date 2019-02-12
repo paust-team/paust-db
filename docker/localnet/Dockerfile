@@ -23,7 +23,7 @@ RUN rm -rf /root/rocksdb
 
 RUN ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
 # install paust-db
-COPY . /go/src/github.com/paust-team/paust-db
+COPY /Users/jkw/PAUST/andrew/src/github.com/paust-team/paust-db /go/src/github.com/paust-team/paust-db
 WORKDIR /go/src/github.com/paust-team/paust-db
 RUN go get github.com/paust-team/paust-db/cmd/paust-db
 
@@ -38,9 +38,8 @@ ENV TMHOME /tendermint
 VOLUME [ $TMHOME ]
 WORKDIR $TMHOME
 EXPOSE 26656 26657
-ENTRYPOINT ["/root/wrapper.sh"] 
-#CMD ["node", "--log_level *:error"]
-CMD ["node"]
+ENTRYPOINT ["/usr/bin/wrapper.sh"] 
+CMD ["node", "--log_level *:error"]
 STOPSIGNAL SIGTERM
 
-COPY docker/wrapper.sh /root/wrapper.sh
+COPY wrapper.sh /usr/bin/wrapper.sh
