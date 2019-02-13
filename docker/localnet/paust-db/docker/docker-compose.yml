@@ -1,0 +1,11 @@
+version: '3'
+
+services:
+  node0:
+    container_name: node0
+    image: "paust-db"
+    ports:
+      - "26656-26657:26656-26657"
+    volumes:
+      - ./build:/tendermint:Z
+    network_mode: host

@@ -23,7 +23,7 @@ RUN rm -rf /root/rocksdb
 
 RUN ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
 # install paust-db
-COPY /Users/jkw/PAUST/andrew/src/github.com/paust-team/paust-db /go/src/github.com/paust-team/paust-db
+COPY paust-db /go/src/github.com/paust-team/paust-db
 WORKDIR /go/src/github.com/paust-team/paust-db
 RUN go get github.com/paust-team/paust-db/cmd/paust-db
 
