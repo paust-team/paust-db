@@ -7,11 +7,13 @@ import (
 	"fmt"
 	"github.com/paust-team/paust-db/consts"
 	"github.com/paust-team/paust-db/libs/db"
+	"github.com/paust-team/paust-db/libs/log"
 	"github.com/paust-team/paust-db/types"
 	"github.com/pkg/errors"
 	"github.com/tendermint/tendermint/abci/example/code"
 	abciTypes "github.com/tendermint/tendermint/abci/types"
 	"math/rand"
+	"os"
 )
 
 type MasterApplication struct {
@@ -22,6 +24,8 @@ type MasterApplication struct {
 	db     *db.CRocksDB
 	wb     db.Batch
 	mwb    db.Batch
+
+	logger log.Logger
 }
 
 func NewMasterApplication(serial bool, dir string) *MasterApplication {
@@ -37,6 +41,7 @@ func NewMasterApplication(serial bool, dir string) *MasterApplication {
 		serial: serial,
 		hash:   hash,
 		db:     database,
+		logger: log.NewPDBLogger(os.Stdout),
 	}
 }
 
@@ -70,9 +75,9 @@ func (app *MasterApplication) BeginBlock(req abciTypes.RequestBeginBlock) abciTy
 func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	//Unmarshal tx to baseDataObjs
 	var baseDataObjs []types.BaseDataObj
-	err := json.Unmarshal(tx, &baseDataObjs)
-	if err != nil {
-		fmt.Println("BaseDataObj unmarshal error", err)
+	if err := json.Unmarshal(tx, &baseDataObjs); err != nil {
+		app.logger.Error("Error unmarshaling BaseDataObj", "state", "DeliverTx", "err", err)
+		return abciTypes.ResponseDeliverTx{Code: code.CodeTypeEncodingError, Log: err.Error()}
 	}
 
 	//meta와 real 나누어 batch에 담는다
@@ -86,12 +91,14 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 
 		metaData, err := json.Marshal(metaValue)
 		if err != nil {
-			fmt.Println(err)
+			app.logger.Error("Error marshaling metaValue", "state", "DeliverTx", "err", err)
+			return abciTypes.ResponseDeliverTx{Code: code.CodeTypeEncodingError, Log: err.Error()}
 		}
 		app.mwb.SetColumnFamily(app.db.ColumnFamilyHandles()[consts.MetaCFNum], baseDataObjs[i].MetaData.RowKey, metaData)
 		app.wb.SetColumnFamily(app.db.ColumnFamilyHandles()[consts.RealCFNum], baseDataObjs[i].RealData.RowKey, baseDataObjs[i].RealData.Data)
 	}
 
+	app.logger.Info("Put success", "state", "DeliverTx", "size", len(baseDataObjs))
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
 }
 
@@ -102,11 +109,13 @@ func (app *MasterApplication) EndBlock(req abciTypes.RequestEndBlock) abciTypes.
 func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	//resp.Data = app.hash
 	if err := app.mwb.Write(); err != nil {
-		fmt.Println(err)
+		app.logger.Error("Error writing batch", "state", "Commit", "err", err)
+		return
 	}
 
 	if err := app.wb.Write(); err != nil {
-		fmt.Println(err)
+		app.logger.Error("Error writing batch", "state", "Commit", "err", err)
+		return
 	}
 
 	app.mwb = app.db.NewBatch()
@@ -115,31 +124,50 @@ func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	return
 }
 
-func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) (resp abciTypes.ResponseQuery) {
+func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) abciTypes.ResponseQuery {
+	var responseValue []byte
 	switch reqQuery.Path {
 	case consts.QueryPath:
 		var queryObj = types.QueryObj{}
-		err := json.Unmarshal(reqQuery.Data, &queryObj)
-		if err != nil {
-			fmt.Println("QueryObj struct unmarshal error", err)
+		if err := json.Unmarshal(reqQuery.Data, &queryObj); err != nil {
+			app.logger.Error("Error unmarshaling QueryObj", "state", "Query", "err", err)
+			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
 		}
 
-		metaDataObjs, _ := app.metaDataQuery(queryObj)
-		resp.Value, _ = json.Marshal(metaDataObjs)
+		metaDataObjs, err := app.metaDataQuery(queryObj)
+		if err != nil {
+			app.logger.Error("Error processing queryObj", "state", "Query", "err", err)
+			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
+		}
+		responseValue, err = json.Marshal(metaDataObjs)
+		if err != nil {
+			app.logger.Error("Error marshaling metaDataObj", "state", "Query", "err", err)
+			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
+		}
+		app.logger.Info("Query success", "state", "Query", "path", reqQuery.Path)
 
 	case consts.FetchPath:
 		var fetchObj = types.FetchObj{}
-		err := json.Unmarshal(reqQuery.Data, &fetchObj)
-		if err != nil {
-			fmt.Println(err)
+		if err := json.Unmarshal(reqQuery.Data, &fetchObj); err != nil {
+			app.logger.Error("Error unmarshaling FetchObj", "state", "Query", "err", err)
+			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
 		}
 
-		realDataObjs, _ := app.realDataFetch(fetchObj)
-		resp.Value, _ = json.Marshal(realDataObjs)
+		realDataObjs, err := app.realDataFetch(fetchObj)
+		if err != nil {
+			app.logger.Error("Error processing fetchObj", "state", "Query", "err", err)
+			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
+		}
+		responseValue, err = json.Marshal(realDataObjs)
+		if err != nil {
+			app.logger.Error("Error marshaling realDataObj", "state", "Query", "err", err)
+			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
+		}
+		app.logger.Info("Fetch success", "state", "Query", "path", reqQuery.Path)
 
 	}
 
-	return
+	return abciTypes.ResponseQuery{Code: code.CodeTypeOK, Value: responseValue}
 }
 
 func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.MetaDataObj, error) {
@@ -164,9 +192,8 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 			OwnerKey  []byte `json:"ownerKey"`
 			Qualifier []byte `json:"qualifier"`
 		}
-		err := json.Unmarshal(itr.Value(), &metaValue)
-		if err != nil {
-			fmt.Println(err)
+		if err := json.Unmarshal(itr.Value(), &metaValue); err != nil {
+			return nil, errors.Wrap(err, "metaValue unmarshal err: ")
 		}
 
 		metaObj.RowKey = make([]byte, len(itr.Key()))
@@ -214,7 +241,7 @@ func (app *MasterApplication) realDataFetch(fetchObj types.FetchObj) ([]types.Re
 		realDataObj.RowKey = rowKey
 		valueSlice, err := app.db.GetDataFromColumnFamily(consts.RealCFNum, rowKey)
 		if err != nil {
-			fmt.Print(err)
+			return nil, errors.Wrap(err, "GetDataFromColumnFamily err: ")
 		}
 		realDataObj.Data = make([]byte, valueSlice.Size())
 		copy(realDataObj.Data, valueSlice.Data())

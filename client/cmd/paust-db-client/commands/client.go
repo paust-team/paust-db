@@ -174,7 +174,13 @@ var queryCmd = &cobra.Command{
 			fmt.Printf("Query err: %v\n", err)
 			os.Exit(1)
 		}
+		if res.Response.Code != code.CodeTypeOK {
+			fmt.Println("query fail.")
+			fmt.Println(res.Response.Log)
+			os.Exit(1)
+		}
 
+		fmt.Println("query success.")
 		fmt.Println(string(res.Response.Value))
 	},
 }
@@ -237,7 +243,13 @@ var fetchCmd = &cobra.Command{
 			fmt.Printf("Fetch err: %v\n", err)
 			os.Exit(1)
 		}
+		if res.Response.Code != code.CodeTypeOK {
+			fmt.Println("fetch fail.")
+			fmt.Println(res.Response.Log)
+			os.Exit(1)
+		}
 
+		fmt.Println("fetch success.")
 		fmt.Println(string(res.Response.Value))
 	},
 }
