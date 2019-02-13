@@ -2,7 +2,7 @@ FROM golang:1.10-alpine3.8
 MAINTAINER andrew <andrew.joo@paust.io>
 
 #ENV for gorocksdb
-ENV CGO_CFLAGS "-I/usr/local/include"
+ENV CGO_CFLAGS="-I/usr/local/include"
 ENV CGO_LDFLAGS="-L/usr/local/lib -lrocksdb"
 
 RUN apk add --no-cache git build-base cmake bash perl linux-headers
