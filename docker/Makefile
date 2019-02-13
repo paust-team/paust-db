@@ -1,6 +1,6 @@
 # Make docker image
 build-image:
-	docker build -t paust-db ../.
+	docker build --no-cache -t paust-db ../.
 
 # Init tendermint config
 init:
