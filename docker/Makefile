@@ -6,6 +6,10 @@ build-image:
 init:
 	docker run --rm -v ${CURDIR}/build:/tendermint:Z paust-db init
 
+# Config for Clustering
+cluster:
+	docker run --rm -v ${CURDIR}/build:/tendermint:Z paust-db testnet --o .
+
 # Run a 4-node testnet locally
 node-start: node-stop
 	docker-compose up
