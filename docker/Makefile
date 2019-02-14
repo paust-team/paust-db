@@ -2,19 +2,11 @@
 build-image:
 	docker build -t paust-db ../.
 
-# Init tendermint config
-init:
-	docker run --rm -v ${CURDIR}/build:/tendermint:Z paust-db init
-
-# Config for Clustering
-cluster:
-	docker run --rm -v ${CURDIR}/build:/tendermint:Z paust-db testnet --v 4 --o ./cluster
-
 # Run a 4-node testnet locally
-node-start: node-stop
+localnet-start: localnet-stop
+	@if ! [ -f build/node0/config/genesis.json ]; then docker run --rm -v $(CURDIR)/build:/tendermint:Z paust-db testnet --v 4 --o . --populate-persistent-peers --starting-ip-address 192.167.10.2 ; fi
 	docker-compose up
 
 # Stop testnet
-node-stop:
+localnet-stop:
 	docker-compose down
-
