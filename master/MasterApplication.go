@@ -28,7 +28,7 @@ type MasterApplication struct {
 	logger log.Logger
 }
 
-func NewMasterApplication(serial bool, dir string) *MasterApplication {
+func NewMasterApplication(serial bool, dir string, option log.Option) *MasterApplication {
 	hash := make([]byte, 8)
 	database, err := db.NewCRocksDB(consts.DBName, dir)
 
@@ -41,7 +41,7 @@ func NewMasterApplication(serial bool, dir string) *MasterApplication {
 		serial: serial,
 		hash:   hash,
 		db:     database,
-		logger: log.NewPDBLogger(os.Stdout),
+		logger: log.NewFilter(log.NewPDBLogger(log.NewSyncWriter(os.Stdout)), option),
 	}
 }
 

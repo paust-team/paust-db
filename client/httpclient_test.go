@@ -2,6 +2,7 @@ package client_test
 
 import (
 	"github.com/paust-team/paust-db/client"
+	"github.com/paust-team/paust-db/libs/log"
 	"github.com/paust-team/paust-db/master"
 	"github.com/stretchr/testify/suite"
 	cmn "github.com/tendermint/tendermint/libs/common"
@@ -30,7 +31,7 @@ type ClientTestSuite struct {
 func (suite *ClientTestSuite) SetupSuite() {
 	testDir = "/tmp/" + cmn.RandStr(4)
 	os.MkdirAll(testDir, os.ModePerm)
-	app := master.NewMasterApplication(true, testDir)
+	app := master.NewMasterApplication(true, testDir, log.AllowDebug())
 	node = rpctest.StartTendermint(app)
 
 	rand.Seed(0)

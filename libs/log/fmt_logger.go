@@ -3,8 +3,8 @@ package log
 import (
 	"bytes"
 	"fmt"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
+	kitlog "github.com/go-kit/kit/log"
+	kitlevel "github.com/go-kit/kit/log/level"
 	"github.com/go-logfmt/logfmt"
 	"io"
 	"strings"
@@ -41,7 +41,7 @@ type pdbfmtLogger struct {
 // Each log event produces no more than one call to w.Write.
 // The passed Writer must be safe for concurrent use by multiple goroutines if
 // the returned Logger will be used concurrently.
-func NewPDBFmtLogger(w io.Writer) log.Logger {
+func NewPDBFmtLogger(w io.Writer) kitlog.Logger {
 	return &pdbfmtLogger{w}
 }
 
@@ -59,13 +59,13 @@ func (l pdbfmtLogger) Log(keyvals ...interface{}) error {
 
 	for i := 0; i < len(keyvals)-1; i += 2 {
 		// Extract level
-		if keyvals[i] == level.Key() {
+		if keyvals[i] == kitlevel.Key() {
 			excludeIndexes = append(excludeIndexes, i)
 			switch keyvals[i+1].(type) {
 			case string:
 				lvl = keyvals[i+1].(string)
-			case level.Value:
-				lvl = keyvals[i+1].(level.Value).String()
+			case kitlevel.Value:
+				lvl = keyvals[i+1].(kitlevel.Value).String()
 			default:
 				panic(fmt.Sprintf("level value of unknown type %T", keyvals[i+1]))
 			}

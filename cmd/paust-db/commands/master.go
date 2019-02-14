@@ -3,19 +3,26 @@ package commands
 import (
 	"fmt"
 	"github.com/paust-team/paust-db/consts"
+	"github.com/paust-team/paust-db/libs/log"
 	"github.com/paust-team/paust-db/master"
 	"github.com/spf13/cobra"
 	"github.com/tendermint/tendermint/abci/server"
 	"github.com/tendermint/tendermint/libs/common"
-	"github.com/tendermint/tendermint/libs/log"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 	"os"
 )
 
-var dir string
+var dir, level string
 
 func Serve() error {
-	app := master.NewMasterApplication(true, dir)
-	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	option, err := log.AllowLevel(level)
+	if err != nil {
+		fmt.Printf("level parsing err: %v\n", err)
+		os.Exit(1)
+	}
+
+	app := master.NewMasterApplication(true, dir, option)
+	logger := tmlog.NewTMLogger(tmlog.NewSyncWriter(os.Stdout))
 
 	srv, err := server.NewServer(consts.ProtoAddr, consts.Transport, app)
 
@@ -49,4 +56,5 @@ var MasterCmd = &cobra.Command{
 
 func init() {
 	MasterCmd.Flags().StringVarP(&dir, "dir", "d", "/tmp", "directory for rocksdb")
+	MasterCmd.Flags().StringVarP(&level, "level", "l", "info", "set log level [debug|info|error|none]")
 }

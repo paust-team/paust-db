@@ -3,6 +3,7 @@ package master_test
 import (
 	"encoding/base64"
 	"encoding/json"
+	"github.com/paust-team/paust-db/libs/log"
 	"github.com/paust-team/paust-db/master"
 	"github.com/paust-team/paust-db/types"
 	"github.com/stretchr/testify/suite"
@@ -76,7 +77,7 @@ func (suite *MasterSuite) SetupTest() {
 
 	os.RemoveAll(testDir)
 	os.Mkdir(testDir, perm)
-	suite.app = master.NewMasterApplication(true, testDir)
+	suite.app = master.NewMasterApplication(true, testDir, log.AllowDebug())
 	require.NotNil(suite.app, "app should not be nil")
 }
 
