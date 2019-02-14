@@ -98,7 +98,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 		app.wb.SetColumnFamily(app.db.ColumnFamilyHandles()[consts.RealCFNum], baseDataObjs[i].RealData.RowKey, baseDataObjs[i].RealData.Data)
 	}
 
-	app.logger.Info("Put success", "state", "DeliverTx", "size", len(baseDataObjs))
+	app.logger.Info("Put success", "state", "DeliverTx", "size", len(baseDataObjs), "tx", tx)
 	return abciTypes.ResponseDeliverTx{Code: code.CodeTypeOK}
 }
 
@@ -108,14 +108,20 @@ func (app *MasterApplication) EndBlock(req abciTypes.RequestEndBlock) abciTypes.
 
 func (app *MasterApplication) Commit() (resp abciTypes.ResponseCommit) {
 	//resp.Data = app.hash
-	if err := app.mwb.Write(); err != nil {
+	count, err := app.mwb.Write()
+	if err != nil {
 		app.logger.Error("Error writing batch", "state", "Commit", "err", err)
 		return
+	} else if count > 0 {
+		app.logger.Info("Flush metadata", "state", "Commit", "size", count)
 	}
 
-	if err := app.wb.Write(); err != nil {
+	count, err = app.wb.Write()
+	if err != nil {
 		app.logger.Error("Error writing batch", "state", "Commit", "err", err)
 		return
+	} else if count > 0 {
+		app.logger.Info("Flush realdata", "state", "Commit", "size", count)
 	}
 
 	app.mwb = app.db.NewBatch()
@@ -144,7 +150,7 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) abciTypes.R
 			app.logger.Error("Error marshaling metaDataObj", "state", "Query", "err", err)
 			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
 		}
-		app.logger.Info("Query success", "state", "Query", "path", reqQuery.Path)
+		app.logger.Info("Query success", "state", "Query", "path", reqQuery.Path, "data", reqQuery.Data)
 
 	case consts.FetchPath:
 		var fetchObj = types.FetchObj{}
@@ -163,7 +169,7 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) abciTypes.R
 			app.logger.Error("Error marshaling realDataObj", "state", "Query", "err", err)
 			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
 		}
-		app.logger.Info("Fetch success", "state", "Query", "path", reqQuery.Path)
+		app.logger.Info("Fetch success", "state", "Query", "path", reqQuery.Path, "data", reqQuery.Data)
 
 	}
 

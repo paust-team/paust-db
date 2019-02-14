@@ -73,7 +73,6 @@ func (l pdbfmtLogger) Log(keyvals ...interface{}) error {
 		} else if keyvals[i] == msgKey {
 			excludeIndexes = append(excludeIndexes, i)
 			msg = keyvals[i+1].(string)
-			// and module (could be multiple keyvals; if such case last keyvalue wins)
 		}
 	}
 

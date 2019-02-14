@@ -106,11 +106,11 @@ func (mBatch *cRocksDBBatch) SetColumnFamily(cf *gorocksdb.ColumnFamilyHandle, k
 }
 
 // Implements Batch.
-func (mBatch *cRocksDBBatch) Write() error {
+func (mBatch *cRocksDBBatch) Write() (int, error) {
 	if err := mBatch.db.db.Write(mBatch.db.wo, mBatch.batch); err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return mBatch.batch.Count(), nil
 }
 
 //----------------------------------------

@@ -12,7 +12,8 @@ func (suite *DBSuite) TestColumnFamilyBatchPutGet() {
 
 	batch := suite.DB.NewBatch()
 	batch.SetColumnFamily(suite.DB.ColumnFamilyHandles()[consts.DefaultCFNum], givenKey, givenValue)
-	err := batch.Write()
+	size, err := batch.Write()
+	require.Equal(1, size)
 	require.Nil(err, "Batch MetaColumnFamily Write Error : %v", err)
 
 	actualValue, err := suite.DB.GetDataFromColumnFamily(consts.DefaultCFNum, givenKey)
