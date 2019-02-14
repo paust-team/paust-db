@@ -1,6 +1,6 @@
 # Make docker image
 build-image:
-	docker build --no-cache -t local-paust-db .
+	docker build -t local-paust-db .
 
 # Run a 4-node testnet locally
 localnet-start: localnet-stop

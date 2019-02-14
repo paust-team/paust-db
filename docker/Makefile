@@ -1,6 +1,6 @@
 # Make docker image
 build-image:
-	docker build --no-cache -t paust-db ../.
+	docker build -t paust-db ../.
 
 # Init tendermint config
 init:
@@ -8,7 +8,7 @@ init:
 
 # Config for Clustering
 cluster:
-	docker run --rm -v ${CURDIR}/build:/tendermint:Z paust-db testnet --o .
+	docker run --rm -v ${CURDIR}/build:/tendermint:Z paust-db testnet --v 4 --o ./cluster
 
 # Run a 4-node testnet locally
 node-start: node-stop
