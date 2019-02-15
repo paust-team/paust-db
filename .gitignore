@@ -1,2 +1,4 @@
 .idea
 *.iml
+docker/build
+docker/localnet/build
