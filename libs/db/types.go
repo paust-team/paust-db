@@ -36,7 +36,7 @@ type DB interface {
 
 type Batch interface {
 	SetColumnFamily(cf *gorocksdb.ColumnFamilyHandle, key, value []byte)
-	Write() error
+	Write() (int, error)
 }
 
 //----------------------------------------
