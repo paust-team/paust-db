@@ -1,4 +1,4 @@
-FROM golang:1.10-alpine3.8
+FROM golang:1.11.5-alpine3.9
 MAINTAINER andrew <andrew.joo@paust.io>
 
 #ENV for gorocksdb
@@ -26,9 +26,9 @@ RUN ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
 # install paust-db
 RUN go get github.com/paust-team/paust-db/cmd/paust-db
 
-# install tendermint v0.27.4
+# install tendermint v0.30.0
 WORKDIR /go/src/github.com/tendermint/tendermint
-RUN git checkout v0.27.4
+RUN git checkout v0.30.0
 RUN make get_tools
 RUN make get_vendor_deps
 RUN make install
