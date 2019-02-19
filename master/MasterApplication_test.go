@@ -75,10 +75,13 @@ func (suite *MasterSuite) SetupSuite() {
 func (suite *MasterSuite) SetupTest() {
 	require := suite.Require()
 
+	var err error
+
 	os.RemoveAll(testDir)
 	os.Mkdir(testDir, perm)
-	suite.app = master.NewMasterApplication(true, testDir, log.AllowDebug())
+	suite.app, err = master.NewMasterApplication(true, testDir, log.AllowDebug())
 	require.NotNil(suite.app, "app should not be nil")
+	require.Nil(err, "err: %+v", err)
 }
 
 func (suite *MasterSuite) TearDownTest() {
