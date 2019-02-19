@@ -28,12 +28,14 @@ type MasterApplication struct {
 	logger log.Logger
 }
 
-func NewMasterApplication(serial bool, dir string, option log.Option) *MasterApplication {
+func NewMasterApplication(serial bool, dir string, option log.Option) (*MasterApplication, error) {
 	hash := make([]byte, 8)
+	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
+		return nil, errors.Wrap(err, "make directory failed")
+	}
 	database, err := db.NewCRocksDB(consts.DBName, dir)
-
 	if err != nil {
-		fmt.Println(err)
+		return nil, errors.Wrap(err, "NewCRocksDB err")
 	}
 
 	binary.BigEndian.PutUint64(hash, rand.Uint64())
@@ -42,7 +44,7 @@ func NewMasterApplication(serial bool, dir string, option log.Option) *MasterApp
 		hash:   hash,
 		db:     database,
 		logger: log.NewFilter(log.NewPDBLogger(log.NewSyncWriter(os.Stdout)), option),
-	}
+	}, nil
 }
 
 func (app *MasterApplication) Info(req abciTypes.RequestInfo) abciTypes.ResponseInfo {
@@ -199,7 +201,7 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 			Qualifier []byte `json:"qualifier"`
 		}
 		if err := json.Unmarshal(itr.Value(), &metaValue); err != nil {
-			return nil, errors.Wrap(err, "metaValue unmarshal err: ")
+			return nil, errors.Wrap(err, "metaValue unmarshal err")
 		}
 
 		metaObj.RowKey = make([]byte, len(itr.Key()))
@@ -247,7 +249,7 @@ func (app *MasterApplication) realDataFetch(fetchObj types.FetchObj) ([]types.Re
 		realDataObj.RowKey = rowKey
 		valueSlice, err := app.db.GetDataFromColumnFamily(consts.RealCFNum, rowKey)
 		if err != nil {
-			return nil, errors.Wrap(err, "GetDataFromColumnFamily err: ")
+			return nil, errors.Wrap(err, "GetDataFromColumnFamily err")
 		}
 		realDataObj.Data = make([]byte, valueSlice.Size())
 		copy(realDataObj.Data, valueSlice.Data())

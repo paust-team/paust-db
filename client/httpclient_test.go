@@ -31,7 +31,8 @@ type ClientTestSuite struct {
 func (suite *ClientTestSuite) SetupSuite() {
 	testDir = "/tmp/" + cmn.RandStr(4)
 	os.MkdirAll(testDir, os.ModePerm)
-	app := master.NewMasterApplication(true, testDir, log.AllowDebug())
+	app, err := master.NewMasterApplication(true, testDir, log.AllowDebug())
+	suite.Require().Nil(err, "err: %+v", err)
 	node = rpctest.StartTendermint(app)
 
 	rand.Seed(0)
