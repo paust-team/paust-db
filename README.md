@@ -1,153 +1,159 @@
-# paust-db
+# Paust DB
 
-paust-db
+Paust DB is a blockchain based a decentralized database platform for continuous timeseries.
 
-## Getting Started
+Paust DB는 하나의 연속적인 Timeseries를 블록체인 내에서 관리한다. 각 부분적인 Timeseries에 대해서 사용자가 자신의 데이터를 기록하고 있고 사용자는 권한에 따라 허가된 부분적인 Timeseries에 접근하여 데이터를 조회하고 가져올 수 있다. DApp이 이 플랫폼을 이용한다면 블록체인 환경내에서 실시간 데이터 처리를 위해 상태를 저장하거나 다시 이전에 있었던 시계열 데이터를 가져와서 처리하기에 용이하다. 
 
-These instructions will get you a copy of the project up and running on your local machine(MacOS 10.14.2) for development and testing purposes.
+## Features
+- 하나의 연속적인 Timeseries를 실시간으로 관리
+- Timeseries에 대해 Data를 기록하고 조회 가능
+- (TBD) 대용량의 Timeseries에 대하여 빠른 데이터 조회 가능
+- (TBD) 정책에 따라 자신에게 맞는 시계열 데이터베이스 구축
 
-### Prerequisites
-
-You'll need `go` [installed](https://golang.org/doc/install) and `tendermint` [installed](https://tendermint.com/docs/introduction/install.html).
-
-To install RocksDB library, run
-
-```bash
-brew install snappy zlib bzip2 lz4 zstd
-git clone https://github.com/facebook/rocksdb.git
-cd rocksdb
-make static_lib
-make install-static
+## Installation(Mac OS)
+linux(ubuntu, alpine 등) 지원 예정
+### Install go
+안정성을 위해 1.11.5 설치 추천(https://golang.org/doc/install)
+* Set env for go
+```shell
+mkdir ~/go
+echo 'export GOPATH="$HOME/go"' >> ~/.bash_profile
+echo 'export PATH="$PATH:$GOPATH/bin"' >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-To get source code, run
-```bash
-go get -u github.com/paust-team/paust-db
-cd $GOPATH/src/github.com/paust-team/paust-db
+### Install rocksdb
+* rocksdb dependency install using homebrew
+```
+brew install snappy zlib bzip2 lz4 zstd cmake
+```
+* 5.17.2 version의 rocksdb를 clone한 후 cmake를 이용해 build
+```
+cd ~
+git clone https://github.com/facebook/rocksdb.git -b v5.17.2
+mkdir ~/rocksdb/build && cd ~/rocksdb/build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DWITH_GFLAGS=OFF -DWITH_TESTS=OFF ..
+make install
+ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
+```
+### Set env for gorocksdb
+```shell
+echo 'export CGO_CFLAGS="-I/usr/local/include"' >> ~/.bash_profile
+echo 'export CGO_LDFLAGS="-L/usr/local/lib -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy -llz4 -lzstd"' >> ~/.bash_profile
+source ~/.bash_profile
 ```
 
-To compile and put the binary in `$GOPATH/bin`, run
-
-```bash
-CGO_CFLAGS="-I/usr/local/include/rocksdb" \
-CGO_LDFLAGS="-L/usr/local/lib -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy -llz4 -lzstd" \
-go install
+### Install paust-db
+```
+go get github.com/paust-team/paust-db/cmd/paust-db
 ```
 
-`paust-db` is now installed.
-
-```bash
-$ paust-db
-Paust DB
-
-Usage:
-  paust-db [command]
-
-Available Commands:
-  client      Paust DB Client Application
-  help        Help about any command
-  master      Paust DB Master Application
-
-Flags:
-  -h, --help   help for paust-db
-
-Use "paust-db [command] --help" for more information about a command.
+### Install tendermint
+```
+cd $GOPATH/src/github.com/tendermint/tendermint
+git checkout v0.30.0
+make get_tools
+make get_vendor_deps
+make install
 ```
 
-To compile easily without flags, set environment variables in your shell start script like
-
-```bash
-export CGO_CFLAGS="-I/usr/local/include/rocksdb"
-export CGO_LDFLAGS="-L/usr/local/lib -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy -llz4 -lzstd"
+### Run
+* run paust-db
 ```
-
-## Running the tests
-
-Start paust-db master application at one terminal: 
-```bash
 paust-db master
 ```
-
-Start tendermint node at another terminal:
-
-```bash
+* run tendermint
+```
+tendermint unsafe_reset_all
 tendermint init
 tendermint node
 ```
 
-### Write test
-
-Write 3 data set:
-
-```bash
-echo "[
-        {"timestamp":1544772882435375000,"userKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","type":"cpu","data":"YWJj"},
-        {"timestamp":1544772960049177000,"userKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","type":"mem","data":"ZGVm"},
-        {"timestamp":1544772967331458000,"userKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","type":"speed","data":"Z2hp"}
-]" | paust-db client write -s
+## Quick start
+### Install client cli
+다음 명령어를 통해서 paust-db-client 를 install 하여 local 환경에서 cli 테스트를 할 수 있음 
+자세한 cli 명령어는 [client](https://github.com/paust-team/paust-db/tree/master/client)에서 확인할 수 있음
+```
+go get github.com/paust-team/paust-db/client/cmd/paust-db-client
+```
+### Put
+스트림을 이용한 Json data를 Put 하는 example
+```
+$ echo '[
+        {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"Y3B1","data":"YWJj"},
+        {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"bWVt","data":"ZGVm"},
+        {"timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"c3BlZWQ=","data":"Z2hp"}
+]' | paust-db-client put -s
+Read json data from STDIN
+put success.
 ```
 
-### Read test
-
-Read all data from `1544770000000000000` to `1544773000000000000`:
-
-```bash
-$ paust-db client query realdata 1544770000000000000 1544773000000000000
-{
-	"response": {
-		"value": "W3sidGltZXN0YW1wIjoxNTQ0NzcyODgyNDM1Mzc1MDAwLCJ1c2VyS2V5IjoiTndkVGYrUzkrSDVsc0I2VXMrczVZMUNoZEIxYUtFQ0E2Z3N5R0NhOFNDTT0iLCJ0eXBlIjoiY3B1IiwiZGF0YSI6IllXSmoifSx7InRpbWVzdGFtcCI6MTU0NDc3Mjk2MDA0OTE3NzAwMCwidXNlcktleSI6Im1uaEtjVVduUjFpWVRtNm80U0ovWDBGVjY3UUZJeXRwTEIwM0VtV00xQ1k9IiwidHlwZSI6Im1lbSIsImRhdGEiOiJaR1ZtIn0seyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjczMzE0NTgwMDAsInVzZXJLZXkiOiJhRncrbzJ6MTNMRkNYems3SHB0Rm9PWTU0czdWR0RlUVFWbzMyUkVQRkNVPSIsInR5cGUiOiJzcGVlZCIsImRhdGEiOiJaMmhwIn1d"
-	}
-}
+### Query
+time range 사이의 ownerkey가 mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= 이고, qualifier가 bWVt인 item을 Query하는 example
+```
+$ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q bWVt
+query success.
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"bWVt"}]
 ```
 
-Decode value from base64 format:
-
-```json
-[{"timestamp":1544772882435375000,"userKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","type":"cpu","data":"YWJj"},{"timestamp":1544772960049177000,"userKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","type":"mem","data":"ZGVm"},{"timestamp":1544772967331458000,"userKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","type":"speed","data":"Z2hp"}]
+### Fetch
+query를 통하여 받은 id인 eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0= 를 이용해 실제 data를 fetch하는 example
+```
+$ paust-db-client fetch eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=
+Read data from cli arguments
+fetch success.
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"data":"ZGVm"}]
 ```
 
-***
-
-Read all data which `type` is `cpu` from `1544770000000000000` to `1544773000000000000`:
-
-```bash
-$ paust-db client query realdata 1544770000000000000 1544773000000000000 -t cpu
-{
-	"response": {
-		"value": "W3sidGltZXN0YW1wIjoxNTQ0NzcyODgyNDM1Mzc1MDAwLCJ1c2VyS2V5IjoiTndkVGYrUzkrSDVsc0I2VXMrczVZMUNoZEIxYUtFQ0E2Z3N5R0NhOFNDTT0iLCJ0eXBlIjoiY3B1IiwiZGF0YSI6IllXSmoifV0="
-	}
-}
+## Clustering
+### Setup
+#### Run paust-db
+```
+paust-db master
+```
+#### Network configuration
+validators를 genesis.json에 설정하고, config.toml에 통신을 위한 seeds를 설정함
+```
+# n : validator의 수
+tendermint testnet -v n
+```
+`./mytestnet`에 있는 n개의 node 정보를 n개의 node에 각각 Copy한 후(ex. node0 directory는 첫 번째 node, node1 directory는 두 번째 node, ...) 각 node에서 아래의 command 실행
+```
+tendermint node
 ```
 
-Decode value from base64 format:
-
-```json
-[{"timestamp":1544772882435375000,"userKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","type":"cpu","data":"YWJj"}]
+### Node 추가
+non-validator인 node 추가를 위해 초기 설정을 생성한 후 genesis.json 파일과 seeds를 추가하여야 한다.
+```
+tendermint init
+```
+초기 구축 node의 `ip:port/genesis`의 http response로 genesis.json파일을 수정한다.
+초기 구축 node의 `ip:port/status`의 http response에서 node_info object의 id를 얻는다.
+```
+tendermint node --p2p.seeds ID@IP:PORT
 ```
 
-***
+### Docker Support
+- [docker guide](/docker/README.md)
+- 위의 Installation 과정을 최소화 할 수 있도록 Docker Image 제공
+- Docker를 통한 multi node clustering 을 테스트 할 수 있도록 localnet 테스트 지원
 
-Read all data which `userKey` is `mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=` from `1544770000000000000` to `1544773000000000000`:
 
-```bash
-$ paust-db client query realdata 1544770000000000000 1544773000000000000 -p mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=
-{
-	"response": {
-		"value": "W3sidGltZXN0YW1wIjoxNTQ0NzcyOTYwMDQ5MTc3MDAwLCJ1c2VyS2V5IjoibW5oS2NVV25SMWlZVG02bzRTSi9YMEZWNjdRRkl5dHBMQjAzRW1XTTFDWT0iLCJ0eXBlIjoibWVtIiwiZGF0YSI6IlpHVm0ifV0="
-	}
-}
-```
-
-Decode value from base64 format:
-
-```json
-[{"timestamp":1544772960049177000,"userKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","type":"mem","data":"ZGVm"}]
-```
+## Contributing
+- Welcome PR
+- Owner 명시(PAUST Inc.) www.paust.io
 
 ## License
+- PaustDB(master) is GPLv3-style licensed, as found in the [LICENSE](https://github.com/paust-team/paust-db/LICENSE) file.
+- PaustDB(client) is LGPL-style licensed, as found in the [LICENSE](https://github.com/paust-team/paust-db/client/LICENSE) file.
 
-GPLv3
+## Third-party
+
+* go(https://github.com/golang/go)
+* tendermint(https://github.com/tendermint/tendermint)
+* gorocksdb(https://github.com/tecbot/gorocksdb)
+* testify(https://github.com/stretchr/testify)
+* corbra(https://github.com/spf13/cobra)
+* kit(https://github.com/go-kit/kit)
+* logfmt(https://github.com/go-logfmt/logfmt)
+* errors(https://github.com/pkg/errors)
