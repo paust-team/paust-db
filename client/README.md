@@ -1,4 +1,4 @@
-# client
+# Paust-DB Client
 * [godoc for client](https://godoc.org/github.com/paust-team/paust-db/client)
 ## Client Interface
 ```go
