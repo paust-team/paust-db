@@ -14,9 +14,9 @@ Paust DB는 하나의 연속적인 Timeseries를 블록체인 내에서 관리�
 
 Requirement|Version
 ---|---
-Golang | 1.11.5
-Tendermint | 0.30.0
-Rocksdb | 5.17.2
+Golang | 1.11.5 or higher
+Tendermint | 0.29.0 or higher
+Rocksdb | 5.17.2 or higher
 
 
 ## Installation
