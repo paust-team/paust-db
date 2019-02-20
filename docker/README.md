@@ -16,7 +16,7 @@ make build-image
 ```
 ### Start one instance
 ```
-docker run --rm -v /tmp:/tendermint:Z paust-db init
+docker run --rm -v ~/build:/tendermint:Z paust-db init
 docker run -p "26656-26657":"26656-26657" --rm -v /tmp:/tendermint:Z paust-db 
 ```
 ### Local Cluster
