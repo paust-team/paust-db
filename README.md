@@ -131,9 +131,9 @@ fetch success.
 ## Docker Support
 [Docker Guide](/docker/README.md)
 
-1. Single Node (for test)
-2. Multi-Node Clustering on Single Host (for test)
-3. Multi-Node Clustering
+- Single Node (for test)
+- Multi-Node Clustering on Single Host (for test)
+- Multi-Node Clustering
 
 
 ## Contributing
