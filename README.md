@@ -86,9 +86,29 @@ tendermint node
 ```
 
 ### Status
-tm-monitor를 이용해 paust-db의 core인 tendermint의 상태(특정 노드의 block height, the number of validators, health 등)를 모니터할 수 있음
+tm-monitor를 이용해 paust-db의 core인 tendermint의 상태 체크 가능 
+tendermint 가 정상작동 중이면 paust-db daemon 또한 정상 작동중임
 
-(tm-monitor)[https://github.com/tendermint/tools/tree/master/tm-monitor]
+- [Install](https://github.com/tendermint/tools/tree/master/tm-monitor)
+
+- Run
+```
+tm-monitor localhost:26657
+```
+- Result
+```
+2019-02-20 20:13:14.50251 +0900 KST m=+0.074827320 up 100.00%
+
+Height: 49
+Avg block time: 1000.000 ms
+Avg tx throughput: 0 per sec
+Avg block latency: 0.154 ms
+Active nodes: 1/1 (health: moderate) Validators: 1
+
+NAME                HEIGHT     BLOCK LATENCY     ONLINE     VALIDATOR     
+localhost:26657     49         0.221 ms          true       true  
+
+```
 
 **주의** localnet clustering의 경우 bridge network를 사용하기 때문에 docker가 아닌 binary install을 통해 monitor 해야 함
 
