@@ -85,6 +85,13 @@ tendermint init
 tendermint node
 ```
 
+### Status
+tm-monitor를 이용해 paust-db의 core인 tendermint의 상태(특정 노드의 block height, the number of validators, health 등)를 모니터할 수 있음
+
+(tm-monitor)[https://github.com/tendermint/tools/tree/master/tm-monitor]
+
+**주의** localnet clustering의 경우 bridge network를 사용하기 때문에 docker가 아닌 binary install을 통해 monitor 해야 함
+
 ## Quick start
 ### Install client cli
 다음 명령어를 통해서 paust-db-client 를 install 하여 local 환경에서 cli 테스트를 할 수 있음 
