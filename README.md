@@ -141,8 +141,8 @@ fetch success.
 - Owner 명시(PAUST Inc.) www.paust.io
 
 ## License
-- PaustDB(master) is GPLv3-style licensed, as found in the [LICENSE](https://github.com/paust-team/paust-db/LICENSE) file.
-- PaustDB(client) is LGPL-style licensed, as found in the [LICENSE](https://github.com/paust-team/paust-db/client/LICENSE) file.
+- PaustDB(master) is GPLv3-style licensed, as found in the [LICENSE](LICENSE) file.
+- PaustDB(client) is LGPL-style licensed, as found in the [LICENSE](/client/LICENSE) file.
 
 ## Third-party
 
