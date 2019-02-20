@@ -128,38 +128,12 @@ fetch success.
 [{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"data":"ZGVm"}]
 ```
 
-## Clustering
-### Setup
-#### Run paust-db
-```
-paust-db master
-```
-#### Network configuration
-validators를 genesis.json에 설정하고, config.toml에 통신을 위한 seeds를 설정함
-```
-# n : validator의 수
-tendermint testnet -v n
-```
-`./mytestnet`에 있는 n개의 node 정보를 n개의 node에 각각 Copy한 후(ex. node0 directory는 첫 번째 node, node1 directory는 두 번째 node, ...) 각 node에서 아래의 command 실행
-```
-tendermint node
-```
+## Docker Support
+[Docker Guide](/docker/README.md)
 
-### Node 추가
-non-validator인 node 추가를 위해 초기 설정을 생성한 후 genesis.json 파일과 seeds를 추가하여야 한다.
-```
-tendermint init
-```
-초기 구축 node의 `ip:port/genesis`의 http response로 genesis.json파일을 수정한다.
-초기 구축 node의 `ip:port/status`의 http response에서 node_info object의 id를 얻는다.
-```
-tendermint node --p2p.seeds ID@IP:PORT
-```
-
-### Docker Support
-- [docker guide](/docker/README.md)
-- 위의 Installation 과정을 최소화 할 수 있도록 Docker Image 제공
-- Docker를 통한 multi node clustering 을 테스트 할 수 있도록 localnet 테스트 지원
+1. Single Node (for test)
+2. Multi-Node Clustering on Single Host (for test)
+3. Multi-Node Clustering
 
 
 ## Contributing
