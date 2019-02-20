@@ -10,8 +10,16 @@ Paust DB는 하나의 연속적인 Timeseries를 블록체인 내에서 관리�
 - (TBD) 대용량의 Timeseries에 대하여 빠른 데이터 조회 가능
 - (TBD) 정책에 따라 자신에게 맞는 시계열 데이터베이스 구축
 
-## Installation(Mac OS)
-linux(ubuntu, alpine 등) 지원 예정
+## Requirements
+
+Requirement|Version
+---|---
+Golang | 1.11.5
+Tendermint | 0.30.0
+Rocksdb | 5.17.2
+
+
+## Installation
 ### Install go
 안정성을 위해 1.11.5 설치 추천(https://golang.org/doc/install)
 * Set env for go
@@ -23,11 +31,19 @@ source ~/.bash_profile
 ```
 
 ### Install rocksdb
-* rocksdb dependency install using homebrew
-```
+#### Rocksdb dependency install
+zlib, bzip2, lz4, zstandard, snappy
+
+* Mac OS
+```shell
 brew install snappy zlib bzip2 lz4 zstd cmake
 ```
-* 5.17.2 version의 rocksdb를 clone한 후 cmake를 이용해 build
+* Ubuntu
+```shell
+sudo apt-get install libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+```
+
+#### 5.17.2 version의 rocksdb를 clone한 후 cmake를 이용해 build
 ```
 cd ~
 git clone https://github.com/facebook/rocksdb.git -b v5.17.2
