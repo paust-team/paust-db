@@ -50,6 +50,7 @@ $ git clone https://github.com/facebook/rocksdb.git -b v5.17.2
 $ mkdir ~/rocksdb/build && cd ~/rocksdb/build
 $ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DWITH_GFLAGS=OFF -DWITH_TESTS=OFF ..
 $ make install
+mac os의 경우 아래의 과정을 할 필요가 없음.
 $ ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
 ```
 ### Set env for gorocksdb
