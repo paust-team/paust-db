@@ -32,7 +32,3 @@ make localnet-start
 
 ### Multi-Node Clustering
 
-## Deployment
-아래를 참고하길 바람
-
-https://tendermint.com/docs/networks/terraform-and-ansible.html#ansible
