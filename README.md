@@ -24,10 +24,10 @@ Rocksdb | 5.17.2 or higher
 안정성을 위해 1.11.5 설치 추천(https://golang.org/doc/install)
 * Set env for go
 ```shell
-mkdir ~/go
-echo 'export GOPATH="$HOME/go"' >> ~/.bash_profile
-echo 'export PATH="$PATH:$GOPATH/bin"' >> ~/.bash_profile
-source ~/.bash_profile
+$ mkdir ~/go
+$ echo 'export GOPATH="$HOME/go"' >> ~/.bash_profile
+$ echo 'export PATH="$PATH:$GOPATH/bin"' >> ~/.bash_profile
+$ source ~/.bash_profile
 ```
 
 ### Install rocksdb
@@ -36,53 +36,53 @@ zlib, bzip2, lz4, zstandard, snappy
 
 * Mac OS
 ```shell
-brew install snappy zlib bzip2 lz4 zstd cmake
+$ brew install snappy zlib bzip2 lz4 zstd cmake
 ```
 * Ubuntu
 ```shell
-sudo apt-get install libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
+$ sudo apt-get install libsnappy-dev zlib1g-dev libbz2-dev liblz4-dev libzstd-dev
 ```
 
 #### 5.17.2 version의 rocksdb를 clone한 후 cmake를 이용해 build
-```
-cd ~
-git clone https://github.com/facebook/rocksdb.git -b v5.17.2
-mkdir ~/rocksdb/build && cd ~/rocksdb/build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DWITH_GFLAGS=OFF -DWITH_TESTS=OFF ..
-make install
-ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
+```shell
+$ cd ~
+$ git clone https://github.com/facebook/rocksdb.git -b v5.17.2
+$ mkdir ~/rocksdb/build && cd ~/rocksdb/build
+$ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DWITH_GFLAGS=OFF -DWITH_TESTS=OFF ..
+$ make install
+$ ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
 ```
 ### Set env for gorocksdb
 ```shell
-echo 'export CGO_CFLAGS="-I/usr/local/include"' >> ~/.bash_profile
-echo 'export CGO_LDFLAGS="-L/usr/local/lib -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy -llz4 -lzstd"' >> ~/.bash_profile
-source ~/.bash_profile
+$ echo 'export CGO_CFLAGS="-I/usr/local/include"' >> ~/.bash_profile
+$ echo 'export CGO_LDFLAGS="-L/usr/local/lib -lrocksdb -lstdc++ -lm -lz -lbz2 -lsnappy -llz4 -lzstd"' >> ~/.bash_profile
+$ source ~/.bash_profile
 ```
 
 ### Install paust-db
-```
-go get github.com/paust-team/paust-db/cmd/paust-db
+```shell
+$ go get github.com/paust-team/paust-db/cmd/paust-db
 ```
 
 ### Install tendermint
-```
-cd $GOPATH/src/github.com/tendermint/tendermint
-git checkout v0.30.0
-make get_tools
-make get_vendor_deps
-make install
+```shell
+$ cd $GOPATH/src/github.com/tendermint/tendermint
+$ git checkout v0.30.0
+$ make get_tools
+$ make get_vendor_deps
+$ make install
 ```
 
 ### Run
 * run paust-db
-```
-paust-db master
+```shell
+$ paust-db master
 ```
 * run tendermint
-```
-tendermint unsafe_reset_all
-tendermint init
-tendermint node
+```shell
+$ tendermint unsafe_reset_all
+$ tendermint init
+$ tendermint node
 ```
 
 ### Status
@@ -92,8 +92,8 @@ tendermint 가 정상작동 중이면 paust-db daemon 또한 정상 작동중임
 - [Install](https://github.com/tendermint/tools/tree/master/tm-monitor)
 
 - Run
-```
-tm-monitor localhost:26657
+```shell
+$ tm-monitor localhost:26657
 ```
 - Result
 ```
@@ -116,12 +116,12 @@ localhost:26657     49         0.221 ms          true       true
 ### Install client cli
 다음 명령어를 통해서 paust-db-client 를 install 하여 local 환경에서 cli 테스트를 할 수 있음 
 자세한 cli 명령어는 [client](https://github.com/paust-team/paust-db/tree/master/client)에서 확인할 수 있음
-```
-go get github.com/paust-team/paust-db/client/cmd/paust-db-client
+```shell
+$ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 ```
 ### Put
 스트림을 이용한 Json data를 Put 하는 example
-```
+```shell
 $ echo '[
         {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"Y3B1","data":"YWJj"},
         {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"bWVt","data":"ZGVm"},
@@ -141,7 +141,7 @@ query success.
 
 ### Fetch
 query를 통하여 받은 id인 eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0= 를 이용해 실제 data를 fetch하는 example
-```
+```shell
 $ paust-db-client fetch eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=
 Read data from cli arguments
 fetch success.
