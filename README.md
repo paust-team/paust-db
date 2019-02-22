@@ -90,7 +90,7 @@ $ tendermint node
 tm-monitor를 이용해 paust-db의 core인 tendermint의 상태 체크 가능 
 tendermint 가 정상작동 중이면 paust-db daemon 또한 정상 작동중임
 
-- [Install](https://github.com/tendermint/tools/tree/master/tm-monitor)
+- [Install](https://github.com/tendermint/tendermint/tree/master/tools/tm-monitor)
 
 - Run
 ```shell
