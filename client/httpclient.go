@@ -27,7 +27,7 @@ func NewHTTPClient(remote string) *HTTPClient {
 	}
 }
 
-func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTx, error) {
+func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error) {
 	var baseDataObjs []types.BaseDataObj
 	for _, dataObj := range dataObjs {
 		if len(dataObj.OwnerKey) != consts.OwnerKeyLen {
@@ -45,7 +45,7 @@ func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastT
 		return nil, errors.Wrap(err, "marshal failed")
 	}
 
-	bres, err := client.rpcClient.BroadcastTxSync(jsonBytes)
+	bres, err := client.rpcClient.BroadcastTxCommit(jsonBytes)
 	return bres, err
 }
 

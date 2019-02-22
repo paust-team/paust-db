@@ -7,7 +7,6 @@ import (
 	"github.com/paust-team/paust-db/client/util"
 	"github.com/paust-team/paust-db/consts"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/abci/example/code"
 	"golang.org/x/crypto/ed25519"
 	"os"
 	"strconv"
@@ -114,11 +113,15 @@ var putCmd = &cobra.Command{
 					fmt.Printf("%s: Put err: %v\n", path, err)
 					continue
 				}
-				if res.Code == code.CodeTypeOK {
-					fmt.Printf("%s: put success.\n", path)
-				} else {
+				switch {
+				case res.CheckTx.IsErr():
 					fmt.Printf("%s: put fail.\n", path)
-					fmt.Println(res.Log)
+					fmt.Println(res.CheckTx.Log)
+				case res.DeliverTx.IsErr():
+					fmt.Printf("%s: put fail.\n", path)
+					fmt.Println(res.DeliverTx.Log)
+				default:
+					fmt.Printf("%s: put success.\n", path)
 				}
 			}
 		} else {
@@ -127,11 +130,15 @@ var putCmd = &cobra.Command{
 				fmt.Printf("Put err: %v\n", err)
 				os.Exit(1)
 			}
-			if res.Code == code.CodeTypeOK {
-				fmt.Println("put success.")
-			} else {
+			switch {
+			case res.CheckTx.IsErr():
 				fmt.Println("put fail.")
-				fmt.Println(res.Log)
+				fmt.Println(res.CheckTx.Log)
+			case res.DeliverTx.IsErr():
+				fmt.Println("put fail.")
+				fmt.Println(res.DeliverTx.Log)
+			default:
+				fmt.Println("put success.")
 			}
 		}
 	},
@@ -174,7 +181,7 @@ var queryCmd = &cobra.Command{
 			fmt.Printf("Query err: %v\n", err)
 			os.Exit(1)
 		}
-		if res.Response.Code != code.CodeTypeOK {
+		if res.Response.IsErr() {
 			fmt.Println("query fail.")
 			fmt.Println(res.Response.Log)
 			os.Exit(1)
@@ -243,7 +250,7 @@ var fetchCmd = &cobra.Command{
 			fmt.Printf("Fetch err: %v\n", err)
 			os.Exit(1)
 		}
-		if res.Response.Code != code.CodeTypeOK {
+		if res.Response.IsErr() {
 			fmt.Println("fetch fail.")
 			fmt.Println(res.Response.Log)
 			os.Exit(1)
