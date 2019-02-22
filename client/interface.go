@@ -7,8 +7,8 @@ import (
 
 // Client는 paust-db와 communicate하는 기본적인 client임
 type Client interface {
-	// Put는 InputDataObj slice의 데이터를 write하고 그 결과를 tendermint의 ResultBroadcastTx로 return.
-	Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTx, error)
+	// Put는 InputDataObj slice의 데이터를 write하고 그 결과를 tendermint의 ResultBroadcastTxCommit로 return.
+	Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error)
 
 	// Query는 start와 end사이에 있는 데이터의 metadata를 ResultABCIQuery에 담아서 return.
 	// ownerKey와 qualifier가 명시된 경우 해당 ownerKey, qualifier와 일치하는 데이터만을 read.
