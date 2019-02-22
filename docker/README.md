@@ -105,9 +105,10 @@ docker run --rm -v ~/build:/tendermint:Z paust-db init
 curl ip0:26657/genesis | jq .result.genesis > ~/build/node0/config/genesis.json
 ```
 - 통신할 seed(초기 구축 node)를 추가
+
 ~/build/node0/config/config.toml 파일의 seeds field를 "node_id@ip0:26656" 형식으로 추가
 
-node_id
+node_id는 해당 노드의 config.toml의 persistent_peers(node_id@ip:port)에서 얻을 수 있음
 
 - Run paust-db on node4 as a non-validator
 ```shell
