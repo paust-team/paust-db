@@ -117,6 +117,10 @@ docker run --rm -p "26656-26657":"26656-26657" --name node4 -v ~/build:/tendermi
 
 #### Monitoring
 [tm-monitor](https://github.com/tendermint/tendermint/tree/master/tools/tm-monitor)를 이용하여 추가된 노드를 비롯해 5개의 node를 한번에 monitor할 수 있음
-```
+```shell
 tm-monitor ip0:26657,ip1:26657,ip2:26657,ip3:26657,ip4:26657
+```
+docker로도 monitor가 가능함
+```shell
+docker run -it --rm -p "26670:26670" tendermint/monitor ip0:26657,ip1:26657,ip2:26657,ip3:26657,ip4:26657
 ```
