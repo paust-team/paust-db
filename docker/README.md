@@ -68,9 +68,9 @@ persistent_peers는 node_id@ip:port의 형식을 가지는데 초기 설정에�
 ```shell
 sudo rm -rf ~/build/node0
 sudo cp -r ~/build/cluster/node0 ~/build/node0
-sudo ssh -i /home/ubuntu/paust_test.pem ip1 "mkdir -p ~/build" && sudo scp -i /home/ubuntu/paust_test.pem -r ~/build/cluster/node1 ip1:~/build/node0
-sudo ssh -i /home/ubuntu/paust_test.pem ip2 "mkdir -p ~/build" && sudo scp -i /home/ubuntu/paust_test.pem -r ~/build/cluster/node2 ip2:~/build/node0
-sudo ssh -i /home/ubuntu/paust_test.pem ip3 "mkdir -p ~/build" && sudo scp -i /home/ubuntu/paust_test.pem -r ~/build/cluster/node3 ip3:~/build/node0
+sudo ssh account@ip1 "mkdir -p ~/build" && sudo scp -r ~/build/cluster/node1 account@ip1:~/build/node0
+sudo ssh account@ip2 "mkdir -p ~/build" && sudo scp -r ~/build/cluster/node2 account@ip2:~/build/node0
+sudo ssh account@ip3 "mkdir -p ~/build" && sudo scp -r ~/build/cluster/node3 account@ip3:~/build/node0
 sudo rm -rf ~/build/cluster
 ```
 #### Run paust-db
