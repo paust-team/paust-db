@@ -108,7 +108,9 @@ var putCmd = &cobra.Command{
 		HTTPClient := client.NewHTTPClient(consts.Remote)
 		if inputDataObjMap != nil {
 			for path, inputDataObj := range inputDataObjMap {
+				startTime := time.Now()
 				res, err := HTTPClient.Put(inputDataObj)
+				endTime := time.Now()
 				if err != nil {
 					fmt.Printf("%s: Put err: %v\n", path, err)
 					continue
@@ -121,11 +123,13 @@ var putCmd = &cobra.Command{
 					fmt.Printf("%s: put fail.\n", path)
 					fmt.Println(res.DeliverTx.Log)
 				default:
-					fmt.Printf("%s: put success.\n", path)
+					fmt.Printf("%s: put success. elapsed time: %v\n", path, endTime.Sub(startTime).Round(time.Millisecond).String())
 				}
 			}
 		} else {
+			startTime := time.Now()
 			res, err := HTTPClient.Put(inputDataObjs)
+			endTime := time.Now()
 			if err != nil {
 				fmt.Printf("Put err: %v\n", err)
 				os.Exit(1)
@@ -138,7 +142,7 @@ var putCmd = &cobra.Command{
 				fmt.Println("put fail.")
 				fmt.Println(res.DeliverTx.Log)
 			default:
-				fmt.Println("put success.")
+				fmt.Printf("put success. elapsed time: %v\n", endTime.Sub(startTime).Round(time.Millisecond).String())
 			}
 		}
 	},
@@ -176,7 +180,9 @@ var queryCmd = &cobra.Command{
 		}
 
 		HTTPClient := client.NewHTTPClient(consts.Remote)
+		startTime := time.Now()
 		res, err := HTTPClient.Query(start, end, ownerKey, qualifier)
+		endTime := time.Now()
 		if err != nil {
 			fmt.Printf("Query err: %v\n", err)
 			os.Exit(1)
@@ -187,7 +193,7 @@ var queryCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Println("query success.")
+		fmt.Printf("query success. elapsed time: %v\n", endTime.Sub(startTime).Round(time.Millisecond).String())
 		fmt.Println(string(res.Response.Value))
 	},
 }
@@ -245,7 +251,9 @@ var fetchCmd = &cobra.Command{
 		}
 
 		HTTPClient := client.NewHTTPClient(consts.Remote)
+		startTime := time.Now()
 		res, err := HTTPClient.Fetch(*inputFetchObj)
+		endTime := time.Now()
 		if err != nil {
 			fmt.Printf("Fetch err: %v\n", err)
 			os.Exit(1)
@@ -256,7 +264,7 @@ var fetchCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fmt.Println("fetch success.")
+		fmt.Printf("fetch success. elapsed time: %v\n", endTime.Sub(startTime).Round(time.Millisecond).String())
 		fmt.Println(string(res.Response.Value))
 	},
 }
