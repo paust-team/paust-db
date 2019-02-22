@@ -1,6 +1,6 @@
 # Paust DB
 
-Paust DB is a blockchain based a decentralized database platform for continuous timeseries.
+Paust DB is a blockchain based decentralized database platform for continuous timeseries.
 
 Paust DB는 하나의 연속적인 Timeseries를 블록체인 내에서 관리한다. 각 부분적인 Timeseries에 대해서 사용자가 자신의 데이터를 기록하고 있고 사용자는 권한에 따라 허가된 부분적인 Timeseries에 접근하여 데이터를 조회하고 가져올 수 있다. DApp이 이 플랫폼을 이용한다면 블록체인 환경내에서 실시간 데이터 처리를 위해 상태를 저장하거나 다시 이전에 있었던 시계열 데이터를 가져와서 처리하기에 용이하다. 
 
