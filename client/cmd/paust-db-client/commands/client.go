@@ -66,6 +66,12 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		endpoint, err := cmd.Flags().GetString("endpoint")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
 		if stdin == false && filePath == "" && directoryPath == "" && len(args) == 0 {
 			fmt.Println("you should specify data to put")
 			os.Exit(1)
@@ -105,7 +111,7 @@ var putCmd = &cobra.Command{
 			inputDataObjs = append(inputDataObjs, client.InputDataObj{Timestamp: uint64(time.Now().UnixNano()), OwnerKey: ownerKey, Qualifier: qualifier, Data: []byte(strings.Join(args, " "))})
 		}
 
-		HTTPClient := client.NewHTTPClient(consts.Remote)
+		HTTPClient := client.NewHTTPClient(endpoint)
 		if inputDataObjMap != nil {
 			for path, inputDataObj := range inputDataObjMap {
 				startTime := time.Now()
@@ -179,7 +185,13 @@ var queryCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		HTTPClient := client.NewHTTPClient(consts.Remote)
+		endpoint, err := cmd.Flags().GetString("endpoint")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		HTTPClient := client.NewHTTPClient(endpoint)
 		startTime := time.Now()
 		res, err := HTTPClient.Query(start, end, ownerKey, qualifier)
 		endTime := time.Now()
@@ -211,6 +223,12 @@ var fetchCmd = &cobra.Command{
 		}
 
 		filePath, err := cmd.Flags().GetString("file")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		endpoint, err := cmd.Flags().GetString("endpoint")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -250,7 +268,7 @@ var fetchCmd = &cobra.Command{
 			}
 		}
 
-		HTTPClient := client.NewHTTPClient(consts.Remote)
+		HTTPClient := client.NewHTTPClient(endpoint)
 		startTime := time.Now()
 		res, err := HTTPClient.Fetch(*inputFetchObj)
 		endTime := time.Now()
@@ -291,10 +309,13 @@ func init() {
 	putCmd.Flags().StringP("directory", "d", "", "Directory path")
 	putCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
 	putCmd.Flags().BoolP("recursive", "r", false, "Write all files and folders recursively")
+	putCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	fetchCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
 	fetchCmd.Flags().StringP("file", "f", "", "File path")
+	fetchCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	queryCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
 	queryCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
+	queryCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	ClientCmd.AddCommand(putCmd)
 	ClientCmd.AddCommand(generateCmd)
 	ClientCmd.AddCommand(queryCmd)

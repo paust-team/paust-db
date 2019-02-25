@@ -21,7 +21,6 @@ const (
 
 //Client config 상수
 const (
-	Remote     = "http://localhost:26657"
 	WsEndpoint = "/websocket"
 )
 
