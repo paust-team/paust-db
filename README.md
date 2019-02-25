@@ -114,7 +114,6 @@ localhost:26657     49         0.221 ms          true       true
 
 ```
 
-**주의** localnet clustering의 경우 bridge network를 사용하기 때문에 docker가 아닌 binary install을 통해 monitor 해야 함
 
 ## Quick start
 ### Install client cli
