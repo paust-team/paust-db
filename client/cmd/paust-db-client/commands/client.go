@@ -287,6 +287,26 @@ var fetchCmd = &cobra.Command{
 	},
 }
 
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Check status of paust-db",
+	Run: func(cmd *cobra.Command, args []string) {
+		endpoint, err := cmd.Flags().GetString("endpoint")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		HTTPClient := client.NewHTTPClient(endpoint)
+		_, err = HTTPClient.Query(1, 2, []byte{}, []byte{})
+		if err != nil {
+			fmt.Println("not running")
+		} else {
+			fmt.Println("running")
+		}
+	},
+}
+
 var generateCmd = &cobra.Command{
 	Use:   "generate",
 	Short: "Generate ED25519 Key Pair",
@@ -316,8 +336,10 @@ func init() {
 	queryCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
 	queryCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
 	queryCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
+	statusCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	ClientCmd.AddCommand(putCmd)
 	ClientCmd.AddCommand(generateCmd)
 	ClientCmd.AddCommand(queryCmd)
 	ClientCmd.AddCommand(fetchCmd)
+	ClientCmd.AddCommand(statusCmd)
 }
