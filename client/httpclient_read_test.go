@@ -2,6 +2,7 @@ package client_test
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"github.com/paust-team/paust-db/client"
 	"github.com/paust-team/paust-db/types"
@@ -16,10 +17,14 @@ func (suite *ClientTestSuite) TestClient_Query() {
 
 	mempool := node.MempoolReactor().Mempool
 	timestamp := uint64(time.Now().UnixNano())
+	timestampBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(timestampBytes, timestamp)
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	rowKey, err := json.Marshal(types.KeyObj{Timestamp: timestamp, Salt: 0})
+	salt := make([]byte, 2)
+	binary.BigEndian.PutUint16(salt, 0)
+	rowKey, err := json.Marshal(types.KeyObj{Timestamp: timestampBytes, Salt: salt})
 	require.Nil(err, "json marshal err: %+v", err)
 	tx, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	require.Nil(err, "json marshal err: %+v", err)
@@ -47,10 +52,14 @@ func (suite *ClientTestSuite) TestClient_Fetch() {
 
 	mempool := node.MempoolReactor().Mempool
 	timestamp := uint64(time.Now().UnixNano())
+	timestampBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(timestampBytes, timestamp)
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	rowKey, err := json.Marshal(types.KeyObj{Timestamp: timestamp, Salt: 0})
+	salt := make([]byte, 2)
+	binary.BigEndian.PutUint16(salt, 0)
+	rowKey, err := json.Marshal(types.KeyObj{Timestamp: timestampBytes, Salt: salt})
 	require.Nil(err, "json marshal err: %+v", err)
 	tx, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	require.Nil(err, "json marshal err: %+v", err)

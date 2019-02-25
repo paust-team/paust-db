@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"github.com/paust-team/paust-db/consts"
 	"github.com/paust-team/paust-db/types"
@@ -33,7 +34,11 @@ func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastT
 		if len(dataObj.OwnerKey) != consts.OwnerKeyLen {
 			return nil, errors.Errorf("%s: wrong ownerKey length. Expected %v, got %v", base64.StdEncoding.EncodeToString(dataObj.OwnerKey), consts.OwnerKeyLen, len(dataObj.OwnerKey))
 		}
-		rowKey, err := json.Marshal(types.KeyObj{Timestamp: dataObj.Timestamp, Salt: uint8(rand.Intn(256))})
+		timestamp := make([]byte, 8)
+		binary.BigEndian.PutUint64(timestamp, dataObj.Timestamp)
+		salt := make([]byte, 2)
+		binary.BigEndian.PutUint16(salt, uint16(rand.Intn(65536)))
+		rowKey, err := json.Marshal(types.KeyObj{Timestamp: timestamp, Salt: salt})
 		if err != nil {
 			return nil, errors.Wrap(err, "marshal failed")
 		}
@@ -62,7 +67,11 @@ func (client *HTTPClient) Query(start uint64, end uint64, ownerKey []byte, quali
 		return nil, errors.Errorf("wrong ownerKey length. Expected %v, got %v", consts.OwnerKeyLen, len(ownerKey))
 	}
 
-	jsonBytes, err := json.Marshal(types.QueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
+	startTimestamp := make([]byte, 8)
+	endTimestamp := make([]byte, 8)
+	binary.BigEndian.PutUint64(startTimestamp, start)
+	binary.BigEndian.PutUint64(endTimestamp, end)
+	jsonBytes, err := json.Marshal(types.QueryObj{Start: startTimestamp, End: endTimestamp, OwnerKey: ownerKey, Qualifier: qualifier})
 	if err != nil {
 		return nil, errors.Wrap(err, "marshal failed")
 	}
@@ -119,7 +128,7 @@ func deSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 			if err := json.Unmarshal(metaDataObj.RowKey, &keyObj); err != nil {
 				return nil, errors.Wrap(err, "unmarshal failed")
 			}
-			deserializedMeta = append(deserializedMeta, OutputQueryObj{Id: metaDataObj.RowKey, Timestamp: keyObj.Timestamp, OwnerKey: metaDataObj.OwnerKey, Qualifier: metaDataObj.Qualifier})
+			deserializedMeta = append(deserializedMeta, OutputQueryObj{Id: metaDataObj.RowKey, Timestamp: binary.BigEndian.Uint64(keyObj.Timestamp), OwnerKey: metaDataObj.OwnerKey, Qualifier: metaDataObj.Qualifier})
 		}
 		deserializedObj, err := json.Marshal(deserializedMeta)
 		if err != nil {
@@ -138,7 +147,7 @@ func deSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 			if err := json.Unmarshal(realDataObj.RowKey, &keyObj); err != nil {
 				return nil, errors.Wrap(err, "unmarshal failed")
 			}
-			deserializedReal = append(deserializedReal, OutputFetchObj{Id: realDataObj.RowKey, Timestamp: keyObj.Timestamp, Data: realDataObj.Data})
+			deserializedReal = append(deserializedReal, OutputFetchObj{Id: realDataObj.RowKey, Timestamp: binary.BigEndian.Uint64(keyObj.Timestamp), Data: realDataObj.Data})
 		}
 		deserializedObj, err := json.Marshal(deserializedReal)
 		if err != nil {

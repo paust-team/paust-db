@@ -1,14 +1,15 @@
 package types
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 )
 
 //TODO offset 추가
 type KeyObj struct {
-	Timestamp uint64 `json:"timestamp"`
-	Salt      uint8  `json:"salt"`
+	Timestamp []byte `json:"timestamp"`
+	Salt      []byte `json:"salt"`
 }
 
 type MetaDataObj struct {
@@ -28,8 +29,8 @@ type BaseDataObj struct {
 }
 
 type QueryObj struct {
-	Start     uint64 `json:"start"`
-	End       uint64 `json:"end"`
+	Start     []byte `json:"start"`
+	End       []byte `json:"end"`
 	OwnerKey  []byte `json:"ownerKey"`
 	Qualifier []byte `json:"qualifier"`
 }
@@ -40,8 +41,10 @@ type FetchObj struct {
 
 // 주어진 DataQuery로부터 시작할 지점(startByte)과 마지막 지점(endByte)을 구한다.
 func CreateStartByteAndEndByte(query QueryObj) ([]byte, []byte) {
-	startKeyObj := KeyObj{Timestamp: query.Start}
-	endKeyObj := KeyObj{Timestamp: query.End}
+	salt := make([]byte, 2)
+	binary.BigEndian.PutUint16(salt, 0x0000)
+	startKeyObj := KeyObj{Timestamp: query.Start, Salt: salt}
+	endKeyObj := KeyObj{Timestamp: query.End, Salt: salt}
 
 	startByte, err := json.Marshal(startKeyObj)
 	if err != nil {

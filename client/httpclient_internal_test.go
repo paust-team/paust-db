@@ -2,6 +2,7 @@ package client
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"github.com/paust-team/paust-db/types"
 	"github.com/stretchr/testify/require"
@@ -17,9 +18,15 @@ func TestHTTPClient_deSerializeKeyObj(t *testing.T) {
 	require := require.New(t)
 	var timestamp1 uint64 = 1547772882435375000
 	var timestamp2 uint64 = 1547772960049177000
-	rowKey1, err := json.Marshal(types.KeyObj{Timestamp: timestamp1, Salt: 0})
+	timestampBytes1 := make([]byte, 8)
+	timestampBytes2 := make([]byte, 8)
+	binary.BigEndian.PutUint64(timestampBytes1, timestamp1)
+	binary.BigEndian.PutUint64(timestampBytes2, timestamp2)
+	salt := make([]byte, 2)
+	binary.BigEndian.PutUint16(salt, 0)
+	rowKey1, err := json.Marshal(types.KeyObj{Timestamp: timestampBytes1, Salt: salt})
 	require.Nil(err, "json marshal err: %+v", err)
-	rowKey2, err := json.Marshal(types.KeyObj{Timestamp: timestamp2, Salt: 0})
+	rowKey2, err := json.Marshal(types.KeyObj{Timestamp: timestampBytes2, Salt: salt})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	// MetaDataResObj deserialize

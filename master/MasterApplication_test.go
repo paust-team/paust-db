@@ -2,6 +2,7 @@ package master_test
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"github.com/paust-team/paust-db/libs/log"
 	"github.com/paust-team/paust-db/master"
@@ -45,8 +46,14 @@ func (suite *MasterSuite) SetupSuite() {
 	var err error
 
 	//test data 설정
-	givenKeyObj1 = types.KeyObj{Timestamp: 1545982882435375000, Salt: 0}
-	givenKeyObj2 = types.KeyObj{Timestamp: 1545982882435375001, Salt: 0}
+	timestamp1 := make([]byte, 8)
+	timestamp2 := make([]byte, 8)
+	binary.BigEndian.PutUint64(timestamp1, 1545982882435375000)
+	binary.BigEndian.PutUint64(timestamp2, 1545982882435375001)
+	salt := make([]byte, 2)
+	binary.BigEndian.PutUint16(salt, 0)
+	givenKeyObj1 = types.KeyObj{Timestamp: timestamp1, Salt: salt}
+	givenKeyObj2 = types.KeyObj{Timestamp: timestamp2, Salt: salt}
 
 	givenRowKey1, err = json.Marshal(givenKeyObj1)
 	require.Nil(err)
