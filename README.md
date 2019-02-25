@@ -21,14 +21,10 @@ Rocksdb | 5.17.2 or higher
 
 ## Installation
 ### Install go
-안정성을 위해 1.11.5 설치 추천(https://golang.org/doc/install)
-* Set env for go
-```shell
-$ mkdir ~/go
-$ echo 'export GOPATH="$HOME/go"' >> ~/.bash_profile
-$ echo 'export PATH="$PATH:$GOPATH/bin"' >> ~/.bash_profile
-$ source ~/.bash_profile
-```
+[Install](https://golang.org/doc/install)
+
+[Setting environments](https://github.com/golang/go/wiki/SettingGOPATH)
+
 
 ### Install rocksdb
 #### Rocksdb dependency install
@@ -87,13 +83,23 @@ $ tendermint node
 ```
 
 ### Status
-tm-monitor를 이용해 paust-db의 core인 tendermint의 상태 체크 가능 
-tendermint 가 정상작동 중이면 paust-db daemon 또한 정상 작동중임
+* paust-db-client status
+아래 Quick start guide 를 따라 paust-db-client 를 설치하여 status command 로 health check 가능
+
+* tm-monitor 
+tm-monitor를 이용해 직접 구성한 node 들의 상태를 확인 할 수 있음
+
+```shell
+$ paust-db-client status -E localhost:26657
+```
 
 - [Install](https://github.com/tendermint/tendermint/tree/master/tools/tm-monitor)
 
 - Run
+
 ```shell
+usage: tm-monitor ip:port
+
 $ tm-monitor localhost:26657
 ```
 - Result
