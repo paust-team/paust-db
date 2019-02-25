@@ -10,16 +10,13 @@ Paust DB는 하나의 연속적인 Timeseries를 블록체인 내에서 관리�
 - (TBD) 대용량의 Timeseries에 대하여 빠른 데이터 조회 가능
 - (TBD) 정책에 따라 자신에게 맞는 시계열 데이터베이스 구축
 
-## Requirements
-
+## Prerequisite
 Requirement|Version
 ---|---
 Golang | 1.11.5 or higher
-Tendermint | 0.29.0 or higher
 Rocksdb | 5.17.2 or higher
+Tendermint | 0.29.0 or higher
 
-
-## Installation
 ### Install go
 [Install](https://golang.org/doc/install)
 
@@ -56,11 +53,6 @@ $ echo 'export CGO_LDFLAGS="-L/usr/local/lib -lrocksdb -lstdc++ -lm -lz -lbz2 -l
 $ source ~/.bash_profile
 ```
 
-### Install paust-db
-```shell
-$ go get github.com/paust-team/paust-db/cmd/paust-db
-```
-
 ### Install tendermint
 ```shell
 $ cd $GOPATH/src/github.com/tendermint/tendermint
@@ -68,6 +60,12 @@ $ git checkout v0.30.0
 $ make get_tools
 $ make get_vendor_deps
 $ make install
+```
+
+## Installation
+### Install paust-db
+```shell
+$ go get github.com/paust-team/paust-db/cmd/paust-db
 ```
 
 ### Run
