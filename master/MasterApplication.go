@@ -187,7 +187,21 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 		return nil, errors.Errorf("ownerKey and Qualifier must not be nil")
 	}
 
-	startByte, endByte := types.CreateStartByteAndEndByte(queryObj)
+	// create start and end for iterator
+	salt := make([]byte, 2)
+	binary.BigEndian.PutUint16(salt, 0x0000)
+	startKeyObj := types.KeyObj{Timestamp: queryObj.Start, Salt: salt}
+	endKeyObj := types.KeyObj{Timestamp: queryObj.End, Salt: salt}
+
+	startByte, err := json.Marshal(startKeyObj)
+	if err != nil {
+		return nil, errors.Wrap(err, "startKeyObj marshal err")
+	}
+	endByte, err := json.Marshal(endKeyObj)
+	if err != nil {
+		return nil, errors.Wrap(err, "endKeyObj marshal err")
+	}
+
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandles()[consts.MetaCFNum])
 	//TODO unittest close test
 	defer itr.Close()
