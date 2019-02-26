@@ -92,6 +92,7 @@ Available Commands:
   help        Help about any command
   put         Put data to DB
   query       Query DB for metadata
+  status      Check status of paust-db
 
 Flags:
   -h, --help   help for paust-db-client
@@ -152,6 +153,7 @@ Usage:
 
 Flags:
   -d, --directory string        Directory path
+  -e, --endpoint string         Endpoint of paust-db (default "localhost:26657")
   -f, --file string             File path
   -h, --help                    help for put
   -o, --ownerKey bytesBase64    Base64 encoded ED25519 public key
@@ -202,6 +204,7 @@ Usage:
   paust-db-client query start end [flags]
 
 Flags:
+  -e, --endpoint string         Endpoint of paust-db (default "localhost:26657")
   -h, --help                    help for query
   -o, --ownerKey bytesBase64    Base64 encoded ED25519 public key
   -q, --qualifier bytesBase64   Base64 encoded data qualifier
@@ -252,7 +255,8 @@ Usage:
   paust-db-client fetch [id...] [flags]
 
 Flags:
-  -f, --file string   File path
-  -h, --help          help for fetch
-  -s, --stdin         Input json data from standard input
+  -e, --endpoint string   Endpoint of paust-db (default "localhost:26657")
+  -f, --file string       File path
+  -h, --help              help for fetch
+  -s, --stdin             Input json data from standard input
 ```
