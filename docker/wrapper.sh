@@ -5,8 +5,8 @@
 ##
 ID=${ID:-0}
 LOG=${LOG:-tendermint.log}
-TENDERMINT=$GOPATH/bin/tendermint
-PAUSTDB=$GOPATH/bin/paust-db
+TENDERMINT=/usr/bin/tendermint
+PAUSTDB=/usr/bin/paust-db
 
 export TMHOME="/tendermint/node${ID}"
 
