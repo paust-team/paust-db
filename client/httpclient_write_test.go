@@ -17,7 +17,7 @@ func (suite *ClientTestSuite) TestClient_Put() {
 	data := []byte(cmn.RandStr(8))
 	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
 	require.Nil(err, "base64 decode err: %+v", err)
-	dataObjs := []client.InputDataObj{{Timestamp: timestamp, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier), Data: data}}
+	dataObjs := []client.InputDataObj{{Timestamp: timestamp, OwnerKey: pubKeyBytes, Qualifier: TestQualifier, Data: data}}
 	bres, err := suite.dbClient.Put(dataObjs)
 
 	require.Nil(err, "err: %+v", err)

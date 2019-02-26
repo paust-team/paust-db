@@ -60,7 +60,7 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		qualifier, err := cmd.Flags().GetBytesBase64("qualifier")
+		qualifier, err := cmd.Flags().GetString("qualifier")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -179,7 +179,7 @@ var queryCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		qualifier, err := cmd.Flags().GetBytesBase64("qualifier")
+		qualifier, err := cmd.Flags().GetString("qualifier")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -298,7 +298,7 @@ var statusCmd = &cobra.Command{
 		}
 
 		HTTPClient := client.NewHTTPClient(endpoint)
-		_, err = HTTPClient.Query(1, 2, []byte{}, []byte{})
+		_, err = HTTPClient.Query(1, 2, []byte{}, "")
 		if err != nil {
 			fmt.Println("not running")
 		} else {
@@ -324,7 +324,7 @@ var generateCmd = &cobra.Command{
 
 func init() {
 	putCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
-	putCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
+	putCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	putCmd.Flags().StringP("file", "f", "", "File path")
 	putCmd.Flags().StringP("directory", "d", "", "Directory path")
 	putCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
@@ -334,7 +334,7 @@ func init() {
 	fetchCmd.Flags().StringP("file", "f", "", "File path")
 	fetchCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	queryCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
-	queryCmd.Flags().BytesBase64P("qualifier", "q", nil, "Base64 encoded data qualifier")
+	queryCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	queryCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	statusCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	ClientCmd.AddCommand(putCmd)

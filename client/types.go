@@ -3,10 +3,11 @@ package client
 // InputDataObj는 Put function의 write model.
 // Timestamp는 unix timestamp이며 단위는 nano second임.
 // OwnerKey는 ed25519 public key이며 32byte.
+// Qualifier는 json object이며 string.
 type InputDataObj struct {
 	Timestamp uint64 `json:"timestamp"`
 	OwnerKey  []byte `json:"ownerKey"`
-	Qualifier []byte `json:"qualifier"`
+	Qualifier string `json:"qualifier"`
 	Data      []byte `json:"data"`
 }
 
@@ -20,11 +21,12 @@ type InputFetchObj struct {
 // Id는 data의 고유한 id.
 // Timestamp는 unix timestamp이며 단위는 nano second임.
 // OwnerKey는 ed25519 public key이며 32byte.
+// Qualifier는 json object이며 string.
 type OutputQueryObj struct {
 	Id        []byte `json:"id"`
 	Timestamp uint64 `json:"timestamp"`
 	OwnerKey  []byte `json:"ownerKey"`
-	Qualifier []byte `json:"qualifier"`
+	Qualifier string `json:"qualifier"`
 }
 
 // OutputFetchObj는 Fetch function의 result data type.
