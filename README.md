@@ -129,9 +129,9 @@ schemeless json string
 스트림을 이용한 Json data를 Put 하는 example. 
 ```shell
 $ echo '[
-        {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":'{"userId":"paust_kevin"}',"data":"YWJj"},
-        {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"'{"userId":"paust_andrew"}'","data":"ZGVm"},
-        {"timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"'{"userId":"paust_elon"}'","data":"Z2hp"}
+        {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"{\"userId\":\"paust_kevin\"}","data":"YWJj"},
+        {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"userId\":\"paust_andrew\"}","data":"ZGVm"},
+        {"timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"{\"userId\":\"paust_elon\"}","data":"Z2hp"}
 ]' | paust-db-client put -s
 Read json data from STDIN
 put success.
