@@ -33,6 +33,15 @@ RUN make get_tools
 RUN make get_vendor_deps
 RUN make install
 
+FROM alpine:3.7
+
+RUN apk update && apk add --no-cache libstdc++
+
+COPY --from=0 /usr/local/lib64/librocksdb.so.5 /usr/local/lib64/
+RUN ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
+COPY --from=0 /go/bin/tendermint /usr/bin/
+COPY --from=0 /go/bin/paust-db /usr/bin/
+
 ENV TMHOME /tendermint
 VOLUME [ $TMHOME ]
 WORKDIR $TMHOME
