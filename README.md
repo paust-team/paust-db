@@ -128,7 +128,7 @@ $ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 Name|Description
 ---|---
 timestamp | Unix timestamp(milisec)
-ownerkey | base64 encoded owner key
+ownerkey | base64 encoded ED2519 public key
 qulifier | schemeless json string
 data | base64 encoded data 
 
