@@ -266,6 +266,16 @@ paust-db-client status command 를 이용하여 paust-db의 health를 체크할 
 ```
 $ paust-db-client status -e localhost:26657
 running
+
+$ paust-db-client status --help
+Check status of paust-db
+
+Usage:
+  paust-db-client status [flags]
+
+Flags:
+  -e, --endpoint string   Endpoint of paust-db (default "localhost:26657")
+  -h, --help              help for status
 ```
 
 ### Generate ED25519 key pair
