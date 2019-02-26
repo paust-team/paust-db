@@ -79,7 +79,7 @@ fmt.Println(string(res.Response.Value))
 paust-db의 put, query, fetch등의 기능을 쉽게 테스트 하기 위한 Client CLI 를 제공함
 
 ```
-$ go get github.com/dragon0170/paust-db/client/cmd/paust-db-client
+$ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 $ paust-db-client
 Paust DB Client Application
 
@@ -259,4 +259,19 @@ Flags:
   -f, --file string       File path
   -h, --help              help for fetch
   -s, --stdin             Input json data from standard input
+```
+
+### Check status of pasut-db
+paust-db-client status command 를 이용하여 paust-db의 health를 체크할 수 있음
+```
+$ paust-db-client status -e localhost:26657
+running
+```
+
+### Generate ED25519 key pair
+paust-db-client generate command 를 이용하여 ED25519 key pair를 생성할 수 있음
+```
+$ paust-db-client generate
+Private Key(base64 encoding): clHDfdXUGVbE52H3jnhBVtnSD0qdCPSou26Ptl3SOGxHJlqBZzZAMlH1lxXFT3JishRccC9OaqNlTs0mEWmG3g==
+Public Key(base64 encoding): RyZagWc2QDJR9ZcVxU9yYrIUXHAvTmqjZU7NJhFpht4=
 ```
