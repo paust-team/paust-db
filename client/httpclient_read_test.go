@@ -28,7 +28,7 @@ func (suite *ClientTestSuite) TestClient_Query() {
 	require.Nil(err, "json marshal err: %+v", err)
 	tx, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	require.Nil(err, "json marshal err: %+v", err)
-	expectedValue, err := json.Marshal([]client.OutputQueryObj{{Id: rowKey, Timestamp: timestamp, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
+	expectedValue, err := json.Marshal([]client.OutputQueryObj{{Id: rowKey, Timestamp: timestamp, OwnerKey: pubKeyBytes, Qualifier: TestQualifier}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)
@@ -40,7 +40,7 @@ func (suite *ClientTestSuite) TestClient_Query() {
 
 	require.Equal(0, mempool.Size())
 
-	res, err := suite.dbClient.Query(timestamp, timestamp+1, pubKeyBytes, []byte(TestQualifier))
+	res, err := suite.dbClient.Query(timestamp, timestamp+1, pubKeyBytes, TestQualifier)
 	qres := res.Response
 	if suite.Nil(err) && suite.True(qres.IsOK()) {
 		suite.EqualValues(expectedValue, qres.Value)

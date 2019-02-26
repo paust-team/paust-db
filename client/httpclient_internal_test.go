@@ -34,7 +34,7 @@ func TestHTTPClient_deSerializeKeyObj(t *testing.T) {
 	require.Nil(err, "base64 decode err: %+v", err)
 	metaDataObjs, err := json.Marshal([]types.MetaDataObj{{RowKey: rowKey1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {RowKey: rowKey2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
-	outputQueryObjs, err := json.Marshal([]OutputQueryObj{{Id: rowKey1, Timestamp: timestamp1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {Id: rowKey2, Timestamp: timestamp2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
+	outputQueryObjs, err := json.Marshal([]OutputQueryObj{{Id: rowKey1, Timestamp: timestamp1, OwnerKey: pubKeyBytes, Qualifier: TestQualifier}, {Id: rowKey2, Timestamp: timestamp2, OwnerKey: pubKeyBytes, Qualifier: TestQualifier}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	deserializedBytes, err := deSerializeKeyObj(metaDataObjs, true)

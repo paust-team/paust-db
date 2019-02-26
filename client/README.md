@@ -108,9 +108,9 @@ cli 상에서 `client.InputDataObj`형식을 가진 JSON object의 array를 사�
 ```
 # put data of STDIN
 $ echo '[
-        {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"Y3B1","data":"YWJj"},
-        {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"bWVt","data":"ZGVm"},
-        {"timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"c3BlZWQ=","data":"Z2hp"}
+        {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"{\"type\":\"temperature\"}","data":"YWJj"},
+        {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"type\":\"speed\"}","data":"ZGVm"},
+        {"timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"{\"type\":\"price\"}","data":"Z2hp"}
 ]' | paust-db-client put -s
 Read json data from STDIN
 put success.
@@ -139,7 +139,7 @@ Read json data from files in directory: /root/writeDirectory
 - Cli argument 방식
 ```
 # put data of cli arguments
-$ paust-db-client put 123456 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q c3BlZWQ=
+$ paust-db-client put 123456 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"temperature"}'
 Read data from cli arguments
 put success.
 ```
@@ -152,14 +152,14 @@ Usage:
   paust-db-client put [data to put] [flags]
 
 Flags:
-  -d, --directory string        Directory path
-  -e, --endpoint string         Endpoint of paust-db (default "localhost:26657")
-  -f, --file string             File path
-  -h, --help                    help for put
-  -o, --ownerKey bytesBase64    Base64 encoded ED25519 public key
-  -q, --qualifier bytesBase64   Base64 encoded data qualifier
-  -r, --recursive               Write all files and folders recursively
-  -s, --stdin                   Input json data from standard input
+  -d, --directory string       Directory path
+  -e, --endpoint string        Endpoint of paust-db (default "localhost:26657")
+  -f, --file string            File path
+  -h, --help                   help for put
+  -o, --ownerKey bytesBase64   Base64 encoded ED25519 public key
+  -q, --qualifier string       Data qualifier(JSON object)
+  -r, --recursive              Write all files and folders recursively
+  -s, --stdin                  Input json data from standard input
 ```
 
 ### Query data
@@ -170,28 +170,28 @@ flag를 통해 ownerKey, qualifier를 명시하면 특정 ownerKey, qualifier와
 # Query with start, end
 $ paust-db-client query 1544772882435375000 1544772882435375001
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI4ODI0MzUzNzUwMDAsInNhbHQiOjQ1fQ==","timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"Y3B1"}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI4ODI0MzUzNzUwMDAsInNhbHQiOjQ1fQ==","timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"{\"type\":\"temperature\"}"}]
 ```
 - start, end timestamp와 ownerKey 명시
 ```
 # Query with start, end, ownerKey
 $ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"bWVt"}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"type\":\"speed\"}"}]
 ```
 - start, end timestamp와 qualifier 명시
 ```
 # Query with start, end, qualifier
-$ paust-db-client query 1544772882435375000 1544772967331458001 -q c3BlZWQ=
+$ paust-db-client query 1544772882435375000 1544772967331458001 -q '{"type":"price"}'
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjczMzE0NTgwMDAsInNhbHQiOjM5fQ==","timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"c3BlZWQ="}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjczMzE0NTgwMDAsInNhbHQiOjM5fQ==","timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"{\"type\":\"price\"}"}]
 ```
 - start, end timestamp와 ownerKey, qualifier 명시
 ```
 # Query with start, end, ownerKey, qualifier
-$ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q bWVt
+$ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"speed"}'
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"bWVt"}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"type\":\"speed\"}"}]
 ```
 
 기타 query에 관련된 usage를 --help를 통해 확인할 수 있음
@@ -204,10 +204,10 @@ Usage:
   paust-db-client query start end [flags]
 
 Flags:
-  -e, --endpoint string         Endpoint of paust-db (default "localhost:26657")
-  -h, --help                    help for query
-  -o, --ownerKey bytesBase64    Base64 encoded ED25519 public key
-  -q, --qualifier bytesBase64   Base64 encoded data qualifier
+  -e, --endpoint string        Endpoint of paust-db (default "localhost:26657")
+  -h, --help                   help for query
+  -o, --ownerKey bytesBase64   Base64 encoded ED25519 public key
+  -q, --qualifier string       Data qualifier(JSON object)
 ```
 
 ### Fetch Data

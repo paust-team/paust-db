@@ -17,7 +17,7 @@ var testDir string
 
 const (
 	TestPubKey    = "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE="
-	TestQualifier = "testQualifier"
+	TestQualifier = "{\"type\":\"testQualifier\"}"
 )
 
 type ClientTestSuite struct {
