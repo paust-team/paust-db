@@ -128,9 +128,9 @@ $ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 Name|Description
 ---|---
 timestamp | Unix timestamp(milisec)
-ownerKey | base64 encoded ED2519 public key
-qulifier | schemeless json string
-data | base64 encoded data 
+ownerKey | Base64 encoded ED2519 public key
+qulifier | Schemeless json string
+data | Base64 encoded data 
 
 
 ### Put
@@ -146,7 +146,7 @@ put success.
 ```
 
 ### Query
-time range 사이의 ownerkey가 mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= 이고, qualifier가 bWVt인 item을 Query하는 example
+Time range 사이의 ownerkey가 mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= 이고, qualifier가 bWVt인 item을 Query하는 example
 ```
 $ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"userId":"paust_kevin"}'
 query success.
@@ -154,7 +154,7 @@ query success.
 ```
 
 ### Fetch
-query를 통하여 받은 id인 eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0= 를 이용해 실제 data를 fetch하는 example
+Query를 통하여 받은 id인 eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0= 를 이용해 실제 data를 fetch하는 example
 ```shell
 $ paust-db-client fetch eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=
 Read data from cli arguments
