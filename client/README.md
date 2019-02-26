@@ -29,8 +29,8 @@ import "github.com/paust-team/paust-db/client"
 
 Name|Type|Description
 ---|---|---
-timestamp | uint64 | Unix timestamp(milisec)
-ownerkey | []byte | base64 encoded ED2519 public key
+timestamp | uint64 | Unix timestamp(nanosec)
+ownerKey | []byte | base64 encoded ED2519 public key
 qulifier | string | schemeless json string
 data | []byte | base64 encoded data 
 
@@ -53,9 +53,9 @@ if res.Code != 0 {
 
 Name|Type|Description
 ---|---|---
-start | uint64 | Unix timestamp(milisec)
-end | uint64 | Unix timestamp(milisec)
-ownerkey | []byte | base64 encoded ED2519 public key
+start | uint64 | Unix timestamp(nanosec)
+end | uint64 | Unix timestamp(nanosec)
+ownerKey | []byte | base64 encoded ED2519 public key
 qulifier | string | schemeless json string
 
 ```go
