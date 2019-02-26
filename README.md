@@ -84,7 +84,7 @@ $ tendermint node
 #### paust-db-client status
 아래 Quick start guide 를 따라 paust-db-client 를 설치하여 status command 로 health check 가능
 ```shell
-$ paust-db-client status -E localhost:26657
+$ paust-db-client status -e localhost:26657
 ```
 
 #### tm-monitor 
