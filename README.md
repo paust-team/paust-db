@@ -123,7 +123,7 @@ localhost:26657     49         0.221 ms          true       true
 $ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 ```
 
-### Parameters
+### Data 
 
 Name|Description
 ---|---
