@@ -33,7 +33,7 @@ RUN make get_tools
 RUN make get_vendor_deps
 RUN make install
 
-FROM alpine:3.7
+FROM alpine:3.9
 
 RUN apk update && apk add --no-cache libstdc++
 
