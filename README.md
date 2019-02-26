@@ -8,15 +8,11 @@ PAUST DB 는 시계열 데이터에 특화된 탈중앙화 데이터 베이스 �
 
 앞으로는 성능이나 자원 효율의 관점에서 위와 같은 문제를 해결할 수 있는 새로운 탈중앙화 데이터베이스가 필요합니다. 우리는 시계열 데이터에 특화된 탈중앙화 데이터베이스로 PAUST DB를 만들어 네트워크 데이터 공유 인프라를 구축하는 것을 목표로 합니다.
 
-## PAUST DB
-
-- 탈중앙화 네트워크 기반 데이터 저장소(Decentralized Date Store)**
-
-- 소유권 정보 불변성(Immutable Ownership)**
-
-- 시계열 분산데이터 조회 최적화(Timeseries Query Optimizer)**
-
-- 참여형 오픈 데이터베이스(Open Database for Participation)**
+## 주요 특징
+- 탈중앙화 네트워크 기반 데이터 저장소(Decentralized Date Store)
+- 소유권 정보 불변성(Immutable Ownership)
+- 시계열 분산데이터 조회 최적화(Timeseries Query Optimizer)
+- 참여형 오픈 데이터베이스(Open Database for Participation)
 
 ## Features
 - 하나의 연속적인 대용량 Timeseries 데이터를 실시간으로 관리 가능
