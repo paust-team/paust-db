@@ -15,15 +15,15 @@ make build-image
 ```
 ## How to use this image
 
-### Single Node
-For test 
+### Single Node(for test)
+
 ```
 docker run --rm -v /tmp:/tendermint:Z paust-db init
 docker run -p "26656-26657":"26656-26657" --rm -v /tmp:/tendermint:Z paust-db 
 ```
 
-### Multi-Node Clustering on Single Host
-Docker-compose를 이용해 4개의 local cluster 구성(bridge network로 통신) for test
+### Multi-Node Clustering on Single Host(for test)
+Docker-compose를 이용해 4개의 local cluster 구성(bridge network로 통신)
 
 ```
 cd $GOPATH/src/github.com/paust-team/paust-db/docker
