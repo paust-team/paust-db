@@ -124,7 +124,15 @@ $ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 ```
 
 ### Parameters
-schemeless json string
+
+Name|Description
+---|---
+timestamp | Unix timestamp(milisec)
+ownerkey | base64 encoded owner key
+qulifier | schemeless json string
+data | base64 encoded data 
+
+
 ### Put
 스트림을 이용한 Json data를 Put 하는 example. 
 ```shell
