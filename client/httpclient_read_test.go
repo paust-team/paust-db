@@ -40,7 +40,7 @@ func (suite *ClientTestSuite) TestClient_Query() {
 
 	require.Equal(0, mempool.Size())
 
-	res, err := suite.dbClient.Query(timestamp, timestamp+1, pubKeyBytes, TestQualifier)
+	res, err := suite.dbClient.Query(client.InputQueryObj{Start: timestamp, End: timestamp + 1, OwnerKey: pubKeyBytes, Qualifier: TestQualifier})
 	qres := res.Response
 	if suite.Nil(err) && suite.True(qres.IsOK()) {
 		suite.EqualValues(expectedValue, qres.Value)

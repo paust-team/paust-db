@@ -11,6 +11,17 @@ type InputDataObj struct {
 	Data      []byte `json:"data"`
 }
 
+// InputQueryObj는 Query function의 read model.
+// Start, End는 unix timestamp이며 단위는 nano second임.
+// OwnerKey는 ed25519 public key이며 32byte.
+// Qualifier는 json object이며 string.
+type InputQueryObj struct {
+	Start     uint64 `json:"start"`
+	End       uint64 `json:"end"`
+	OwnerKey  []byte `json:"ownerKey"`
+	Qualifier string `json:"qualifier"`
+}
+
 // InputFetchObj는 Fetch function의 read model.
 // Id는 data의 고유한 id.
 type InputFetchObj struct {

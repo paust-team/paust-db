@@ -193,7 +193,7 @@ var queryCmd = &cobra.Command{
 
 		HTTPClient := client.NewHTTPClient(endpoint)
 		startTime := time.Now()
-		res, err := HTTPClient.Query(start, end, ownerKey, qualifier)
+		res, err := HTTPClient.Query(client.InputQueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
 		endTime := time.Now()
 		if err != nil {
 			fmt.Printf("Query err: %v\n", err)
@@ -298,7 +298,7 @@ var statusCmd = &cobra.Command{
 		}
 
 		HTTPClient := client.NewHTTPClient(endpoint)
-		_, err = HTTPClient.Query(1, 2, []byte{}, "")
+		_, err = HTTPClient.Query(client.InputQueryObj{Start: 1, End: 2, OwnerKey: []byte{}, Qualifier: ""})
 		if err != nil {
 			fmt.Println("not running")
 		} else {
