@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/paust-team/paust-db.svg?branch=master)](https://travis-ci.org/paust-team/paust-db)
+
 # Paust DB
 
 Paust DB is a blockchain based decentralized database platform for continuous timeseries.
