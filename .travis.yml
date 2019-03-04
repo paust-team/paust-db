@@ -1,0 +1,14 @@
+dist: xenial
+language: go
+
+go:
+  - 1.11.x
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y git cmake g++ libsnappy-dev
+  - git clone -b v5.17.2 https://github.com/facebook/rocksdb.git && cd rocksdb && cmake . -DCMAKE_BUILD_TYPE=Release -DWITH_TESTS=OFF && make -j `nproc` && sudo make install && cd - && rm -rf rocksdb
+  - go get -t ./master ./client ./libs/db ./libs/log
+
+script:
+  - go test ./master ./client ./libs/db ./libs/log
