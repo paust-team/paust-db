@@ -4,19 +4,18 @@
 ```go
 // Client는 paust-db와 communicate하는 기본적인 client임
 type Client interface {
-	// Put는 InputDataObj slice의 데이터를 write하고 그 결과를 tendermint의 ResultBroadcastTx로 return.
-	Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTx, error)
+	// Put는 InputDataObj slice의 데이터를 write하고 그 결과를 tendermint의 ResultBroadcastTxCommit로 return.
+	Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error)
 
-	// Query는 start와 end사이에 있는 데이터의 metadata를 ResultABCIQuery에 담아서 return.
-	// ownerKey와 qualifier가 명시된 경우 해당 ownerKey, qualifier와 일치하는 데이터만을 read.
+	// Query는 InputQueryObj의 Start와 End사이에 있는 데이터의 metadata를 ResultABCIQuery에 담아서 return.
+	// InputQueryObj에 OwnerKey와 Qualifier가 명시된 경우 해당 OwnerKey, Qualifier와 일치하는 데이터만을 read.
 	// ResultABCIQuery.Response.Value에 실제 read한 데이터가 OutputQueryObj의 slice로 담겨있음.
-	Query(start uint64, end uint64, ownerKey []byte, qualifier string) (*ctypes.ResultABCIQuery, error)
+	Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery, error)
 
 	// Fetch는 InputFetchObj와 일치하는 데이터를 tendermint의 ResultABCIQuery에 담아서 return.
 	// ResultABCIQuery.Response.Value에 실제 read한 데이터가 OutputFetchObj의 slice로 담겨있음.
 	Fetch(fetchObj InputFetchObj) (*ctypes.ResultABCIQuery, error)
 }
-
 ```
 
 ### Example
@@ -24,50 +23,53 @@ paust-db client API를 사용하기 위해서는 client package를 import해야�
 ```go
 import "github.com/paust-team/paust-db/client"
 ```
-#### Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTx, error)
+#### Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error)
 - ##### Data (InputDataObj)
 
 Name|Type|Description
 ---|---|---
-timestamp | uint64 | Unix timestamp(nanosec)
-ownerKey | []byte | base64 encoded ED2519 public key
-qulifier | string | schemeless json string
-data | []byte | base64 encoded data 
+Timestamp | uint64 | Unix timestamp(nanosec)
+OwnerKey | []byte | ED2519 public key
+Qualifier | string | schemeless json string
+Data | []byte | Data to be stored
 
 ```go
 // Example
-inputDataObjs := []client.InputDataObj{{Timestamp: time.Now().UnixNano(), OwnerKey: ownerKey, Qualifier: qualifier, Data: data}}
+inputDataObjs := []client.InputDataObj{{Timestamp: uint64(time.Now().UnixNano()), OwnerKey: ownerKey, Qualifier: qualifier, Data: data}}
 HTTPClient := client.NewHTTPClient("http://localhost:26657")
 res, err := HTTPClient.Put(inputDataObjs)
 if err != nil {
 	fmt.Println(err)
 	os.Exit(1)
 }
-if res.Code != 0 {
-	fmt.Println(res.Log)
+if res.CheckTx.IsErr() {
+	fmt.Println(res.CheckTx.Log)
+	os.Exit(1)
+} else if res.DeliverTx.IsErr() {
+	fmt.Println(res.DeliverTx.Log)
 	os.Exit(1)
 }
 ```
-#### Query(start uint64, end uint64, ownerKey []byte, qualifier string) (*ctypes.ResultABCIQuery, error)
+#### Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery, error)
 - ##### Data (InputQueryObj)
 
 Name|Type|Description
 ---|---|---
-start | uint64 | Unix timestamp(nanosec)
-end | uint64 | Unix timestamp(nanosec)
-ownerKey | []byte | base64 encoded ED2519 public key
-qulifier | string | schemeless json string
+Start | uint64 | Unix timestamp(nanosec)
+End | uint64 | Unix timestamp(nanosec)
+OwnerKey | []byte | ED2519 public key
+Qualifier | string | schemeless json string
 
 ```go
 // Example
 HTTPClient := client.NewHTTPClient("http://localhost:26657")
-res, err := HTTPClient.Query(start, end, ownerKey, qualifier)
+res, err := HTTPClient.Query(client.InputQueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
 if err != nil {
 	fmt.Println(err)
 	os.Exit(1)
 }
-if res.Code != 0 {
-	fmt.Println(res.Log)
+if res.Response.IsErr() {
+	fmt.Println(res.Response.Log)
 	os.Exit(1)
 }
 
@@ -91,8 +93,8 @@ if err != nil {
 	fmt.Println(err)
 	os.Exit(1)
 }
-if res.Code != 0 {
-	fmt.Println(res.Log)
+if res.Response.IsErr() {
+	fmt.Println(res.Response.Log)
 	os.Exit(1)
 }
 

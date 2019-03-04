@@ -54,20 +54,20 @@ func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastT
 	return bres, err
 }
 
-func (client *HTTPClient) Query(start uint64, end uint64, ownerKey []byte, qualifier string) (*ctypes.ResultABCIQuery, error) {
-	if ownerKey == nil {
+func (client *HTTPClient) Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery, error) {
+	if queryObj.OwnerKey == nil {
 		return nil, errors.Errorf("ownerKey must not be nil.")
 	}
 
-	if len(ownerKey) != 0 && len(ownerKey) != consts.OwnerKeyLen {
-		return nil, errors.Errorf("wrong ownerKey length. Expected %v, got %v", consts.OwnerKeyLen, len(ownerKey))
+	if len(queryObj.OwnerKey) != 0 && len(queryObj.OwnerKey) != consts.OwnerKeyLen {
+		return nil, errors.Errorf("wrong ownerKey length. Expected %v, got %v", consts.OwnerKeyLen, len(queryObj.OwnerKey))
 	}
 
 	startTimestamp := make([]byte, 8)
 	endTimestamp := make([]byte, 8)
-	binary.BigEndian.PutUint64(startTimestamp, start)
-	binary.BigEndian.PutUint64(endTimestamp, end)
-	jsonBytes, err := json.Marshal(types.QueryObj{Start: startTimestamp, End: endTimestamp, OwnerKey: ownerKey, Qualifier: []byte(qualifier)})
+	binary.BigEndian.PutUint64(startTimestamp, queryObj.Start)
+	binary.BigEndian.PutUint64(endTimestamp, queryObj.End)
+	jsonBytes, err := json.Marshal(types.QueryObj{Start: startTimestamp, End: endTimestamp, OwnerKey: queryObj.OwnerKey, Qualifier: []byte(queryObj.Qualifier)})
 	if err != nil {
 		return nil, errors.Wrap(err, "marshal failed")
 	}
