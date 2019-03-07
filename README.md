@@ -1,3 +1,5 @@
+![Alt text](white_logo_color_background.jpg)
+
 [![Build Status](https://travis-ci.org/paust-team/paust-db.svg?branch=master)](https://travis-ci.org/paust-team/paust-db)
 
 # Paust DB
