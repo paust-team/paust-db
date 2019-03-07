@@ -1,4 +1,5 @@
-![Alt text](white_logo_color_background.jpg)
+<img src="white_logo_color_background.jpg" alt="PAUST Logo" width="200px" height="50px" align="right">
+
 
 [![Build Status](https://travis-ci.org/paust-team/paust-db.svg?branch=master)](https://travis-ci.org/paust-team/paust-db)
 
