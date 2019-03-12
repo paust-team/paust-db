@@ -31,6 +31,9 @@ func NewHTTPClient(remote string) *HTTPClient {
 func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error) {
 	var baseDataObjs []types.BaseDataObj
 	for _, dataObj := range dataObjs {
+		if dataObj.Timestamp == 0 {
+			return nil, errors.Errorf("timestamp must not be 0.")
+		}
 		if len(dataObj.OwnerKey) != consts.OwnerKeyLen {
 			return nil, errors.Errorf("%s: wrong ownerKey length. Expected %v, got %v", base64.StdEncoding.EncodeToString(dataObj.OwnerKey), consts.OwnerKeyLen, len(dataObj.OwnerKey))
 		}
