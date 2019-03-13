@@ -177,17 +177,18 @@ Read json data from files in directory: /root/writeDirectory
 timestamp를 명시하지 않으면 현재 시간으로 timestamp가 설정됨.
 ```
 # put data of cli arguments
-$ paust-db-client put 123456 -t 1552391844405076000 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"temperature"}'
+$ paust-db-client put 6BM= -t 1552391844405076000 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"temperature"}'
 Read data from cli arguments
 put success.
 ```
 기타 put 에 관련된 usage 를 --help 를 통해 확인할 수 있음 
 ```
 $ paust-db-client put --help
-Put data to DB
+Put data to DB.
+'data' is base64 encoded byte array.
 
 Usage:
-  paust-db-client put [data to put] [flags]
+  paust-db-client put data [flags]
 
 Flags:
   -d, --directory string       Directory path
