@@ -29,7 +29,7 @@ import "github.com/paust-team/paust-db/client"
 Name|Type|Description
 ---|---|---
 Timestamp | uint64 | Unix timestamp(nanosec)
-OwnerKey | []byte | ED2519 public key
+OwnerKey | []byte | ED2519 public key(32byte)
 Qualifier | string | schemeless json string
 Data | []byte | Data to be stored
 
@@ -57,8 +57,8 @@ Name|Type|Description
 ---|---|---
 Start | uint64 | Unix timestamp(nanosec)
 End | uint64 | Unix timestamp(nanosec)
-OwnerKey | []byte | ED2519 public key
-Qualifier | string | schemeless json string
+OwnerKey | []byte | ED2519 public key(32byte) or empty byte slice
+Qualifier | string | schemeless json string or empty string
 
 ```go
 // Example
@@ -131,6 +131,15 @@ Use "paust-db-client [command] --help" for more information about a command.
 ### Put data
 paust-db-client put command 를 이용하여 여러 방법으로 데이터를 time series db에 쓸 수 있음
 put data 구조는 `client.InputDataObj` 를 따름
+#### JSON object Data 
+
+Name|Description
+---|---
+timestamp | Essential. Unix timestamp(nanosec)
+ownerKey | Essential. Base64 encoded ED25519 public key(32byte)
+qualifier | Schemeless json string
+data | Base64 encoded data 
+
 - Stdin 방식
 cli 상에서 `client.InputDataObj`형식을 가진 JSON object의 array를 사용하여 put 할 수 있음
 ```
@@ -165,19 +174,21 @@ Read json data from files in directory: /root/writeDirectory
 ```
 
 - Cli argument 방식
+timestamp를 명시하지 않으면 현재 시간으로 timestamp가 설정됨.
 ```
 # put data of cli arguments
-$ paust-db-client put 123456 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"temperature"}'
+$ paust-db-client put 6BM= -t 1552391844405076000 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"temperature"}'
 Read data from cli arguments
 put success.
 ```
 기타 put 에 관련된 usage 를 --help 를 통해 확인할 수 있음 
 ```
 $ paust-db-client put --help
-Put data to DB
+Put data to DB.
+'data' is base64 encoded byte array.
 
 Usage:
-  paust-db-client put [data to put] [flags]
+  paust-db-client put data [flags]
 
 Flags:
   -d, --directory string       Directory path
@@ -188,11 +199,13 @@ Flags:
   -q, --qualifier string       Data qualifier(JSON object)
   -r, --recursive              Write all files and folders recursively
   -s, --stdin                  Input json data from standard input
+  -t, --timestamp uint         Unix timestamp(in nanoseconds) (default 1552391845405076000)
 ```
 
 ### Query data
 paust-db-client query command 를 이용하여 start, end timestamp 사이에 있는 time series 데이터의 metadata를 가져올 수 있음
 flag를 통해 ownerKey, qualifier를 명시하면 특정 ownerKey, qualifier와 일치하는 데이터만 가져 옴
+query object 구조는 `client.InputQueryObj` 를 따름
 - start, end timestamp명시
 ```
 # Query with start, end
@@ -241,6 +254,12 @@ Flags:
 ### Fetch Data
 paust-db-client fetch command 를 이용하여 여러 방법으로 time series db의 데이터를 읽을 수 있음
 fetch object 구조는 `client.InputFetchObj` 를 따름
+#### JSON object Data 
+
+Name|Description
+---|---
+ids | Array of Base64 encoded id.
+
 - STDIN 방식
 cli 상에서 `client.InputFetchObj`형식을 가진 JSON object의 array를 사용하여 특정 id를 가진 데이터를 fetch 할 수 있음
 ```

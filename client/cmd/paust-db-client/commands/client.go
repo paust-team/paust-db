@@ -10,7 +10,6 @@ import (
 	"golang.org/x/crypto/ed25519"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -27,8 +26,11 @@ var ClientCmd = &cobra.Command{
 }
 
 var putCmd = &cobra.Command{
-	Use:   "put [data to put]",
-	Short: "Put data to DB",
+	Use:   "put data",
+	Args:  cobra.ExactArgs(1),
+	Short: "Put data to DB.",
+	Long: `Put data to DB.
+'data' is base64 encoded byte array.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		stdin, err := cmd.Flags().GetBool("stdin")
 		if err != nil {
@@ -54,6 +56,12 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		timestamp, err := cmd.Flags().GetUint64("timestamp")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
 		ownerKey, err := cmd.Flags().GetBytesBase64("ownerKey")
 		if err != nil {
 			fmt.Println(err)
@@ -72,8 +80,9 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if stdin == false && filePath == "" && directoryPath == "" && len(args) == 0 {
-			fmt.Println("you should specify data to put")
+		data, err := base64.StdEncoding.DecodeString(args[0])
+		if err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 
@@ -104,11 +113,15 @@ var putCmd = &cobra.Command{
 			}
 		default:
 			fmt.Println("Read data from cli arguments")
+			if timestamp == 0 {
+				fmt.Printf("timestamp must not be 0.")
+				os.Exit(1)
+			}
 			if len(ownerKey) != consts.OwnerKeyLen {
 				fmt.Printf("wrong ownerKey length. Expected %v, got %v\n", consts.OwnerKeyLen, len(ownerKey))
 				os.Exit(1)
 			}
-			inputDataObjs = append(inputDataObjs, client.InputDataObj{Timestamp: uint64(time.Now().UnixNano()), OwnerKey: ownerKey, Qualifier: qualifier, Data: []byte(strings.Join(args, " "))})
+			inputDataObjs = append(inputDataObjs, client.InputDataObj{Timestamp: timestamp, OwnerKey: ownerKey, Qualifier: qualifier, Data: data})
 		}
 
 		HTTPClient := client.NewHTTPClient(endpoint)
@@ -323,6 +336,7 @@ var generateCmd = &cobra.Command{
 }
 
 func init() {
+	putCmd.Flags().Uint64P("timestamp", "t", uint64(time.Now().UnixNano()), "Unix timestamp(in nanoseconds)")
 	putCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
 	putCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	putCmd.Flags().StringP("file", "f", "", "File path")
