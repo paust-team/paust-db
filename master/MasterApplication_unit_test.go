@@ -121,10 +121,10 @@ func (suite *MasterSuite) TestMasterApplication_Commit() {
 	suite.Equal(expectRes, actualRes)
 }
 
-// Query는 OwnerKey와 Qualifier에 따라 4가지 경우가 존재한다.
+// Query는 OwnerId와 Qualifier에 따라 4가지 경우가 존재한다.
 
 /*
-	case query.OwnerKey == nil && query.Qualifier == nil:
+	case query.OwnerId == "" && query.Qualifier == nil:
 */
 func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 	require := suite.Require()
@@ -141,7 +141,7 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 	end := make([]byte, 8)
 	binary.BigEndian.PutUint64(start, 1545982882435375000)
 	binary.BigEndian.PutUint64(end, 1545982882435375002)
-	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerKey: emptySlice, Qualifier: emptySlice}
+	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerId: "", Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: consts.QueryPath}
@@ -189,7 +189,7 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 }
 
 /*
-	case query.OwnerKey == nil:
+	case query.OwnerId == nil:
 */
 func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 	require := suite.Require()
@@ -200,12 +200,11 @@ func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 	*/
 
 	//when
-	emptySlice := make([]byte, 0)
 	start := make([]byte, 8)
 	end := make([]byte, 8)
 	binary.BigEndian.PutUint64(start, 1545982882435375000)
 	binary.BigEndian.PutUint64(end, 1545982882435375002)
-	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerKey: emptySlice, Qualifier: []byte("Memory")}
+	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerId: "", Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: consts.QueryPath}
@@ -256,7 +255,7 @@ func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 /*
 	case query.Qualifier == nil:
 */
-func (suite *MasterSuite) TestMasterApplication_ownerKey_Query() {
+func (suite *MasterSuite) TestMasterApplication_ownerId_Query() {
 	require := suite.Require()
 	//given
 	suite.TestMasterApplication_Commit()
@@ -271,7 +270,7 @@ func (suite *MasterSuite) TestMasterApplication_ownerKey_Query() {
 	end := make([]byte, 8)
 	binary.BigEndian.PutUint64(start, 1545982882435375000)
 	binary.BigEndian.PutUint64(end, 1545982882435375002)
-	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerKey: givenOwnerKey2, Qualifier: emptySlice}
+	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerId: TestOwnerId2, Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: consts.QueryPath}
@@ -335,7 +334,7 @@ func (suite *MasterSuite) TestMasterApplication_both_Query() {
 	end := make([]byte, 8)
 	binary.BigEndian.PutUint64(start, 1545982882435375000)
 	binary.BigEndian.PutUint64(end, 1545982882435375002)
-	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
+	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerId: TestOwnerId, Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
 	metaQuery := abciTypes.RequestQuery{Data: metaQueryByteArr, Path: consts.QueryPath}

@@ -21,9 +21,9 @@ func TestGetInputDataFromStdin(t *testing.T) {
 	require := require.New(t)
 
 	inputData := `[
-        {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"{\"type\":\"temperature\"}","data":"YWJj"},
-        {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"type\":\"speed\"}","data":"ZGVm"},
-        {"timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"{\"type\":\"price\"}","data":"Z2hp"}
+        {"timestamp":1544772882435375000,"ownerId":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"{\"type\":\"temperature\"}","data":"YWJj"},
+        {"timestamp":1544772960049177000,"ownerId":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"type\":\"speed\"}","data":"ZGVm"},
+        {"timestamp":1544772967331458000,"ownerId":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"{\"type\":\"price\"}","data":"Z2hp"}
 ]`
 	var dataObjs []client.InputDataObj
 	err := json.Unmarshal([]byte(inputData), &dataObjs)
