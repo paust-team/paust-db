@@ -188,8 +188,8 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 		return nil, errors.Errorf("Qualifier must not be nil")
 	}
 
-	if len(queryObj.OwnerId) >= consts.OwnerIdLenLimit {
-		return nil, errors.Errorf("OwnerId must be below 64")
+	if len(queryObj.OwnerId) > consts.OwnerIdLenLimit {
+		return nil, errors.Errorf("OwnerId must be %v or below", consts.OwnerIdLenLimit)
 	}
 
 	// create start and end for iterator

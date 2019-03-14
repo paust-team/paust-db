@@ -142,7 +142,7 @@ $ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 Name|Description|Length
 ---|---|---
 timestamp | Essential. Unix timestamp(nanosec) | size of uint64
-ownerId | Essential. Data owner id | below 64 characters
+ownerId | Essential. Data owner id | 64 characters or below
 qualifier | Schemeless json string | Unlimited
 data | Base64 encoded data | Unlimited
 

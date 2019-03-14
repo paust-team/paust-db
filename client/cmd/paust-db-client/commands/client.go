@@ -113,8 +113,8 @@ var putCmd = &cobra.Command{
 		default:
 			fmt.Println("Read data from cli arguments")
 
-			if len(ownerId) >= consts.OwnerIdLenLimit || len(ownerId) == 0 {
-				fmt.Printf("wrong ownerId length. Expected %v, got %v\n", consts.OwnerIdLenLimit, len(ownerId))
+			if len(ownerId) > consts.OwnerIdLenLimit || len(ownerId) == 0 {
+				fmt.Printf("wrong ownerId length. Expect %v or below, got %v", consts.OwnerIdLenLimit, len(ownerId))
 				os.Exit(1)
 			}
       if timestamp == 0 {
@@ -321,7 +321,7 @@ var statusCmd = &cobra.Command{
 }
 
 func init() {
-	putCmd.Flags().StringP("ownerId", "o", "", "Data owner id below 64 characters")
+	putCmd.Flags().StringP("ownerId", "o", "", "Data owner id 64 characters or below")
   putCmd.Flags().Uint64P("timestamp", "t", uint64(time.Now().UnixNano()), "Unix timestamp(in nanoseconds)")
 	putCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	putCmd.Flags().StringP("file", "f", "", "File path")
@@ -332,7 +332,7 @@ func init() {
 	fetchCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
 	fetchCmd.Flags().StringP("file", "f", "", "File path")
 	fetchCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
-	queryCmd.Flags().StringP("ownerId", "o", "", "Data owner id below 64 characters")
+	queryCmd.Flags().StringP("ownerId", "o", "", "Data owner id 64 characters or below")
 	queryCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	queryCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	statusCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")

@@ -33,8 +33,8 @@ func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastT
     if dataObj.Timestamp == 0 {
 			return nil, errors.Errorf("timestamp must not be 0.")
 		}
-		if len(dataObj.OwnerId) >= consts.OwnerIdLenLimit || len(dataObj.OwnerId) == 0 {
-			return nil, errors.Errorf("%s: wrong ownerId length. Expect below %v, got %v", dataObj.OwnerId, consts.OwnerIdLenLimit, len(dataObj.OwnerId))
+		if len(dataObj.OwnerId) > consts.OwnerIdLenLimit || len(dataObj.OwnerId) == 0 {
+			return nil, errors.Errorf("%s: wrong ownerId length. Expect %v or below, got %v", dataObj.OwnerId, consts.OwnerIdLenLimit, len(dataObj.OwnerId))
 		}
 		timestamp := make([]byte, 8)
 		binary.BigEndian.PutUint64(timestamp, dataObj.Timestamp)
@@ -58,8 +58,8 @@ func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastT
 
 func (client *HTTPClient) Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery, error) {
 
-	if len(queryObj.OwnerId) >= consts.OwnerIdLenLimit {
-		return nil, errors.Errorf("wrong ownerId length. Expect below %v, got %v", consts.OwnerIdLenLimit, len(queryObj.OwnerId))
+	if len(queryObj.OwnerId) > consts.OwnerIdLenLimit {
+		return nil, errors.Errorf("wrong ownerId length. Expect %v or below, got %v", consts.OwnerIdLenLimit, len(queryObj.OwnerId))
 	}
 
 	startTimestamp := make([]byte, 8)

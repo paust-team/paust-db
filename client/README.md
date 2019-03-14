@@ -29,7 +29,7 @@ import "github.com/paust-team/paust-db/client"
 Name|Type|Description|Length
 ---|---|---|---
 Timestamp | uint64 | Unix timestamp(nanosec) | uint64
-OwnerId | string | Data owner id | below 64 characters
+OwnerId | string | Data owner id | 64 characters or below
 Qualifier | string | Schemeless json string | Unlimited
 Data | []byte | Data to be stored | Unlimited
 
@@ -57,7 +57,7 @@ Name|Type|Description|Length
 ---|---|---|---
 Start | uint64 | Unix timestamp(nanosec) | uint64
 End | uint64 | Unix timestamp(nanosec) | uint64
-OwnerId | string | Data owner id | below 64 characters
+OwnerId | string | Data owner id | 64 characters or below
 Qualifier | string | Schemeless json string | Unlimited
 
 ```go
@@ -135,7 +135,7 @@ put data 구조는 `client.InputDataObj` 를 따름
 Name|Description|Length
 ---|---|---
 timestamp | Essential. Unix timestamp(nanosec) | size of uint64
-ownerId | Essential. Data owner id | below 64 characters
+ownerId | Essential. Data owner id | 64 characters or below
 qualifier | Schemeless json string | Unlimited
 data | Base64 encoded data | Unlimited
 
@@ -194,7 +194,7 @@ Flags:
   -e, --endpoint string        Endpoint of paust-db (default "localhost:26657")
   -f, --file string            File path
   -h, --help                   help for put
-  -o, --ownerId string         Data Owner Id below 64 characters
+  -o, --ownerId string         Data Owner Id 64 characters or below
   -q, --qualifier string       Data qualifier(JSON object)
   -r, --recursive              Write all files and folders recursively
   -s, --stdin                  Input json data from standard input
@@ -246,7 +246,7 @@ Usage:
 Flags:
   -e, --endpoint string        Endpoint of paust-db (default "localhost:26657")
   -h, --help                   help for query
-  -o, --ownerId string         Data Owner Id below 64 characters
+  -o, --ownerId string         Data Owner Id 64 characters or below
   -q, --qualifier string       Data qualifier(JSON object)
 ```
 
