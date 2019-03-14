@@ -13,8 +13,8 @@ type InputDataObj struct {
 
 // InputQueryObj는 Query function의 read model.
 // Start, End는 unix timestamp이며 단위는 nano second임.
-// OwnerId는 data owner id이며 64자리 미만 string
-// Qualifier는 json object이며 string.
+// OwnerId는 data owner id이며 64자리 미만 string. OwnerId를 제한하고 싶지 않다면 empty string을 넣음.
+// Qualifier는 json object이며 string. Qualifier를 제한하고 싶지 않다면 empty string을 넣음.
 type InputQueryObj struct {
 	Start     uint64 `json:"start"`
 	End       uint64 `json:"end"`

@@ -30,6 +30,9 @@ func NewHTTPClient(remote string) *HTTPClient {
 func (client *HTTPClient) Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error) {
 	var baseDataObjs []types.BaseDataObj
 	for _, dataObj := range dataObjs {
+    if dataObj.Timestamp == 0 {
+			return nil, errors.Errorf("timestamp must not be 0.")
+		}
 		if len(dataObj.OwnerId) >= consts.OwnerIdLenLimit || len(dataObj.OwnerId) == 0 {
 			return nil, errors.Errorf("%s: wrong ownerId length. Expect below %v, got %v", dataObj.OwnerId, consts.OwnerIdLenLimit, len(dataObj.OwnerId))
 		}

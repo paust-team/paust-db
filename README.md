@@ -139,12 +139,12 @@ $ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 
 ### Data 
 
-Name|Description
----|---
-timestamp | Unix timestamp(nanosec)
-ownerId | Data owner id below 64 characters
-qulifier | Schemeless json string
-data | Base64 encoded data 
+Name|Description|Length
+---|---|---
+timestamp | Essential. Unix timestamp(nanosec) | size of uint64
+ownerId | Essential. Data owner id | below 64 characters
+qualifier | Schemeless json string | Unlimited
+data | Base64 encoded data | Unlimited
 
 
 ### Put

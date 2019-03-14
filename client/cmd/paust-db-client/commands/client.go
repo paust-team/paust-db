@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -26,8 +25,11 @@ var ClientCmd = &cobra.Command{
 }
 
 var putCmd = &cobra.Command{
-	Use:   "put [data to put]",
-	Short: "Put data to DB",
+	Use:   "put data",
+	Args:  cobra.ExactArgs(1),
+	Short: "Put data to DB.",
+	Long: `Put data to DB.
+'data' is base64 encoded byte array.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		stdin, err := cmd.Flags().GetBool("stdin")
 		if err != nil {
@@ -53,7 +55,13 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		ownerId, err := cmd.Flags().GetString("ownerId")
+		timestamp, err := cmd.Flags().GetUint64("timestamp")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+  
+    ownerId, err := cmd.Flags().GetString("ownerId")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -71,8 +79,9 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		if stdin == false && filePath == "" && directoryPath == "" && len(args) == 0 {
-			fmt.Println("you should specify data to put")
+		data, err := base64.StdEncoding.DecodeString(args[0])
+		if err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 
@@ -103,11 +112,16 @@ var putCmd = &cobra.Command{
 			}
 		default:
 			fmt.Println("Read data from cli arguments")
-			if len(ownerId) >= consts.OwnerIdLenLimit || len(ownerId) == 0{
+
+			if len(ownerId) >= consts.OwnerIdLenLimit || len(ownerId) == 0 {
 				fmt.Printf("wrong ownerId length. Expected %v, got %v\n", consts.OwnerIdLenLimit, len(ownerId))
 				os.Exit(1)
 			}
-			inputDataObjs = append(inputDataObjs, client.InputDataObj{Timestamp: uint64(time.Now().UnixNano()), OwnerId: ownerId, Qualifier: qualifier, Data: []byte(strings.Join(args, " "))})
+      if timestamp == 0 {
+				fmt.Printf("timestamp must not be 0.")
+				os.Exit(1)
+			}
+			inputDataObjs = append(inputDataObjs, client.InputDataObj{Timestamp: timestamp, OwnerId: ownerId, Qualifier: qualifier, Data: data})
 		}
 
 		HTTPClient := client.NewHTTPClient(endpoint)
@@ -308,6 +322,7 @@ var statusCmd = &cobra.Command{
 
 func init() {
 	putCmd.Flags().StringP("ownerId", "o", "", "Data owner id below 64 characters")
+  putCmd.Flags().Uint64P("timestamp", "t", uint64(time.Now().UnixNano()), "Unix timestamp(in nanoseconds)")
 	putCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	putCmd.Flags().StringP("file", "f", "", "File path")
 	putCmd.Flags().StringP("directory", "d", "", "Directory path")
