@@ -1,10 +1,8 @@
 package types
 
-//TODO offset 추가
-type KeyObj struct {
-	Timestamp []byte `json:"timestamp"`
-	Salt      []byte `json:"salt"`
-}
+import (
+	"encoding/binary"
+)
 
 type MetaDataObj struct {
 	RowKey    []byte `json:"rowKey"`
@@ -31,4 +29,12 @@ type QueryObj struct {
 
 type FetchObj struct {
 	RowKeys [][]byte `json:"rowKeys"`
+}
+
+func GetRowKey(timestamp uint64, salt uint16) []byte {
+	rowKey := make([]byte, 10)
+	binary.BigEndian.PutUint64(rowKey[0:], timestamp)
+	binary.BigEndian.PutUint16(rowKey[8:], salt)
+
+	return rowKey
 }
