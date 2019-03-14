@@ -1,8 +1,6 @@
 package master_test
 
 import (
-	"encoding/binary"
-	"encoding/json"
 	"github.com/paust-team/paust-db/libs/log"
 	"github.com/paust-team/paust-db/master"
 	"github.com/paust-team/paust-db/types"
@@ -25,7 +23,6 @@ const (
 
 //test data
 var (
-	givenKeyObj1, givenKeyObj2           types.KeyObj
 	givenRowKey1, givenRowKey2           []byte
 	givenMetaDataObj1, givenMetaDataObj2 types.MetaDataObj
 	givenRealDataObj1, givenRealDataObj2 types.RealDataObj
@@ -39,25 +36,13 @@ type MasterSuite struct {
 }
 
 func (suite *MasterSuite) SetupSuite() {
-	require := suite.Require()
-
-	var err error
-
 	//test data 설정
-	timestamp1 := make([]byte, 8)
-	timestamp2 := make([]byte, 8)
-	binary.BigEndian.PutUint64(timestamp1, 1545982882435375000)
-	binary.BigEndian.PutUint64(timestamp2, 1545982882435375001)
-	salt := make([]byte, 2)
-	binary.BigEndian.PutUint16(salt, 0)
-	givenKeyObj1 = types.KeyObj{Timestamp: timestamp1, Salt: salt}
-	givenKeyObj2 = types.KeyObj{Timestamp: timestamp2, Salt: salt}
+	timestamp1 := uint64(1545982882435375000)
+	timestamp2 := uint64(1545982882435375001)
+	salt := uint16(0)
 
-	givenRowKey1, err = json.Marshal(givenKeyObj1)
-	require.Nil(err)
-
-	givenRowKey2, err = json.Marshal(givenKeyObj2)
-	require.Nil(err)
+	givenRowKey1 = types.GetRowKey(timestamp1, salt)
+	givenRowKey2 = types.GetRowKey(timestamp2, salt)
 
 	givenMetaDataObj1 = types.MetaDataObj{RowKey: givenRowKey1, OwnerId: TestOwnerId, Qualifier: []byte("Memory")}
 	givenMetaDataObj2 = types.MetaDataObj{RowKey: givenRowKey2, OwnerId: TestOwnerId2, Qualifier: []byte("Stt")}

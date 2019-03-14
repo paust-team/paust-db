@@ -1,7 +1,6 @@
 package master_test
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"github.com/paust-team/paust-db/consts"
 	"github.com/paust-team/paust-db/types"
@@ -137,10 +136,8 @@ func (suite *MasterSuite) TestMasterApplication_time_only_Query() {
 
 	//when
 	emptySlice := make([]byte, 0)
-	start := make([]byte, 8)
-	end := make([]byte, 8)
-	binary.BigEndian.PutUint64(start, 1545982882435375000)
-	binary.BigEndian.PutUint64(end, 1545982882435375002)
+	start := uint64(1545982882435375000)
+	end := uint64(1545982882435375002)
 	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerId: "", Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
@@ -200,10 +197,8 @@ func (suite *MasterSuite) TestMasterApplication_qualifier_Query() {
 	*/
 
 	//when
-	start := make([]byte, 8)
-	end := make([]byte, 8)
-	binary.BigEndian.PutUint64(start, 1545982882435375000)
-	binary.BigEndian.PutUint64(end, 1545982882435375002)
+	start := uint64(1545982882435375000)
+	end := uint64(1545982882435375002)
 	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerId: "", Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
@@ -266,10 +261,8 @@ func (suite *MasterSuite) TestMasterApplication_ownerId_Query() {
 
 	//when
 	emptySlice := make([]byte, 0)
-	start := make([]byte, 8)
-	end := make([]byte, 8)
-	binary.BigEndian.PutUint64(start, 1545982882435375000)
-	binary.BigEndian.PutUint64(end, 1545982882435375002)
+	start := uint64(1545982882435375000)
+	end := uint64(1545982882435375002)
 	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerId: TestOwnerId2, Qualifier: emptySlice}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
@@ -330,10 +323,8 @@ func (suite *MasterSuite) TestMasterApplication_both_Query() {
 	*/
 
 	//when
-	start := make([]byte, 8)
-	end := make([]byte, 8)
-	binary.BigEndian.PutUint64(start, 1545982882435375000)
-	binary.BigEndian.PutUint64(end, 1545982882435375002)
+	start := uint64(1545982882435375000)
+	end := uint64(1545982882435375002)
 	metaQueryObj := types.QueryObj{Start: start, End: end, OwnerId: TestOwnerId, Qualifier: []byte("Memory")}
 	metaQueryByteArr, err := json.Marshal(metaQueryObj)
 	require.Nil(err)
