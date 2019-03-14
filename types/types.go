@@ -21,8 +21,8 @@ type BaseDataObj struct {
 }
 
 type QueryObj struct {
-	Start     []byte `json:"start"`
-	End       []byte `json:"end"`
+	Start     uint64 `json:"start"`
+	End       uint64 `json:"end"`
 	OwnerId   string `json:"ownerId"`
 	Qualifier []byte `json:"qualifier"`
 }
