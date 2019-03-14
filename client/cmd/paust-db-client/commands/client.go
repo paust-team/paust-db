@@ -26,8 +26,7 @@ var ClientCmd = &cobra.Command{
 }
 
 var putCmd = &cobra.Command{
-	Use:   "put data",
-	Args:  cobra.ExactArgs(1),
+	Use:   "put [data]",
 	Short: "Put data to DB.",
 	Long: `Put data to DB.
 'data' is base64 encoded byte array.`,
@@ -80,9 +79,8 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		data, err := base64.StdEncoding.DecodeString(args[0])
-		if err != nil {
-			fmt.Println(err)
+		if stdin == false && filePath == "" && directoryPath == "" && len(args) == 0 {
+			fmt.Println("you should specify data to put")
 			os.Exit(1)
 		}
 
@@ -119,6 +117,11 @@ var putCmd = &cobra.Command{
 			}
 			if len(ownerKey) != consts.OwnerKeyLen {
 				fmt.Printf("wrong ownerKey length. Expected %v, got %v\n", consts.OwnerKeyLen, len(ownerKey))
+				os.Exit(1)
+			}
+			data, err := base64.StdEncoding.DecodeString(args[0])
+			if err != nil {
+				fmt.Println(err)
 				os.Exit(1)
 			}
 			inputDataObjs = append(inputDataObjs, client.InputDataObj{Timestamp: timestamp, OwnerKey: ownerKey, Qualifier: qualifier, Data: data})
