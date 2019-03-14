@@ -86,7 +86,7 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	//meta와 real 나누어 batch에 담는다
 	for i := 0; i < len(baseDataObjs); i++ {
 		var metaValue struct {
-			OwnerId  string `json:"ownerId"`
+			OwnerId   string `json:"ownerId"`
 			Qualifier []byte `json:"qualifier"`
 		}
 		metaValue.OwnerId = baseDataObjs[i].MetaData.OwnerId
@@ -216,7 +216,7 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 		var metaObj = types.MetaDataObj{}
 
 		var metaValue struct {
-			OwnerId  string `json:"ownerId"`
+			OwnerId   string `json:"ownerId"`
 			Qualifier []byte `json:"qualifier"`
 		}
 		if err := json.Unmarshal(itr.Value(), &metaValue); err != nil {

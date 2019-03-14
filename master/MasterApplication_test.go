@@ -59,7 +59,6 @@ func (suite *MasterSuite) SetupSuite() {
 	givenRowKey2, err = json.Marshal(givenKeyObj2)
 	require.Nil(err)
 
-
 	givenMetaDataObj1 = types.MetaDataObj{RowKey: givenRowKey1, OwnerId: TestOwnerId, Qualifier: []byte("Memory")}
 	givenMetaDataObj2 = types.MetaDataObj{RowKey: givenRowKey2, OwnerId: TestOwnerId2, Qualifier: []byte("Stt")}
 

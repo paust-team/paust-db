@@ -6,7 +6,7 @@ package client
 // Qualifier는 json object이며 string.
 type InputDataObj struct {
 	Timestamp uint64 `json:"timestamp"`
-	OwnerId  string `json:"ownerId"`
+	OwnerId   string `json:"ownerId"`
 	Qualifier string `json:"qualifier"`
 	Data      []byte `json:"data"`
 }
@@ -18,7 +18,7 @@ type InputDataObj struct {
 type InputQueryObj struct {
 	Start     uint64 `json:"start"`
 	End       uint64 `json:"end"`
-	OwnerId  string `json:"ownerId"`
+	OwnerId   string `json:"ownerId"`
 	Qualifier string `json:"qualifier"`
 }
 
@@ -36,7 +36,7 @@ type InputFetchObj struct {
 type OutputQueryObj struct {
 	Id        []byte `json:"id"`
 	Timestamp uint64 `json:"timestamp"`
-	OwnerId  string `json:"OwnerId"`
+	OwnerId   string `json:"OwnerId"`
 	Qualifier string `json:"qualifier"`
 }
 

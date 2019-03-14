@@ -215,7 +215,7 @@ query success.
 - start, end timestamp와 ownerId 명시
 ```
 # Query with start, end, ownerId
-$ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=
+$ paust-db-client query 1544772882435375000 1544772967331458001 -o owner2
 query success.
 [{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerId":"owner2","qualifier":"{\"type\":\"speed\"}"}]
 ```
@@ -229,7 +229,7 @@ query success.
 - start, end timestamp와 ownerId, qualifier 명시
 ```
 # Query with start, end, ownerId, qualifier
-$ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"speed"}'
+$ paust-db-client query 1544772882435375000 1544772967331458001 -o owner2 -q '{"type":"speed"}'
 query success.
 [{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerId":"owner2","qualifier":"{\"type\":\"speed\"}"}]
 ```

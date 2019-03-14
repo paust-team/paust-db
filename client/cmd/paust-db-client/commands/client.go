@@ -59,8 +59,8 @@ var putCmd = &cobra.Command{
 			fmt.Println(err)
 			os.Exit(1)
 		}
-  
-    ownerId, err := cmd.Flags().GetString("ownerId")
+
+		ownerId, err := cmd.Flags().GetString("ownerId")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -115,7 +115,7 @@ var putCmd = &cobra.Command{
 				fmt.Printf("wrong ownerId length. Expect %v or below, got %v", consts.OwnerIdLenLimit, len(ownerId))
 				os.Exit(1)
 			}
-      if timestamp == 0 {
+			if timestamp == 0 {
 				fmt.Printf("timestamp must not be 0.")
 				os.Exit(1)
 			}
@@ -325,7 +325,7 @@ var statusCmd = &cobra.Command{
 
 func init() {
 	putCmd.Flags().StringP("ownerId", "o", "", "Data owner id 64 characters or below")
-  putCmd.Flags().Uint64P("timestamp", "t", uint64(time.Now().UnixNano()), "Unix timestamp(in nanoseconds)")
+	putCmd.Flags().Uint64P("timestamp", "t", uint64(time.Now().UnixNano()), "Unix timestamp(in nanoseconds)")
 	putCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	putCmd.Flags().StringP("file", "f", "", "File path")
 	putCmd.Flags().StringP("directory", "d", "", "Directory path")
