@@ -8,7 +8,7 @@ type KeyObj struct {
 
 type MetaDataObj struct {
 	RowKey    []byte `json:"rowKey"`
-	OwnerKey  []byte `json:"ownerKey"`
+	OwnerId   string `json:"ownerId"`
 	Qualifier []byte `json:"qualifier"`
 }
 
@@ -25,7 +25,7 @@ type BaseDataObj struct {
 type QueryObj struct {
 	Start     []byte `json:"start"`
 	End       []byte `json:"end"`
-	OwnerKey  []byte `json:"ownerKey"`
+	OwnerId   string `json:"ownerId"`
 	Qualifier []byte `json:"qualifier"`
 }
 

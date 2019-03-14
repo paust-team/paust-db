@@ -8,7 +8,7 @@ type Client interface {
 	Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error)
 
 	// Query는 InputQueryObj의 Start와 End사이에 있는 데이터의 metadata를 ResultABCIQuery에 담아서 return.
-	// InputQueryObj에 OwnerKey와 Qualifier가 명시된 경우 해당 OwnerKey, Qualifier와 일치하는 데이터만을 read.
+	// InputQueryObj에 OwnerId와 Qualifier가 명시된 경우 해당 OwnerId, Qualifier와 일치하는 데이터만을 read.
 	// ResultABCIQuery.Response.Value에 실제 read한 데이터가 OutputQueryObj의 slice로 담겨있음.
 	Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery, error)
 
@@ -26,16 +26,16 @@ import "github.com/paust-team/paust-db/client"
 #### Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error)
 - ##### Data (InputDataObj)
 
-Name|Type|Description
----|---|---
-Timestamp | uint64 | Unix timestamp(nanosec)
-OwnerKey | []byte | ED2519 public key(32byte)
-Qualifier | string | schemeless json string
-Data | []byte | Data to be stored
+Name|Type|Description|Length
+---|---|---|---
+Timestamp | uint64 | Unix timestamp(nanosec) | uint64
+OwnerId | string | Data owner id | 64 characters or below
+Qualifier | string | Schemeless json string | Unlimited
+Data | []byte | Data to be stored | Unlimited
 
 ```go
 // Example
-inputDataObjs := []client.InputDataObj{{Timestamp: uint64(time.Now().UnixNano()), OwnerKey: ownerKey, Qualifier: qualifier, Data: data}}
+inputDataObjs := []client.InputDataObj{{Timestamp: uint64(time.Now().UnixNano()), OwnerId: ownerId, Qualifier: qualifier, Data: data}}
 HTTPClient := client.NewHTTPClient("http://localhost:26657")
 res, err := HTTPClient.Put(inputDataObjs)
 if err != nil {
@@ -53,17 +53,17 @@ if res.CheckTx.IsErr() {
 #### Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery, error)
 - ##### Data (InputQueryObj)
 
-Name|Type|Description
----|---|---
-Start | uint64 | Unix timestamp(nanosec)
-End | uint64 | Unix timestamp(nanosec)
-OwnerKey | []byte | ED2519 public key(32byte) or empty byte slice
-Qualifier | string | schemeless json string or empty string
+Name|Type|Description|Length
+---|---|---|---
+Start | uint64 | Unix timestamp(nanosec) | uint64
+End | uint64 | Unix timestamp(nanosec) | uint64
+OwnerId | string | Data owner id | 64 characters or below
+Qualifier | string | Schemeless json string | Unlimited
 
 ```go
 // Example
 HTTPClient := client.NewHTTPClient("http://localhost:26657")
-res, err := HTTPClient.Query(client.InputQueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
+res, err := HTTPClient.Query(client.InputQueryObj{Start: start, End: end, OwnerId: ownerId, Qualifier: qualifier})
 if err != nil {
 	fmt.Println(err)
 	os.Exit(1)
@@ -116,7 +116,6 @@ Usage:
 
 Available Commands:
   fetch       Fetch DB for real data
-  generate    Generate ED25519 Key Pair
   help        Help about any command
   put         Put data to DB
   query       Query DB for metadata
@@ -133,21 +132,21 @@ paust-db-client put command 를 이용하여 여러 방법으로 데이터를 ti
 put data 구조는 `client.InputDataObj` 를 따름
 #### JSON object Data 
 
-Name|Description
----|---
-timestamp | Essential. Unix timestamp(nanosec)
-ownerKey | Essential. Base64 encoded ED25519 public key(32byte)
-qualifier | Schemeless json string
-data | Base64 encoded data 
+Name|Description|Length
+---|---|---
+timestamp | Essential. Unix timestamp(nanosec) | size of uint64
+ownerId | Essential. Data owner id | 64 characters or below
+qualifier | Schemeless json string | Unlimited
+data | Base64 encoded data | Unlimited
 
 - Stdin 방식
 cli 상에서 `client.InputDataObj`형식을 가진 JSON object의 array를 사용하여 put 할 수 있음
 ```
 # put data of STDIN
 $ echo '[
-        {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"{\"type\":\"temperature\"}","data":"YWJj"},
-        {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"type\":\"speed\"}","data":"ZGVm"},
-        {"timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"{\"type\":\"price\"}","data":"Z2hp"}
+        {"timestamp":1544772882435375000,"ownerId":"owner1","qualifier":"{\"type\":\"temperature\"}","data":"YWJj"},
+        {"timestamp":1544772960049177000,"ownerId":"owner2","qualifier":"{\"type\":\"speed\"}","data":"ZGVm"},
+        {"timestamp":1544772967331458000,"ownerId":"owner3","qualifier":"{\"type\":\"price\"}","data":"Z2hp"}
 ]' | paust-db-client put -s
 Read json data from STDIN
 put success.
@@ -177,7 +176,7 @@ Read json data from files in directory: /root/writeDirectory
 timestamp를 명시하지 않으면 현재 시간으로 timestamp가 설정됨.
 ```
 # put data of cli arguments
-$ paust-db-client put 6BM= -t 1552391844405076000 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"temperature"}'
+$ paust-db-client put 6BM= -t 1552391844405076000 -o owner2 -q '{"type":"temperature"}'
 Read data from cli arguments
 put success.
 ```
@@ -195,7 +194,7 @@ Flags:
   -e, --endpoint string        Endpoint of paust-db (default "localhost:26657")
   -f, --file string            File path
   -h, --help                   help for put
-  -o, --ownerKey bytesBase64   Base64 encoded ED25519 public key
+  -o, --ownerId string         Data Owner Id 64 characters or below
   -q, --qualifier string       Data qualifier(JSON object)
   -r, --recursive              Write all files and folders recursively
   -s, --stdin                  Input json data from standard input
@@ -204,35 +203,35 @@ Flags:
 
 ### Query data
 paust-db-client query command 를 이용하여 start, end timestamp 사이에 있는 time series 데이터의 metadata를 가져올 수 있음
-flag를 통해 ownerKey, qualifier를 명시하면 특정 ownerKey, qualifier와 일치하는 데이터만 가져 옴
+flag를 통해 ownerId, qualifier를 명시하면 특정 ownerId, qualifier와 일치하는 데이터만 가져 옴
 query object 구조는 `client.InputQueryObj` 를 따름
 - start, end timestamp명시
 ```
 # Query with start, end
 $ paust-db-client query 1544772882435375000 1544772882435375001
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI4ODI0MzUzNzUwMDAsInNhbHQiOjQ1fQ==","timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"{\"type\":\"temperature\"}"}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI4ODI0MzUzNzUwMDAsInNhbHQiOjQ1fQ==","timestamp":1544772882435375000,"ownerId":"owner1","qualifier":"{\"type\":\"temperature\"}"}]
 ```
-- start, end timestamp와 ownerKey 명시
+- start, end timestamp와 ownerId 명시
 ```
-# Query with start, end, ownerKey
-$ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=
+# Query with start, end, ownerId
+$ paust-db-client query 1544772882435375000 1544772967331458001 -o owner2
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"type\":\"speed\"}"}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerId":"owner2","qualifier":"{\"type\":\"speed\"}"}]
 ```
 - start, end timestamp와 qualifier 명시
 ```
 # Query with start, end, qualifier
 $ paust-db-client query 1544772882435375000 1544772967331458001 -q '{"type":"price"}'
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjczMzE0NTgwMDAsInNhbHQiOjM5fQ==","timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"{\"type\":\"price\"}"}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjczMzE0NTgwMDAsInNhbHQiOjM5fQ==","timestamp":1544772967331458000,"ownerId":"owner3","qualifier":"{\"type\":\"price\"}"}]
 ```
-- start, end timestamp와 ownerKey, qualifier 명시
+- start, end timestamp와 ownerId, qualifier 명시
 ```
-# Query with start, end, ownerKey, qualifier
-$ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"type":"speed"}'
+# Query with start, end, ownerId, qualifier
+$ paust-db-client query 1544772882435375000 1544772967331458001 -o owner2 -q '{"type":"speed"}'
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"type\":\"speed\"}"}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerId":"owner2","qualifier":"{\"type\":\"speed\"}"}]
 ```
 
 기타 query에 관련된 usage를 --help를 통해 확인할 수 있음
@@ -247,7 +246,7 @@ Usage:
 Flags:
   -e, --endpoint string        Endpoint of paust-db (default "localhost:26657")
   -h, --help                   help for query
-  -o, --ownerKey bytesBase64   Base64 encoded ED25519 public key
+  -o, --ownerId string         Data Owner Id 64 characters or below
   -q, --qualifier string       Data qualifier(JSON object)
 ```
 
@@ -308,7 +307,7 @@ Flags:
   -s, --stdin             Input json data from standard input
 ```
 
-### Check status of pasut-db
+### Check status of paust-db
 paust-db-client status command 를 이용하여 paust-db의 health를 체크할 수 있음
 ```
 $ paust-db-client status -e localhost:26657
@@ -323,12 +322,4 @@ Usage:
 Flags:
   -e, --endpoint string   Endpoint of paust-db (default "localhost:26657")
   -h, --help              help for status
-```
-
-### Generate ED25519 key pair
-paust-db-client generate command 를 이용하여 ED25519 key pair를 생성할 수 있음
-```
-$ paust-db-client generate
-Private Key(base64 encoding): clHDfdXUGVbE52H3jnhBVtnSD0qdCPSou26Ptl3SOGxHJlqBZzZAMlH1lxXFT3JishRccC9OaqNlTs0mEWmG3g==
-Public Key(base64 encoding): RyZagWc2QDJR9ZcVxU9yYrIUXHAvTmqjZU7NJhFpht4=
 ```

@@ -2,7 +2,7 @@ package consts
 
 //Data Length관련 상수
 const (
-	OwnerKeyLen = 32
+	OwnerIdLenLimit = 64
 )
 
 //ColumnFamily위치 관련 상수

@@ -139,32 +139,32 @@ $ go get github.com/paust-team/paust-db/client/cmd/paust-db-client
 
 ### Data 
 
-Name|Description
----|---
-timestamp | Essential. Unix timestamp(nanosec)
-ownerKey | Essential. Base64 encoded ED25519 public key(32byte)
-qualifier | Schemeless json string
-data | Base64 encoded data 
+Name|Description|Length
+---|---|---
+timestamp | Essential. Unix timestamp(nanosec) | size of uint64
+ownerId | Essential. Data owner id | 64 characters or below
+qualifier | Schemeless json string | Unlimited
+data | Base64 encoded data | Unlimited
 
 
 ### Put
 스트림을 이용한 Json data를 Put 하는 example. 
 ```shell
 $ echo '[
-        {"timestamp":1544772882435375000,"ownerKey":"NwdTf+S9+H5lsB6Us+s5Y1ChdB1aKECA6gsyGCa8SCM=","qualifier":"{\"userId\":\"paust_kevin\"}","data":"YWJj"},
-        {"timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"userId\":\"paust_andrew\"}","data":"ZGVm"},
-        {"timestamp":1544772967331458000,"ownerKey":"aFw+o2z13LFCXzk7HptFoOY54s7VGDeQQVo32REPFCU=","qualifier":"{\"userId\":\"paust_elon\"}","data":"Z2hp"}
+        {"timestamp":1544772882435375000,"ownerId":"owner1","qualifier":"{\"userId\":\"paust_kevin\"}","data":"YWJj"},
+        {"timestamp":1544772960049177000,"ownerId":"owner2","qualifier":"{\"userId\":\"paust_andrew\"}","data":"ZGVm"},
+        {"timestamp":1544772967331458000,"ownerId":"owner3","qualifier":"{\"userId\":\"paust_elon\"}","data":"Z2hp"}
 ]' | paust-db-client put -s
 Read json data from STDIN
 put success.
 ```
 
 ### Query
-Time range 사이의 ownerkey가 mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= 이고, qualifier가 bWVt인 item을 Query하는 example
+Time range 사이의 ownerId가 owner1 이고, qualifier가 bWVt인 item을 Query하는 example
 ```
-$ paust-db-client query 1544772882435375000 1544772967331458001 -o mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY= -q '{"userId":"paust_kevin"}'
+$ paust-db-client query 1544772882435375000 1544772967331458001 -o owner1 -q '{"userId":"paust_kevin"}'
 query success.
-[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerKey":"mnhKcUWnR1iYTm6o4SJ/X0FV67QFIytpLB03EmWM1CY=","qualifier":"{\"userId\":\"paust_kevin\"}"}]
+[{"id":"eyJ0aW1lc3RhbXAiOjE1NDQ3NzI5NjAwNDkxNzcwMDAsInNhbHQiOjIxNX0=","timestamp":1544772960049177000,"ownerId":"owner1","qualifier":"{\"userId\":\"paust_kevin\"}"}]
 ```
 
 ### Fetch

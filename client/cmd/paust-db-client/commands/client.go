@@ -7,7 +7,6 @@ import (
 	"github.com/paust-team/paust-db/client/util"
 	"github.com/paust-team/paust-db/consts"
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/ed25519"
 	"os"
 	"strconv"
 	"time"
@@ -61,7 +60,7 @@ var putCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		ownerKey, err := cmd.Flags().GetBytesBase64("ownerKey")
+		ownerId, err := cmd.Flags().GetString("ownerId")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -111,12 +110,13 @@ var putCmd = &cobra.Command{
 			}
 		default:
 			fmt.Println("Read data from cli arguments")
-			if timestamp == 0 {
-				fmt.Printf("timestamp must not be 0.")
+
+			if len(ownerId) > consts.OwnerIdLenLimit || len(ownerId) == 0 {
+				fmt.Printf("wrong ownerId length. Expect %v or below, got %v", consts.OwnerIdLenLimit, len(ownerId))
 				os.Exit(1)
 			}
-			if len(ownerKey) != consts.OwnerKeyLen {
-				fmt.Printf("wrong ownerKey length. Expected %v, got %v\n", consts.OwnerKeyLen, len(ownerKey))
+			if timestamp == 0 {
+				fmt.Printf("timestamp must not be 0.")
 				os.Exit(1)
 			}
 			data, err := base64.StdEncoding.DecodeString(args[0])
@@ -124,7 +124,7 @@ var putCmd = &cobra.Command{
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			inputDataObjs = append(inputDataObjs, client.InputDataObj{Timestamp: timestamp, OwnerKey: ownerKey, Qualifier: qualifier, Data: data})
+			inputDataObjs = append(inputDataObjs, client.InputDataObj{Timestamp: timestamp, OwnerId: ownerId, Qualifier: qualifier, Data: data})
 		}
 
 		HTTPClient := client.NewHTTPClient(endpoint)
@@ -189,7 +189,7 @@ var queryCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		ownerKey, err := cmd.Flags().GetBytesBase64("ownerKey")
+		ownerId, err := cmd.Flags().GetString("ownerId")
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -209,7 +209,7 @@ var queryCmd = &cobra.Command{
 
 		HTTPClient := client.NewHTTPClient(endpoint)
 		startTime := time.Now()
-		res, err := HTTPClient.Query(client.InputQueryObj{Start: start, End: end, OwnerKey: ownerKey, Qualifier: qualifier})
+		res, err := HTTPClient.Query(client.InputQueryObj{Start: start, End: end, OwnerId: ownerId, Qualifier: qualifier})
 		endTime := time.Now()
 		if err != nil {
 			fmt.Printf("Query err: %v\n", err)
@@ -314,7 +314,7 @@ var statusCmd = &cobra.Command{
 		}
 
 		HTTPClient := client.NewHTTPClient(endpoint)
-		_, err = HTTPClient.Query(client.InputQueryObj{Start: 1, End: 2, OwnerKey: []byte{}, Qualifier: ""})
+		_, err = HTTPClient.Query(client.InputQueryObj{Start: 1, End: 2, OwnerId: "", Qualifier: ""})
 		if err != nil {
 			fmt.Println("not running")
 		} else {
@@ -323,24 +323,9 @@ var statusCmd = &cobra.Command{
 	},
 }
 
-var generateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "Generate ED25519 Key Pair",
-	Run: func(cmd *cobra.Command, args []string) {
-		pubKey, priKey, err := ed25519.GenerateKey(nil)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		fmt.Printf("Private Key(base64 encoding): %v\n", base64.StdEncoding.EncodeToString(priKey))
-		fmt.Printf("Public Key(base64 encoding): %v\n", base64.StdEncoding.EncodeToString(pubKey))
-	},
-}
-
 func init() {
+	putCmd.Flags().StringP("ownerId", "o", "", "Data owner id 64 characters or below")
 	putCmd.Flags().Uint64P("timestamp", "t", uint64(time.Now().UnixNano()), "Unix timestamp(in nanoseconds)")
-	putCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
 	putCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	putCmd.Flags().StringP("file", "f", "", "File path")
 	putCmd.Flags().StringP("directory", "d", "", "Directory path")
@@ -350,12 +335,11 @@ func init() {
 	fetchCmd.Flags().BoolP("stdin", "s", false, "Input json data from standard input")
 	fetchCmd.Flags().StringP("file", "f", "", "File path")
 	fetchCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
-	queryCmd.Flags().BytesBase64P("ownerKey", "o", nil, "Base64 encoded ED25519 public key")
+	queryCmd.Flags().StringP("ownerId", "o", "", "Data owner id 64 characters or below")
 	queryCmd.Flags().StringP("qualifier", "q", "", "Data qualifier(JSON object)")
 	queryCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	statusCmd.Flags().StringP("endpoint", "e", "localhost:26657", "Endpoint of paust-db")
 	ClientCmd.AddCommand(putCmd)
-	ClientCmd.AddCommand(generateCmd)
 	ClientCmd.AddCommand(queryCmd)
 	ClientCmd.AddCommand(fetchCmd)
 	ClientCmd.AddCommand(statusCmd)

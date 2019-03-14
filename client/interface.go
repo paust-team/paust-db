@@ -11,7 +11,7 @@ type Client interface {
 	Put(dataObjs []InputDataObj) (*ctypes.ResultBroadcastTxCommit, error)
 
 	// Query는 InputQueryObj의 Start와 End사이에 있는 데이터의 metadata를 ResultABCIQuery에 담아서 return.
-	// InputQueryObj에 OwnerKey와 Qualifier가 명시된 경우 해당 OwnerKey, Qualifier와 일치하는 데이터만을 read.
+	// InputQueryObj에 OwnerId와 Qualifier가 명시된 경우 해당 OwnerId, Qualifier와 일치하는 데이터만을 read.
 	// ResultABCIQuery.Response.Value에 실제 read한 데이터가 OutputQueryObj의 slice로 담겨있음.
 	Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery, error)
 

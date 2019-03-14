@@ -1,7 +1,6 @@
 package client
 
 import (
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"github.com/paust-team/paust-db/types"
@@ -10,7 +9,7 @@ import (
 )
 
 const (
-	TestPubKey    = "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE="
+	TestOwnerId   = "ownertest"
 	TestQualifier = "testQualifier"
 )
 
@@ -30,11 +29,9 @@ func TestHTTPClient_deSerializeKeyObj(t *testing.T) {
 	require.Nil(err, "json marshal err: %+v", err)
 
 	// MetaDataResObj deserialize
-	pubKeyBytes, err := base64.StdEncoding.DecodeString(TestPubKey)
-	require.Nil(err, "base64 decode err: %+v", err)
-	metaDataObjs, err := json.Marshal([]types.MetaDataObj{{RowKey: rowKey1, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}, {RowKey: rowKey2, OwnerKey: pubKeyBytes, Qualifier: []byte(TestQualifier)}})
+	metaDataObjs, err := json.Marshal([]types.MetaDataObj{{RowKey: rowKey1, OwnerId: TestOwnerId, Qualifier: []byte(TestQualifier)}, {RowKey: rowKey2, OwnerId: TestOwnerId, Qualifier: []byte(TestQualifier)}})
 	require.Nil(err, "json marshal err: %+v", err)
-	outputQueryObjs, err := json.Marshal([]OutputQueryObj{{Id: rowKey1, Timestamp: timestamp1, OwnerKey: pubKeyBytes, Qualifier: TestQualifier}, {Id: rowKey2, Timestamp: timestamp2, OwnerKey: pubKeyBytes, Qualifier: TestQualifier}})
+	outputQueryObjs, err := json.Marshal([]OutputQueryObj{{Id: rowKey1, Timestamp: timestamp1, OwnerId: TestOwnerId, Qualifier: TestQualifier}, {Id: rowKey2, Timestamp: timestamp2, OwnerId: TestOwnerId, Qualifier: TestQualifier}})
 	require.Nil(err, "json marshal err: %+v", err)
 
 	deserializedBytes, err := deSerializeKeyObj(metaDataObjs, true)

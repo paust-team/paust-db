@@ -16,7 +16,7 @@ var node *nm.Node
 var testDir string
 
 const (
-	TestPubKey    = "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE="
+	TestOwnerId   = "TestOwner"
 	TestQualifier = "{\"type\":\"testQualifier\"}"
 )
 
