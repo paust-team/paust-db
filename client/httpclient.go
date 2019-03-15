@@ -55,8 +55,8 @@ func (client *HTTPClient) Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery
 		return nil, errors.Errorf("wrong ownerId length. Expect %v or below, got %v", consts.OwnerIdLenLimit, len(queryObj.OwnerId))
 	}
 
-	if queryObj.Start > queryObj.End {
-		err := errors.New("query start must be greater than end")
+	if queryObj.Start >= queryObj.End {
+		err := errors.New("query end must be greater than start")
 		return nil, err
 	}
 
