@@ -36,7 +36,7 @@ type InputFetchObj struct {
 type OutputQueryObj struct {
 	Id        []byte `json:"id"`
 	Timestamp uint64 `json:"timestamp"`
-	OwnerId   string `json:"OwnerId"`
+	OwnerId   string `json:"ownerId"`
 	Qualifier string `json:"qualifier"`
 }
 
