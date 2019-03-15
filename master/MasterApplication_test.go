@@ -1,9 +1,6 @@
 package master_test
 
 import (
-	"encoding/base64"
-	"encoding/binary"
-	"encoding/json"
 	"github.com/paust-team/paust-db/libs/log"
 	"github.com/paust-team/paust-db/master"
 	"github.com/paust-team/paust-db/types"
@@ -20,15 +17,13 @@ const (
 
 //db test 관련 상수
 const (
-	TestPubKey  = "oimd8ZdzgUHzF9CPChJU8gb89VaMYg+1SpX6WT8nQHE="
-	TestPubKey2 = "Pe8PPI4Mq7kJIjDJjffoTl6s5EezGQSyIcu5Y2KYDaE="
+	TestOwnerId  = "owner1"
+	TestOwnerId2 = "owner2"
 )
 
 //test data
 var (
-	givenKeyObj1, givenKeyObj2           types.KeyObj
 	givenRowKey1, givenRowKey2           []byte
-	givenOwnerKey, givenOwnerKey2        []byte
 	givenMetaDataObj1, givenMetaDataObj2 types.MetaDataObj
 	givenRealDataObj1, givenRealDataObj2 types.RealDataObj
 	givenBaseDataObj1, givenBaseDataObj2 types.BaseDataObj
@@ -41,34 +36,16 @@ type MasterSuite struct {
 }
 
 func (suite *MasterSuite) SetupSuite() {
-	require := suite.Require()
-
-	var err error
-
 	//test data 설정
-	timestamp1 := make([]byte, 8)
-	timestamp2 := make([]byte, 8)
-	binary.BigEndian.PutUint64(timestamp1, 1545982882435375000)
-	binary.BigEndian.PutUint64(timestamp2, 1545982882435375001)
-	salt := make([]byte, 2)
-	binary.BigEndian.PutUint16(salt, 0)
-	givenKeyObj1 = types.KeyObj{Timestamp: timestamp1, Salt: salt}
-	givenKeyObj2 = types.KeyObj{Timestamp: timestamp2, Salt: salt}
+	timestamp1 := uint64(1545982882435375000)
+	timestamp2 := uint64(1545982882435375001)
+	salt := uint16(0)
 
-	givenRowKey1, err = json.Marshal(givenKeyObj1)
-	require.Nil(err)
+	givenRowKey1 = types.GetRowKey(timestamp1, salt)
+	givenRowKey2 = types.GetRowKey(timestamp2, salt)
 
-	givenRowKey2, err = json.Marshal(givenKeyObj2)
-	require.Nil(err)
-
-	givenOwnerKey, err = base64.StdEncoding.DecodeString(TestPubKey)
-	require.Nil(err)
-
-	givenOwnerKey2, err = base64.StdEncoding.DecodeString(TestPubKey2)
-	require.Nil(err)
-
-	givenMetaDataObj1 = types.MetaDataObj{RowKey: givenRowKey1, OwnerKey: givenOwnerKey, Qualifier: []byte("Memory")}
-	givenMetaDataObj2 = types.MetaDataObj{RowKey: givenRowKey2, OwnerKey: givenOwnerKey2, Qualifier: []byte("Stt")}
+	givenMetaDataObj1 = types.MetaDataObj{RowKey: givenRowKey1, OwnerId: TestOwnerId, Qualifier: []byte("Memory")}
+	givenMetaDataObj2 = types.MetaDataObj{RowKey: givenRowKey2, OwnerId: TestOwnerId2, Qualifier: []byte("Stt")}
 
 	givenRealDataObj1 = types.RealDataObj{RowKey: givenRowKey1, Data: []byte("aw")}
 	givenRealDataObj2 = types.RealDataObj{RowKey: givenRowKey2, Data: []byte("good")}

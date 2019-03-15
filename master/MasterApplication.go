@@ -14,6 +14,7 @@ import (
 	abciTypes "github.com/tendermint/tendermint/abci/types"
 	"math/rand"
 	"os"
+	"strings"
 )
 
 type MasterApplication struct {
@@ -85,10 +86,10 @@ func (app *MasterApplication) DeliverTx(tx []byte) abciTypes.ResponseDeliverTx {
 	//meta와 real 나누어 batch에 담는다
 	for i := 0; i < len(baseDataObjs); i++ {
 		var metaValue struct {
-			OwnerKey  []byte `json:"ownerKey"`
+			OwnerId   string `json:"ownerId"`
 			Qualifier []byte `json:"qualifier"`
 		}
-		metaValue.OwnerKey = baseDataObjs[i].MetaData.OwnerKey
+		metaValue.OwnerId = baseDataObjs[i].MetaData.OwnerId
 		metaValue.Qualifier = baseDataObjs[i].MetaData.Qualifier
 
 		metaData, err := json.Marshal(metaValue)
@@ -142,6 +143,11 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) abciTypes.R
 			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
 		}
 
+		if queryObj.Start >= queryObj.End {
+			err := errors.New("query end must be greater than start ")
+			return abciTypes.ResponseQuery{Code: code.CodeTypeUnknownError, Log: err.Error()}
+		}
+
 		metaDataObjs, err := app.metaDataQuery(queryObj)
 		if err != nil {
 			app.logger.Error("Error processing queryObj", "state", "Query", "err", err)
@@ -183,27 +189,21 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 	var metaDataObjs []types.MetaDataObj
 
 	// query field nil error 처리
-	if queryObj.Qualifier == nil || queryObj.OwnerKey == nil {
-		return nil, errors.Errorf("ownerKey and Qualifier must not be nil")
+	if queryObj.Qualifier == nil {
+		return nil, errors.Errorf("Qualifier must not be nil")
+	}
+
+	if len(queryObj.OwnerId) > consts.OwnerIdLenLimit {
+		return nil, errors.Errorf("OwnerId must be %v or below", consts.OwnerIdLenLimit)
 	}
 
 	// create start and end for iterator
-	salt := make([]byte, 2)
-	binary.BigEndian.PutUint16(salt, 0x0000)
-	startKeyObj := types.KeyObj{Timestamp: queryObj.Start, Salt: salt}
-	endKeyObj := types.KeyObj{Timestamp: queryObj.End, Salt: salt}
+	salt := uint16(0)
 
-	startByte, err := json.Marshal(startKeyObj)
-	if err != nil {
-		return nil, errors.Wrap(err, "startKeyObj marshal err")
-	}
-	endByte, err := json.Marshal(endKeyObj)
-	if err != nil {
-		return nil, errors.Wrap(err, "endKeyObj marshal err")
-	}
+	startByte := types.GetRowKey(queryObj.Start, salt)
+	endByte := types.GetRowKey(queryObj.End, salt)
 
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandles()[consts.MetaCFNum])
-	//TODO unittest close test
 	defer itr.Close()
 
 	// time range에 해당하는 모든 데이터를 가져온다
@@ -211,7 +211,7 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 		var metaObj = types.MetaDataObj{}
 
 		var metaValue struct {
-			OwnerKey  []byte `json:"ownerKey"`
+			OwnerId   string `json:"ownerId"`
 			Qualifier []byte `json:"qualifier"`
 		}
 		if err := json.Unmarshal(itr.Value(), &metaValue); err != nil {
@@ -220,7 +220,7 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 
 		metaObj.RowKey = make([]byte, len(itr.Key()))
 		copy(metaObj.RowKey, itr.Key())
-		metaObj.OwnerKey = metaValue.OwnerKey
+		metaObj.OwnerId = metaValue.OwnerId
 		metaObj.Qualifier = metaValue.Qualifier
 
 		rawMetaDataObjs = append(rawMetaDataObjs, metaObj)
@@ -229,9 +229,9 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 
 	// 가져온 데이터를 제한사항에 맞게 거른다
 	switch {
-	case len(queryObj.OwnerKey) == 0 && len(queryObj.Qualifier) == 0:
+	case strings.Compare(queryObj.OwnerId, "") == 0 && len(queryObj.Qualifier) == 0:
 		metaDataObjs = rawMetaDataObjs
-	case len(queryObj.OwnerKey) == 0:
+	case strings.Compare(queryObj.OwnerId, "") == 0:
 		for i, metaObj := range rawMetaDataObjs {
 			if bytes.Compare(metaObj.Qualifier, queryObj.Qualifier) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
@@ -239,13 +239,13 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 		}
 	case len(queryObj.Qualifier) == 0:
 		for i, metaObj := range rawMetaDataObjs {
-			if bytes.Compare(metaObj.OwnerKey, queryObj.OwnerKey) == 0 {
+			if strings.Compare(metaObj.OwnerId, queryObj.OwnerId) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
 			}
 		}
 	default:
 		for i, metaObj := range rawMetaDataObjs {
-			if bytes.Compare(metaObj.Qualifier, queryObj.Qualifier) == 0 && bytes.Compare(metaObj.OwnerKey, queryObj.OwnerKey) == 0 {
+			if bytes.Compare(metaObj.Qualifier, queryObj.Qualifier) == 0 && strings.Compare(metaObj.OwnerId, queryObj.OwnerId) == 0 {
 				metaDataObjs = append(metaDataObjs, rawMetaDataObjs[i])
 			}
 		}
