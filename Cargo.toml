@@ -1,0 +1,11 @@
+[package]
+name = "paust-db"
+version = "0.0.1"
+authors = ["kwjooo <andrew.joo@paust.io>"]
+license = "GPLv3"
+description = "Decentralized timeseries database specialized for real-time streaming"
+readme = "README.md"
+
+[dependencies]
+clap = {version = "2.32"}
+abci = "0.4.3"
