@@ -193,22 +193,12 @@ func (app *MasterApplication) metaDataQuery(queryObj types.QueryObj) ([]types.Me
 	}
 
 	// create start and end for iterator
-	salt := make([]byte, 2)
-	binary.BigEndian.PutUint16(salt, 0x0000)
-	startKeyObj := types.KeyObj{Timestamp: queryObj.Start, Salt: salt}
-	endKeyObj := types.KeyObj{Timestamp: queryObj.End, Salt: salt}
+	salt := uint16(0)
 
-	startByte, err := json.Marshal(startKeyObj)
-	if err != nil {
-		return nil, errors.Wrap(err, "startKeyObj marshal err")
-	}
-	endByte, err := json.Marshal(endKeyObj)
-	if err != nil {
-		return nil, errors.Wrap(err, "endKeyObj marshal err")
-	}
+	startByte := types.GetRowKey(queryObj.Start, salt)
+	endByte := types.GetRowKey(queryObj.End, salt)
 
 	itr := app.db.IteratorColumnFamily(startByte, endByte, app.db.ColumnFamilyHandles()[consts.MetaCFNum])
-	//TODO unittest close test
 	defer itr.Close()
 
 	// time range에 해당하는 모든 데이터를 가져온다
