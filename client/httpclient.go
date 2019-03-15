@@ -55,6 +55,11 @@ func (client *HTTPClient) Query(queryObj InputQueryObj) (*ctypes.ResultABCIQuery
 		return nil, errors.Errorf("wrong ownerId length. Expect %v or below, got %v", consts.OwnerIdLenLimit, len(queryObj.OwnerId))
 	}
 
+	if queryObj.Start > queryObj.End {
+		err := errors.New("query start must be greater than end")
+		return nil, err
+	}
+
 	jsonBytes, err := json.Marshal(types.QueryObj{Start: queryObj.Start, End: queryObj.End, OwnerId: queryObj.OwnerId, Qualifier: []byte(queryObj.Qualifier)})
 	if err != nil {
 		return nil, errors.Wrap(err, "marshal failed")

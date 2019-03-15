@@ -143,6 +143,11 @@ func (app *MasterApplication) Query(reqQuery abciTypes.RequestQuery) abciTypes.R
 			return abciTypes.ResponseQuery{Code: code.CodeTypeEncodingError, Log: err.Error()}
 		}
 
+		if queryObj.Start >= queryObj.End {
+			err := errors.New("query end must be greater than start ")
+			return abciTypes.ResponseQuery{Code: code.CodeTypeUnknownError, Log: err.Error()}
+		}
+
 		metaDataObjs, err := app.metaDataQuery(queryObj)
 		if err != nil {
 			app.logger.Error("Error processing queryObj", "state", "Query", "err", err)
