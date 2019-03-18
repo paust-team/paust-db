@@ -37,7 +37,7 @@ impl abci::Application for PaustApp {
 //
 //    }
 //
-//    fn end_block() {
+//    fn end_block() {dasfasfasfdasdasz
 //
 //    }
 //
@@ -46,7 +46,7 @@ impl abci::Application for PaustApp {
 //    }
 }
 
-pub fn Serve() {
+pub fn serve() {
     let addr = "0.0.0.0:26658".parse().unwrap();
     abci::run(addr, PaustApp::new());
 }

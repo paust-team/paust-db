@@ -1,7 +1,7 @@
 extern crate clap;
 pub mod server;
 use clap::{App, SubCommand};
-use server::paustdb::Serve;
+use server::paustdb::serve;
 
 const RUN_COMMAND: &'static str = "run";
 
@@ -15,7 +15,7 @@ fn main() {
         .get_matches();
 
     match matches.subcommand_name() {
-        Some(RUN_COMMAND) => Serve(),
+        Some(RUN_COMMAND) => serve(),
         None => println!("none"),
         _ => unreachable!(),
     }
