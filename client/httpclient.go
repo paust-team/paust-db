@@ -115,7 +115,7 @@ func deSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 		for _, metaDataObj := range metaDataObjs {
 			deserializedMeta = append(deserializedMeta, OutputQueryObj{Id: metaDataObj.RowKey, Timestamp: binary.BigEndian.Uint64(metaDataObj.RowKey[0:8]), OwnerId: metaDataObj.OwnerId, Qualifier: string(metaDataObj.Qualifier)})
 		}
-		deserializedObj, err := json.Marshal(deserializedMeta)
+		deserializedObj, err := json.MarshalIndent(deserializedMeta, "", "    ")
 		if err != nil {
 			return nil, errors.Wrap(err, "marshal failed")
 		}
@@ -130,7 +130,7 @@ func deSerializeKeyObj(obj []byte, isMeta bool) ([]byte, error) {
 		for _, realDataObj := range realDataObjs {
 			deserializedReal = append(deserializedReal, OutputFetchObj{Id: realDataObj.RowKey, Timestamp: binary.BigEndian.Uint64(realDataObj.RowKey[0:8]), Data: realDataObj.Data})
 		}
-		deserializedObj, err := json.Marshal(deserializedReal)
+		deserializedObj, err := json.MarshalIndent(deserializedReal, "", "    ")
 		if err != nil {
 			return nil, errors.Wrap(err, "marshal failed")
 		}
