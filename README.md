@@ -29,7 +29,7 @@ Requirement|Version
 ---|---
 Golang | 1.11.5 or higher
 Rocksdb | 5.17.2 or higher
-Tendermint | 0.29.0 or higher
+Tendermint | 0.29.0 ~ 0.30.2
 
 ### Install go
 [Install](https://golang.org/doc/install)
@@ -70,7 +70,7 @@ $ source ~/.bash_profile
 ### Install tendermint
 ```shell
 $ cd $GOPATH/src/github.com/tendermint/tendermint
-$ git checkout v0.30.0
+$ git checkout v0.30.2
 $ make get_tools
 $ make get_vendor_deps
 $ make install
