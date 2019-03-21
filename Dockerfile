@@ -23,15 +23,18 @@ RUN rm -rf /root/rocksdb
 
 RUN ln -s /usr/local/lib64/librocksdb.so.5 /usr/local/lib/librocksdb.so.5
 
-# install paust-db
-RUN go get github.com/paust-team/paust-db/cmd/paust-db
-
-# install tendermint v0.30.0
+# install tendermint v0.30.2
+RUN mkdir -p go/src/github.com/tendermint
+WORKDIR /go/src/github.com/tendermint
+RUN git clone https://github.com/tendermint/tendermint.git
 WORKDIR /go/src/github.com/tendermint/tendermint
-RUN git checkout v0.30.0
+RUN git checkout v0.30.2
 RUN make get_tools
 RUN make get_vendor_deps
 RUN make install
+
+# install paust-db
+RUN go get github.com/paust-team/paust-db/cmd/paust-db
 
 FROM alpine:3.9
 
