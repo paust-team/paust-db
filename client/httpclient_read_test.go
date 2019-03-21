@@ -20,7 +20,7 @@ func (suite *ClientTestSuite) TestClient_Query() {
 	rowKey := types.GetRowKey(timestamp, 0)
 	tx, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerId: TestOwnerId, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	require.Nil(err, "json marshal err: %+v", err)
-	expectedValue, err := json.Marshal([]client.OutputQueryObj{{Id: rowKey, Timestamp: timestamp, OwnerId: TestOwnerId, Qualifier: TestQualifier}})
+	expectedValue, err := json.MarshalIndent([]client.OutputQueryObj{{Id: rowKey, Timestamp: timestamp, OwnerId: TestOwnerId, Qualifier: TestQualifier}}, "", "    ")
 	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)
@@ -48,7 +48,7 @@ func (suite *ClientTestSuite) TestClient_Fetch() {
 	rowKey := types.GetRowKey(timestamp, 0)
 	tx, err := json.Marshal([]types.BaseDataObj{{MetaData: types.MetaDataObj{RowKey: rowKey, OwnerId: TestOwnerId, Qualifier: []byte(TestQualifier)}, RealData: types.RealDataObj{RowKey: rowKey, Data: data}}})
 	require.Nil(err, "json marshal err: %+v", err)
-	expectedValue, err := json.Marshal([]client.OutputFetchObj{{Id: rowKey, Timestamp: timestamp, Data: data}})
+	expectedValue, err := json.MarshalIndent([]client.OutputFetchObj{{Id: rowKey, Timestamp: timestamp, Data: data}}, "", "    ")
 	require.Nil(err, "json marshal err: %+v", err)
 
 	c := rpcClient.NewLocal(node)
