@@ -1,0 +1,7 @@
+syntax = "proto3";
+package blockchain;
+import "block.proto";
+
+message Blockchain {
+    repeated Block chain = 1;
+}

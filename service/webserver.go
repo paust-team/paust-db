@@ -13,7 +13,7 @@ import (
 
 
 type Message struct {
-	BPM int
+	BPM int32
 }
 
 var mutex = &sync.Mutex{}
@@ -28,12 +28,10 @@ type WebServer struct {
 	MaxHeaderBytes int
 }
 
-func NewWebServer(address string, port string, timeout time.Duration, maxHeaderBytes int) (*WebServer, error) {
-
-	blockchain, _ := BC.NewBlockchain()
+func NewWebServer(bchain *BC.Blockchain, address string, port string, timeout time.Duration, maxHeaderBytes int) (*WebServer, error) {
 
 	webserver := WebServer{
-		Chain: blockchain,
+		Chain: bchain,
 		Address: address,
 		Port: port, 
 		Mux: mux.NewRouter(),
